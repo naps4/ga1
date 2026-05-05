@@ -74,14 +74,7 @@ class FpuController extends Controller
 
     public function knowManager(FpuRequest $fpu)
     {
-        // Jika melibatkan pihak eksternal, butuh approval Direktur/GM
-        if ($fpu->executor_type === 'Eksternal') {
-            $status = 'Menunggu Persetujuan Direktur/GM';
-        } else {
-            $status = 'Disetujui (Selesai)';
-            // Jika tidak butuh GM, kembalikan status tiket ke In Progress
-            $fpu->workOrder->update(['status' => 'Sedang Dikerjakan']);
-        }
+        $status = 'Menunggu Persetujuan Direktur/GM';
 
         $fpu->update([
             'status_approval' => $status,

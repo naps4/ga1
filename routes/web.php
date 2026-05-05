@@ -108,7 +108,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('fpu/{fpu}', [FpuController::class, 'show'])->name('fpu.show');
     Route::post('fpu/{fpu}', [FpuController::class, 'update'])->name('fpu.update');
     Route::post('fpu/{fpu}/verify-hrga', [FpuController::class, 'verifyHrga'])->name('fpu.verify-hrga');
-    Route::post('fpu/{fpu}/ack-manager', [FpuController::class, 'ackManager'])->name('fpu.ack-manager');
+    Route::post('fpu/{fpu}/ack-manager', [FpuController::class, 'knowManager'])->name('fpu.ack-manager');
     Route::post('fpu/{fpu}/approve-gm', [FpuController::class, 'approveGm'])->name('fpu.approve-gm');
     Route::get('fpu/{fpu}/print', [FpuController::class, 'print'])->name('fpu.print');
 

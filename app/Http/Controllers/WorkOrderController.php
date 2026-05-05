@@ -168,7 +168,7 @@ class WorkOrderController extends Controller
 
     public function print(WorkOrder $workOrder)
     {
-        $workOrder->load('user', 'assignedEngineer');
+        $workOrder->load('user', 'assignedEngineer', 'fpuRequest.materials');
         return view('print.work-order', compact('workOrder'));
     }
 }

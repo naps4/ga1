@@ -6,9 +6,9 @@
         <div class="page-title-wrap">
             <h1 class="m-0">Detail Work Order #WO-{{ str_pad($workOrder->id, 4, '0', STR_PAD_LEFT) }}</h1>
             <div class="d-flex align-items-center">
-                <a href="{{ route('work-orders.print', $workOrder->id) }}" target="_blank" class="btn btn-primary rounded-pill mr-2 shadow-sm">
+                <button type="button" class="btn btn-primary rounded-pill mr-2 shadow-sm" data-toggle="modal" data-target="#pdfModal">
                     <i class="fas fa-print"></i> Cetak Dokumen (PDF)
-                </a>
+                </button>
                 <a href="{{ route('work-orders.index') }}" class="btn btn-outline-secondary rounded-pill">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
@@ -67,7 +67,7 @@
                             </tr>
                             <tr>
                                 <th class="text-muted">Keluhan / Request</th>
-                                <td>: <br>{!! nl2br(e($workOrder->description)) !!}</td>
+                                <td>: {!! nl2br(e($workOrder->description)) !!}</td>
                             </tr>
                             @if($workOrder->attachment_request)
                             <tr>
@@ -281,6 +281,23 @@
         </div>
     </div>
 </section>
+
+<!-- Modal PDF Preview -->
+<div class="modal fade" id="pdfModal" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                <h5 class="modal-title" id="pdfModalLabel"><i class="fas fa-file-pdf"></i> Preview Dokumen (PDF)</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0" style="height: 80vh;">
+                <iframe src="{{ route('work-orders.print', $workOrder->id) }}" width="100%" height="100%" style="border: none; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')

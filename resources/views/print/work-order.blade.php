@@ -175,17 +175,28 @@
             @endif
         </td>
     </tr>
+    @if($workOrder->engineer_needs || ($workOrder->fpuRequest && $workOrder->fpuRequest->materials->count() > 0))
     <tr>
         <td>Kebutuhan Engineer</td>
         <td>:</td>
         <td>
             @if($workOrder->engineer_needs)
                 <div style="margin-bottom: 5px; line-height: 1.5;">{!! nl2br(e($workOrder->engineer_needs)) !!}</div>
-            @else
-                <div style="margin-bottom: 5px;">-</div>
+            @endif
+
+            @if($workOrder->fpuRequest && $workOrder->fpuRequest->materials->count() > 0)
+                <div style="margin-top: {{ $workOrder->engineer_needs ? '10px' : '0' }};">
+                    <strong>Item Pengadaan:</strong>
+                    <ul style="margin-top: 5px; padding-left: 20px; margin-bottom: 0;">
+                        @foreach($workOrder->fpuRequest->materials as $mat)
+                            <li>{{ $mat->material_name }} {{ $mat->specification ? '('.$mat->specification.')' : '' }} - {{ $mat->qty }} {{ $mat->unit }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
         </td>
     </tr>
+    @endif
     <tr>
         <td>Reporting Engineer</td>
         <td>:</td>

@@ -206,7 +206,7 @@
                                             Diketahui oleh: {{ $fpu->knownByManager->name ?? '-' }}
                                         @else
                                             @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && $fpu->verified_by_hrga)
-                                                <form action="{{ route('fpu.know-manager', $fpu->id) }}" method="POST">
+                                                <form action="{{ route('fpu.ack-manager', $fpu->id) }}" method="POST">
                                                     @csrf
                                                     <button type="submit" class="btn btn-sm btn-primary rounded-pill btn-block">Tandai Diketahui</button>
                                                 </form>
@@ -219,29 +219,27 @@
                             </div>
 
                             <!-- Disetujui Direktur -->
-                            @if($fpu->executor_type === 'Eksternal')
-                                <div>
-                                    <i class="fas fa-signature bg-{{ $fpu->approved_by_gm ? 'success' : 'secondary' }}"></i>
-                                    <div class="timeline-item border-0 shadow-none bg-light rounded-4">
-                                        <h3 class="timeline-header border-0 font-weight-bold text-sm">3. Disetujui (Direktur/GM)</h3>
-                                        <div class="timeline-body p-2 text-sm">
-                                            @if($fpu->approved_by_gm)
-                                                Disetujui oleh: {{ $fpu->approvedByGm->name ?? '-' }}
-                                                <br><small>{{ \Carbon\Carbon::parse($fpu->approved_by_gm_at)->format('d M Y') }}</small>
+                            <div>
+                                <i class="fas fa-signature bg-{{ $fpu->approved_by_gm ? 'success' : 'secondary' }}"></i>
+                                <div class="timeline-item border-0 shadow-none bg-light rounded-4">
+                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">3. Disetujui (Direktur/GM)</h3>
+                                    <div class="timeline-body p-2 text-sm">
+                                        @if($fpu->approved_by_gm)
+                                            Disetujui oleh: {{ $fpu->approvedByGm->name ?? '-' }}
+                                            <br><small>{{ \Carbon\Carbon::parse($fpu->approved_by_gm_at)->format('d M Y') }}</small>
+                                        @else
+                                            @if((auth()->user()->role === 'super_admin') && $fpu->known_by_manager)
+                                                <form action="{{ route('fpu.approve-gm', $fpu->id) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill btn-block">Approve (Khusus Direktur)</button>
+                                                </form>
                                             @else
-                                                @if((auth()->user()->role === 'super_admin') && $fpu->known_by_manager)
-                                                    <form action="{{ route('fpu.approve-gm', $fpu->id) }}" method="POST">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-sm btn-success rounded-pill btn-block">Approve (Khusus Direktur)</button>
-                                                    </form>
-                                                @else
-                                                    <span class="text-muted">Menunggu approval.</span>
-                                                @endif
+                                                <span class="text-muted">Menunggu approval.</span>
                                             @endif
-                                        </div>
+                                        @endif
                                     </div>
                                 </div>
-                            @endif
+                            </div>
 
                             <div>
                                 <i class="fas fa-clock bg-gray"></i>
