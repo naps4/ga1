@@ -65,7 +65,7 @@ class WorkOrderController extends Controller
 
     public function show(WorkOrder $workOrder)
     {
-        $workOrder->load('user', 'assignedEngineer', 'fpuRequest.materials', 'handover');
+        $workOrder->load('user', 'assignedEngineer', 'fpuRequest.materials', 'handover', 'progresses');
         
         // Ambil daftar engineer untuk assignment (untuk Admin/SPV)
         $engineers = User::whereIn('role', ['developer', 'engineer'])->get();
@@ -94,11 +94,12 @@ class WorkOrderController extends Controller
         $request->validate([
             'check_result' => 'required|string',
             'engineer_needs' => 'nullable|string',
-            'needs_material' => 'required|boolean',
+            'needs_material' => 'nullable|boolean',
             'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
-        $status = $request->needs_material ? 'Menunggu Pengadaan Material' : 'Sedang Dikerjakan';
+        $needsMaterial = $request->boolean('needs_material');
+        $status = $needsMaterial ? 'Menunggu Pengadaan Material' : 'Sedang Dikerjakan';
         
         $attachmentPath = $workOrder->attachment_check;
         if ($request->hasFile('attachment')) {
@@ -116,7 +117,7 @@ class WorkOrderController extends Controller
         ]);
 
         // Trigger logic untuk FPU jika butuh material
-        if ($request->needs_material && !$workOrder->fpuRequest) {
+        if ($needsMaterial && !$workOrder->fpuRequest) {
             $fpu = $workOrder->fpuRequest()->create([
                 'priority' => $request->priority ?? 'Biasa',
                 'executor_type' => $request->executor_type ?? 'Internal',
@@ -140,6 +141,46 @@ class WorkOrderController extends Controller
         }
 
         return back()->with('success', 'Hasil pengecekan & pengajuan material berhasil diupdate.');
+    }
+
+    public function startWork(WorkOrder $workOrder)
+    {
+        // Pastikan tiket sedang dalam status yang valid untuk dimulai
+        if ($workOrder->status === 'Menunggu Pengadaan Material') {
+            $workOrder->update(['status' => 'Sedang Dikerjakan']);
+            
+            // Tambahkan initial progress log automatically
+            $workOrder->progresses()->create([
+                'description' => 'Mulai pengerjaan setelah material tersedia / disetujui.',
+            ]);
+
+            return back()->with('success', 'Status pengerjaan dimulai (Sedang Dikerjakan).');
+        }
+
+        return back()->with('error', 'Tidak dapat memulai pengerjaan dari status ini.');
+    }
+
+    public function storeProgress(Request $request, WorkOrder $workOrder)
+    {
+        $request->validate([
+            'description' => 'required|string',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ]);
+
+        $attachmentPath = null;
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $filename = time() . '_prog_' . str_replace(' ', '_', $file->getClientOriginalName());
+            $file->move(public_path('uploads/work_orders'), $filename);
+            $attachmentPath = 'uploads/work_orders/' . $filename;
+        }
+
+        $workOrder->progresses()->create([
+            'description' => $request->description,
+            'attachment' => $attachmentPath,
+        ]);
+
+        return back()->with('success', 'Progress pekerjaan berhasil ditambahkan.');
     }
 
     public function updateReport(Request $request, WorkOrder $workOrder)

@@ -45,13 +45,20 @@ class HandoverController extends Controller
         return back()->with('success', 'Berita Acara Penyerahan Hasil berhasil disimpan.');
     }
 
-    public function knowManager(WoHandover $handover)
+    // Approval Admin (Single Step)
+    public function approveAll(WoHandover $handover)
     {
         $handover->update([
-            'known_by' => auth()->id()
+            'prepared_by' => auth()->id(),
+            'known_by' => auth()->id(),
+            'accepted_by' => auth()->id(), // Admin mewakili penerimaan jika perlu
+            'accepted_by_user_at' => now(),
         ]);
 
-        return back()->with('success', 'Berita Acara berhasil ditandai diketahui.');
+        // Ubah status utama Work Order menjadi Selesai
+        $handover->workOrder->update(['status' => 'Selesai']);
+
+        return back()->with('success', 'Tiket telah diselesaikan secara resmi oleh Admin.');
     }
 
     public function print(WorkOrder $workOrder)

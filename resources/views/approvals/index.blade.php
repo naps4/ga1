@@ -17,29 +17,29 @@
                     <table class="table table-hover align-middle data-table mb-0">
                         <thead class="bg-light">
                             <tr>
-                                <th class="pl-4 border-bottom-0">ID</th>
-                                <th class="border-bottom-0">Ticket</th>
+                                <th class="pl-4 border-bottom-0 d-none d-md-table-cell">ID</th>
+                                <th class="border-bottom-0 d-none d-sm-table-cell">Ticket</th>
                                 <th class="border-bottom-0">Nama Proyek</th>
                                 <th class="d-none d-md-table-cell border-bottom-0">Client</th>
                                 <th class="border-bottom-0">Status Tiket</th>
                                 <th class="d-none d-lg-table-cell border-bottom-0">Diajukan</th>
-                                <th class="pr-4 border-bottom-0">Aksi</th>
+                                <th class="pr-4 border-bottom-0 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($pendingApprovals as $approval)
                                 <tr>
-                                    <td class="pl-4">{{ $approval->projectRequest->id }}</td>
-                                    <td><span class="badge badge-dark">{{ $approval->projectRequest->ticket_number ?? '-' }}</span></td>
+                                    <td class="pl-4 d-none d-md-table-cell">{{ $approval->projectRequest->id }}</td>
+                                    <td class="d-none d-sm-table-cell"><span class="badge badge-dark">{{ $approval->projectRequest->ticket_number ?? '-' }}</span></td>
                                     <td>{{ $approval->projectRequest->project_name }}</td>
                                     <td class="d-none d-md-table-cell">{{ $approval->projectRequest->client->name }}</td>
                                     <td>
-                                        <span class="badge badge-{{ $approval->projectRequest->ticket_status_badge_class }}">{{ $approval->projectRequest->ticket_status_label }}</span>
+                                        <span class="badge badge-{{ $approval->projectRequest->ticket_status_badge_class }}" style="white-space: normal; text-align: center; display: inline-block;">{{ $approval->projectRequest->ticket_status_label }}</span>
                                     </td>
                                     <td class="d-none d-lg-table-cell">{{ $approval->created_at->format('d M Y H:i') }}</td>
-                                    <td class="pr-4">
-                                        <a href="{{ route('approvals.show', $approval) }}" class="btn btn-primary px-3 shadow-sm" style="border-radius: 0.5rem; font-weight: 500;">
-                                            <i class="fas fa-eye mr-1"></i> Tinjau
+                                    <td class="pr-4 text-right">
+                                        <a href="{{ route('approvals.show', $approval) }}" class="btn btn-primary btn-sm rounded-pill shadow-sm">
+                                            <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">Tinjau</span>
                                         </a>
                                     </td>
                                 </tr>

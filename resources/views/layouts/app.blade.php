@@ -468,7 +468,7 @@
             }
 
             .content-wrapper {
-                padding-top: 108px !important;
+                padding-top: 72px !important;
             }
             
             .content .card-body {
@@ -497,7 +497,7 @@
 
         @media (max-width: 768px) {
             .content-wrapper {
-                padding-top: 108px !important;
+                padding-top: 72px !important;
             }
 
             .content-wrapper .container-fluid {
@@ -562,22 +562,71 @@
             }
 
             .table-responsive .table {
-                min-width: 0 !important;
+                /* Allow table to naturally exceed screen width to enable horizontal scroll */
+                white-space: nowrap;
             }
             
             .table-responsive .table thead th {
                 font-size: 0.75rem;
-                padding: 0.5rem;
+                padding: 0.5rem 0.75rem;
             }
             
             .table-responsive .table td {
-                padding: 0.5rem;
+                padding: 0.5rem 0.75rem;
                 font-size: 0.85rem;
             }
 
             .content .badge {
-                white-space: normal;
+                white-space: nowrap; /* Prevent badges from stacking vertically */
                 font-size: 0.7rem;
+            }
+
+            .content-header h1 {
+                font-size: 1.25rem;
+                font-weight: 700;
+            }
+            
+            .card-title {
+                font-size: 1rem !important;
+            }
+
+            .timeline::before {
+                left: 15px;
+            }
+
+            .timeline > div > .timeline-item {
+                margin-left: 45px;
+                margin-right: 0;
+                padding: 0;
+            }
+
+            .timeline > div > .timeline-item > .timeline-header {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .timeline > div > .timeline-item > .timeline-body {
+                padding: 0.5rem;
+            }
+
+            .timeline > div > .fa,
+            .timeline > div > .fas,
+            .timeline > div > .far,
+            .timeline > div > .fab,
+            .timeline > div > .fal,
+            .timeline > div > .fad,
+            .timeline > div > .svg-inline--fa,
+            .timeline > div > .ion {
+                width: 26px;
+                height: 26px;
+                font-size: 13px;
+                line-height: 26px;
+                left: 2px;
+            }
+            
+            .time-label span {
+                padding: 3px;
+                font-size: 0.75rem;
             }
         }
 
@@ -1460,6 +1509,23 @@
             // Clear interval on page unload
             $(window).on('beforeunload', function() {
                 clearInterval(notificationInterval);
+            });
+
+            // Global handler for Bootstrap custom file inputs to show selected filename
+            $(document).on('change', '.custom-file-input', function(e) {
+                var files = e.target.files;
+                if (files && files.length > 0) {
+                    var names = [];
+                    for(var i = 0; i < files.length; i++) {
+                        names.push(files[i].name);
+                    }
+                    var fileName = names.join(', ');
+                    $(this).next('.custom-file-label').html(fileName);
+                } else {
+                    // Revert to original text if no file selected
+                    var defaultText = $(this).attr('placeholder') || 'Pilih File';
+                    $(this).next('.custom-file-label').html(defaultText);
+                }
             });
         });
     </script>

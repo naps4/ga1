@@ -1,6 +1,6 @@
 @extends('layouts.print')
 
-@section('title', 'Form Work Order - WO-' . str_pad($workOrder->id, 4, '0', STR_PAD_LEFT))
+@section('title', 'Work Order - WO-' . str_pad($workOrder->id, 4, '0', STR_PAD_LEFT))
 
 @section('custom_header')
     <!-- Custom header within the page content -->
@@ -9,16 +9,16 @@
 @section('content')
 <style>
     body, .page-a4 { font-family: 'Arial', sans-serif !important; color: #000; }
-    .wo-table { width: 100%; border: 3px solid #000; border-collapse: collapse; margin-bottom: 25px; }
+    .wo-table { width: 100%; border: 3px solid #000; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }
     .wo-table td { border: 2px solid #000; padding: 10px; }
-    .wo-table-logo { width: 25%; text-align: center; vertical-align: middle; }
-    .wo-table-title { width: 50%; text-align: center; vertical-align: middle; }
+    .wo-table-logo { width: 15%; text-align: center; vertical-align: middle; }
+    .wo-table-title { width: 60%; text-align: center; vertical-align: middle; }
     .wo-table-doc { width: 25%; text-align: center; font-weight: bold; font-size: 13px; vertical-align: middle; }
     
-    .wo-body { width: 100%; font-size: 13px; margin-bottom: 15px; border: none; }
+    .wo-body { width: 100%; font-size: 13px; margin-bottom: 15px; border: none; table-layout: fixed; }
     .wo-body td { padding: 4px 0; vertical-align: top; border: none; }
-    .wo-body td:first-child { width: 180px; }
-    .wo-body td:nth-child(2) { width: 20px; text-align: left; }
+    .wo-body td:first-child { width: 150px; } /* Diperkecil sedikit agar kolom konten lebih luas */
+    .wo-body td:nth-child(2) { width: 15px; text-align: left; }
     
     /* Using repeating linear gradient for dotted lines to match image */
     .dotted-line-fill {
@@ -35,6 +35,7 @@
     .signature-space { height: 70px; }
     
     .thick-divider { 
+        width: 100%;
         border-top: 4px solid #666; 
         border-bottom: 1.5px solid #666; 
         height: 3px; 
@@ -65,18 +66,18 @@
 <!-- FORM A -->
 <table class="wo-table">
     <tr>
-        <td class="wo-table-logo">
+        <td class="wo-table-logo" style="width: 15%; padding: 2px; border: 1px solid #000; text-align: center; vertical-align: middle;">
             @if(\App\Helpers\SettingsHelper::get('app_logo'))
-                <img src="{{ asset('storage/' . \App\Helpers\SettingsHelper::get('app_logo')) }}" alt="Logo" style="max-height: 45px; object-fit: contain;">
+                <img src="{{ asset('storage/' . \App\Helpers\SettingsHelper::get('app_logo')) }}" alt="Logo" style="width: 100%; max-height: 55px; object-fit: contain;">
             @else
                 <div class="logo-container">
-                    <h2 class="logo-text">HERBATECH</h2>
+                    <h2 class="logo-text">{{ \App\Helpers\SettingsHelper::get('company_name', 'HERBATECH') }}</h2>
                 </div>
             @endif
         </td>
         <td class="wo-table-title">
             <h5 style="margin: 0 0 10px 0; font-weight: bold; font-size: 14px;">{{ \App\Helpers\SettingsHelper::get('company_name', 'PT. HERBATECH INNOPHARMA INDUSTRY') }}</h5>
-            <h5 style="margin: 0; font-weight: bold; font-size: 14px;">FORM WORK ORDER</h5>
+            <h5 style="margin: 0; font-weight: bold; font-size: 14px;">WORK ORDER</h5>
         </td>
         <td class="wo-table-doc">
             CM-03/GA/011C.00
@@ -141,18 +142,18 @@
 <!-- FORM B -->
 <table class="wo-table">
     <tr>
-        <td class="wo-table-logo">
+        <td class="wo-table-logo" style="width: 15%; padding: 2px; border: 1px solid #000; text-align: center; vertical-align: middle;">
             @if(\App\Helpers\SettingsHelper::get('app_logo'))
-                <img src="{{ asset('storage/' . \App\Helpers\SettingsHelper::get('app_logo')) }}" alt="Logo" style="max-height: 45px; object-fit: contain;">
+                <img src="{{ asset('storage/' . \App\Helpers\SettingsHelper::get('app_logo')) }}" alt="Logo" style="width: 100%; max-height: 55px; object-fit: contain;">
             @else
                 <div class="logo-container">
-                    <h2 class="logo-text">HERBATECH</h2>
+                    <h2 class="logo-text">{{ \App\Helpers\SettingsHelper::get('company_name', 'HERBATECH') }}</h2>
                 </div>
             @endif
         </td>
         <td class="wo-table-title">
             <h5 style="margin: 0 0 10px 0; font-weight: bold; font-size: 14px;">{{ \App\Helpers\SettingsHelper::get('company_name', 'PT. HERBATECH INNOPHARMA INDUSTRY') }}</h5>
-            <h5 style="margin: 0; font-weight: bold; font-size: 14px;">FORM WORK ORDER</h5>
+            <h5 style="margin: 0; font-weight: bold; font-size: 14px;">WORK ORDER</h5>
         </td>
         <td class="wo-table-doc">
             CM-03/GA/011C.00
@@ -194,6 +195,22 @@
                     </ul>
                 </div>
             @endif
+        </td>
+    </tr>
+    @endif
+    @if($workOrder->progresses && $workOrder->progresses->count() > 0)
+    <tr>
+        <td>Log Progres Pekerjaan</td>
+        <td>:</td>
+        <td>
+            <ul style="margin-top: 5px; padding-left: 20px; margin-bottom: 5px; line-height: 1.5;">
+                @foreach($workOrder->progresses as $progress)
+                    <li>
+                        <strong>{{ $progress->created_at->format('d M Y H:i') }}</strong><br>
+                        {!! nl2br(e($progress->description)) !!}
+                    </li>
+                @endforeach
+            </ul>
         </td>
     </tr>
     @endif

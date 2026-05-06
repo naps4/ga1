@@ -72,6 +72,16 @@ class User extends Authenticatable
         return $this->hasMany(Queue::class, 'assigned_to');
     }
 
+    public function assignedWorkOrders()
+    {
+        return $this->hasMany(WorkOrder::class, 'assigned_engineer_id');
+    }
+
+    public function workOrders()
+    {
+        return $this->hasMany(WorkOrder::class, 'user_id');
+    }
+
     public function clientConversations()
     {
         return $this->hasMany(ChatConversation::class, 'client_id');

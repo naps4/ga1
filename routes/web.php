@@ -101,22 +101,21 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('work-orders', WorkOrderController::class);
     Route::post('work-orders/{workOrder}/assign', [WorkOrderController::class, 'assign'])->name('work-orders.assign');
     Route::post('work-orders/{workOrder}/check', [WorkOrderController::class, 'updateCheck'])->name('work-orders.update-check');
+    Route::post('work-orders/{workOrder}/progress', [WorkOrderController::class, 'storeProgress'])->name('work-orders.store-progress');
+    Route::post('work-orders/{workOrder}/start', [WorkOrderController::class, 'startWork'])->name('work-orders.start');
     Route::post('work-orders/{workOrder}/report', [WorkOrderController::class, 'updateReport'])->name('work-orders.update-report');
     Route::get('work-orders/{workOrder}/print', [WorkOrderController::class, 'print'])->name('work-orders.print');
 
     // Rute Form C (FPU & Material)
     Route::get('fpu/{fpu}', [FpuController::class, 'show'])->name('fpu.show');
     Route::post('fpu/{fpu}', [FpuController::class, 'update'])->name('fpu.update');
-    Route::post('fpu/{fpu}/verify-hrga', [FpuController::class, 'verifyHrga'])->name('fpu.verify-hrga');
-    Route::post('fpu/{fpu}/ack-manager', [FpuController::class, 'knowManager'])->name('fpu.ack-manager');
-    Route::post('fpu/{fpu}/approve-gm', [FpuController::class, 'approveGm'])->name('fpu.approve-gm');
+    Route::post('fpu/{fpu}/approve-all', [FpuController::class, 'approveAll'])->name('fpu.approve-all');
     Route::get('fpu/{fpu}/print', [FpuController::class, 'print'])->name('fpu.print');
 
     // Rute Form D (Berita Acara / Handover)
     Route::get('handovers/{workOrder}', [HandoverController::class, 'show'])->name('handovers.show');
     Route::post('handovers/{handover}', [HandoverController::class, 'update'])->name('handovers.update');
-    Route::post('handovers/{handover}/know-manager', [HandoverController::class, 'knowManager'])->name('handovers.know-manager');
-    Route::post('handovers/{handover}/accept-user', [HandoverController::class, 'acceptUser'])->name('handovers.accept-user');
+    Route::post('handovers/{handover}/approve-all', [HandoverController::class, 'approveAll'])->name('handovers.approve-all');
     Route::get('handovers/{workOrder}/print', [HandoverController::class, 'print'])->name('handovers.print');
 });
 
@@ -169,6 +168,7 @@ Route::middleware(['auth', 'super_admin'])->prefix('super-admin')->name('super-a
     Route::get('/reports/technical/export/csv', [SuperAdminController::class, 'exportTechnicalReportCsv'])->name('reports.technical.export.csv');
     Route::get('/reports/technical/export/pdf', [SuperAdminController::class, 'exportTechnicalReportPdf'])->name('reports.technical.export.pdf');
     Route::get('/reports/export', [SuperAdminController::class, 'exportMonthlyCumulativeReport'])->name('reports.export');
+    Route::get('/reports/export/pdf', [SuperAdminController::class, 'exportWorkOrderReportPdf'])->name('reports.export.pdf');
 });
 
 // Chat API Routes for Popup Widget

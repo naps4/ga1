@@ -30,4 +30,9 @@ class WorkOrder extends Model
     {
         return $this->hasOne(WoHandover::class);
     }
+
+    public function progresses()
+    {
+        return $this->hasMany(WorkOrderProgress::class);
+    }
 }

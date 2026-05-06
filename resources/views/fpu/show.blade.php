@@ -6,7 +6,7 @@
         <div class="page-title-wrap">
             <h1 class="m-0">Formulir Pelayanan Umum (FPU)</h1>
             <div class="d-flex align-items-center">
-                <a href="{{ route('fpu.print', $fpu->id) }}" target="_blank" class="btn btn-primary rounded-pill mr-2 shadow-sm">
+                <a href="{{ route('fpu.print', $fpu->id) }}" class="btn btn-primary rounded-pill mr-2 shadow-sm">
                     <i class="fas fa-print"></i> Cetak FPU (PDF)
                 </a>
                 <a href="{{ route('work-orders.show', $fpu->work_order_id) }}" class="btn btn-outline-secondary rounded-pill">
@@ -88,12 +88,12 @@
                                     <table class="table table-bordered table-sm" id="material-table">
                                         <thead class="bg-light">
                                             <tr>
-                                                <th>Nama Material</th>
-                                                <th>Spesifikasi</th>
-                                                <th width="10%">Qty</th>
-                                                <th width="15%">Satuan</th>
-                                                <th>Keterangan</th>
-                                                <th width="5%">Aksi</th>
+                                                <th style="min-width: 140px;">Nama Material</th>
+                                                <th style="min-width: 140px;">Spesifikasi</th>
+                                                <th width="10%" style="min-width: 80px;">Qty</th>
+                                                <th width="15%" style="min-width: 80px;">Satuan</th>
+                                                <th style="min-width: 140px;">Keterangan</th>
+                                                <th width="5%" style="min-width: 60px;">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -141,11 +141,11 @@
                                 <table class="table table-bordered table-sm">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th>Nama Material</th>
-                                            <th>Spesifikasi</th>
-                                            <th>Qty</th>
-                                            <th>Satuan</th>
-                                            <th>Keterangan</th>
+                                            <th style="min-width: 140px;">Nama Material</th>
+                                            <th style="min-width: 140px;">Spesifikasi</th>
+                                            <th style="min-width: 80px;">Qty</th>
+                                            <th style="min-width: 80px;">Satuan</th>
+                                            <th style="min-width: 140px;">Keterangan</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -181,60 +181,29 @@
                         </div>
 
                         <div class="timeline timeline-inverse">
-                            <!-- Verifikasi HRGA -->
+                            <!-- Approval Admin (Single Step) -->
                             <div>
-                                <i class="fas fa-user-check bg-{{ $fpu->verified_by_hrga ? 'success' : 'secondary' }}"></i>
+                                <i class="fas fa-check-circle bg-{{ $fpu->approved_by_gm ? 'success' : 'secondary' }}"></i>
                                 <div class="timeline-item border-0 shadow-none bg-light rounded-4">
-                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">1. Verifikasi (HRGA)</h3>
-                                    <div class="timeline-body p-2 text-sm">
-                                        @if($fpu->verified_by_hrga)
-                                            Diverifikasi oleh: {{ $fpu->verifiedByHrga->name ?? '-' }}
-                                        @else
-                                            <span class="text-muted">Klik "Simpan & Verifikasi" pada form di sebelah kiri.</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Diketahui Oprt. Manager -->
-                            <div>
-                                <i class="fas fa-eye bg-{{ $fpu->known_by_manager ? 'success' : 'secondary' }}"></i>
-                                <div class="timeline-item border-0 shadow-none bg-light rounded-4">
-                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">2. Diketahui (Oprt. Manager)</h3>
-                                    <div class="timeline-body p-2 text-sm">
-                                        @if($fpu->known_by_manager)
-                                            Diketahui oleh: {{ $fpu->knownByManager->name ?? '-' }}
-                                        @else
-                                            @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && $fpu->verified_by_hrga)
-                                                <form action="{{ route('fpu.ack-manager', $fpu->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill btn-block">Tandai Diketahui</button>
-                                                </form>
-                                            @else
-                                                <span class="text-muted">Menunggu verifikasi sebelumnya.</span>
-                                            @endif
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Disetujui Direktur -->
-                            <div>
-                                <i class="fas fa-signature bg-{{ $fpu->approved_by_gm ? 'success' : 'secondary' }}"></i>
-                                <div class="timeline-item border-0 shadow-none bg-light rounded-4">
-                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">3. Disetujui (Direktur/GM)</h3>
+                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">Persetujuan Admin</h3>
                                     <div class="timeline-body p-2 text-sm">
                                         @if($fpu->approved_by_gm)
-                                            Disetujui oleh: {{ $fpu->approvedByGm->name ?? '-' }}
-                                            <br><small>{{ \Carbon\Carbon::parse($fpu->approved_by_gm_at)->format('d M Y') }}</small>
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fas fa-check text-success mr-2"></i>
+                                                <span>Disetujui oleh: <strong>{{ $fpu->approvedByGm->name ?? '-' }}</strong></span>
+                                            </div>
+                                            <small class="text-muted"><i class="fas fa-calendar-alt mr-1"></i> {{ \Carbon\Carbon::parse($fpu->approved_by_gm_at)->translatedFormat('d F Y H:i') }}</small>
                                         @else
-                                            @if((auth()->user()->role === 'super_admin') && $fpu->known_by_manager)
-                                                <form action="{{ route('fpu.approve-gm', $fpu->id) }}" method="POST">
+                                            @if(auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin')
+                                                <p class="text-muted mb-3">Klik tombol di bawah untuk menyetujui FPU ini dan melanjutkan pekerjaan.</p>
+                                                <form action="{{ route('fpu.approve-all', $fpu->id) }}" method="POST">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill btn-block">Approve (Khusus Direktur)</button>
+                                                    <button type="submit" class="btn btn-success btn-block rounded-pill shadow-sm">
+                                                        <i class="fas fa-check-double mr-1"></i> Approve FPU (Selesai)
+                                                    </button>
                                                 </form>
                                             @else
-                                                <span class="text-muted">Menunggu approval.</span>
+                                                <span class="text-muted">Menunggu persetujuan Admin/HRGA.</span>
                                             @endif
                                         @endif
                                     </div>

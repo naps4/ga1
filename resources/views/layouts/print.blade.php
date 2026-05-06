@@ -15,12 +15,13 @@
         .page-a4 {
             width: 21cm;
             min-height: 29.7cm;
-            padding: 2cm;
+            padding: 1cm; /* Diperkecil agar lebih full */
             margin: 1cm auto;
             border: 1px #D3D3D3 solid;
             border-radius: 5px;
             background: white;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
         }
         .kop-surat {
             border-bottom: 3px solid #000;
@@ -81,45 +82,74 @@
             text-decoration: underline;
         }
         
+        @page {
+            size: A4;
+            margin: 1cm; /* Margin fisik kertas 1cm */
+        }
         @media print {
             body {
                 background-color: white;
                 margin: 0;
                 padding: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             .page-a4 {
                 margin: 0;
                 border: initial;
                 border-radius: initial;
-                width: initial;
+                width: 100%; /* Gunakan lebar penuh area cetak */
                 min-height: initial;
                 box-shadow: initial;
-                background: initial;
+                background: white;
                 page-break-after: always;
-                padding: 0; /* Margin diatur dari browser */
+                padding: 0; /* Margin sudah ditangani oleh @page */
+                box-sizing: border-box;
             }
             .no-print {
                 display: none !important;
             }
         }
+        @media screen and (max-width: 768px) {
+            .page-a4 {
+                width: 100%;
+                overflow-x: auto;
+                padding: 10px;
+                margin: 0;
+            }
+            .table-print, .wo-table, .wo-body {
+                min-width: 600px;
+            }
+        }
     </style>
 </head>
-<body onload="window.print()">
+<body>
 
     <!-- Tombol untuk trigger print manual jika onload gagal/diblokir -->
     <div class="text-center mt-3 mb-3 no-print">
         <button onclick="window.print()" class="btn btn-primary shadow">🖨️ Cetak / Simpan PDF</button>
-        <button onclick="window.close()" class="btn btn-secondary shadow">Tutup</button>
+        <button onclick="window.history.back()" class="btn btn-secondary shadow">Kembali</button>
     </div>
 
     <div class="page-a4">
         @hasSection('custom_header')
             @yield('custom_header')
         @else
-            <div class="kop-surat text-center">
-                <h2>{{ \App\Helpers\SettingsHelper::get('company_name', 'PT. GENERAL AFFAIR SYSTEM') }}</h2>
-                <p>{{ \App\Helpers\SettingsHelper::get('company_address', 'Jl. Contoh Perusahaan No. 123, Gedung Perkantoran Lt. 4, Jakarta Pusat') }}</p>
-                <p>Telp: {{ \App\Helpers\SettingsHelper::get('company_phone', '(021) 1234567') }} | Email: {{ \App\Helpers\SettingsHelper::get('company_email', 'info@gasystem.com') }}</p>
+            <div class="kop-surat">
+                <table style="width: 100%; border: none; border-collapse: collapse;">
+                    <tr>
+                        @if(\App\Helpers\SettingsHelper::get('app_logo'))
+                            <td style="width: 15%; padding-right: 20px; vertical-align: middle;">
+                                <img src="{{ asset('storage/' . \App\Helpers\SettingsHelper::get('app_logo')) }}" alt="Logo" style="max-height: 60px; object-fit: contain;">
+                            </td>
+                        @endif
+                        <td class="text-center" style="vertical-align: middle;">
+                            <h2>{{ \App\Helpers\SettingsHelper::get('company_name', 'PT. GENERAL AFFAIR SYSTEM') }}</h2>
+                            <p>{{ \App\Helpers\SettingsHelper::get('company_address', 'Jl. Contoh Perusahaan No. 123, Gedung Perkantoran Lt. 4, Jakarta Pusat') }}</p>
+                            <p>Telp: {{ \App\Helpers\SettingsHelper::get('company_phone', '(021) 1234567') }} | Email: {{ \App\Helpers\SettingsHelper::get('company_email', 'info@gasystem.com') }}</p>
+                        </td>
+                    </tr>
+                </table>
             </div>
         @endif
 

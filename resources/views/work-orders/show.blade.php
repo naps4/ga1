@@ -6,9 +6,9 @@
         <div class="page-title-wrap">
             <h1 class="m-0">Detail Work Order #WO-{{ str_pad($workOrder->id, 4, '0', STR_PAD_LEFT) }}</h1>
             <div class="d-flex align-items-center">
-                <button type="button" class="btn btn-primary rounded-pill mr-2 shadow-sm" data-toggle="modal" data-target="#pdfModal">
+                <a href="{{ route('work-orders.print', $workOrder->id) }}" class="btn btn-primary rounded-pill mr-2 shadow-sm">
                     <i class="fas fa-print"></i> Cetak Dokumen (PDF)
-                </button>
+                </a>
                 <a href="{{ route('work-orders.index') }}" class="btn btn-outline-secondary rounded-pill">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
@@ -23,6 +23,19 @@
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show rounded-pill shadow-sm" role="alert">
                 {{ session('success') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" style="border-radius: 1rem;" role="alert">
+                <ul class="mb-0 pl-3">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -101,6 +114,89 @@
                         </div>
                     </div>
                 @endif
+
+                <!-- Status Pengerjaan (Tracking) -->
+                @if($workOrder->status !== 'Menunggu Penugasan')
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-white border-bottom border-light">
+                        <h3 class="card-title text-dark font-weight-bold"><i class="fas fa-stream text-primary"></i> Timeline Pengerjaan</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline timeline-inverse mb-3">
+                            <!-- Step 1: Pengecekan Engineer -->
+                            <div>
+                                <i class="fas fa-search {{ in_array($workOrder->status, ['Pengecekan Engineer', 'Menunggu Pengadaan Material', 'Sedang Dikerjakan', 'Menunggu Serah Terima', 'Selesai']) ? 'bg-primary' : 'bg-secondary' }}"></i>
+                                <div class="timeline-item border-0 shadow-none bg-transparent">
+                                    <h3 class="timeline-header border-0 pb-1 {{ $workOrder->status == 'Pengecekan Engineer' ? 'text-primary font-weight-bold' : 'text-dark' }}">Pengecekan Lapangan</h3>
+                                    @if($workOrder->check_result)
+                                        <div class="timeline-body pt-0 text-muted text-sm pb-0">
+                                            <strong>Detail Pengecekan:</strong><br>
+                                            {{ $workOrder->check_result }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            <!-- Step 2: Menunggu Kebutuhan (Only if FPU requested) -->
+                            @if($workOrder->fpuRequest || $workOrder->status === 'Menunggu Pengadaan Material')
+                            <div>
+                                <i class="fas fa-box {{ in_array($workOrder->status, ['Menunggu Pengadaan Material', 'Sedang Dikerjakan', 'Menunggu Serah Terima', 'Selesai']) ? 'bg-warning text-dark' : 'bg-secondary' }}"></i>
+                                <div class="timeline-item border-0 shadow-none bg-transparent">
+                                    <h3 class="timeline-header border-0 pb-1 {{ $workOrder->status == 'Menunggu Pengadaan Material' ? 'text-warning font-weight-bold' : 'text-dark' }}">Menunggu Kebutuhan</h3>
+                                    @if($workOrder->engineer_needs)
+                                        <div class="timeline-body pt-0 text-muted text-sm pb-1">
+                                            <strong>Kebutuhan Diajukan:</strong><br>
+                                            {{ $workOrder->engineer_needs }}
+                                        </div>
+                                    @endif
+                                    @if($workOrder->status === 'Menunggu Pengadaan Material' && auth()->user()->id === $workOrder->assigned_engineer_id)
+                                    <div class="timeline-body pt-1 pb-0">
+                                        <form action="{{ route('work-orders.start', $workOrder->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill shadow-sm"><i class="fas fa-play"></i> Mulai Pengerjaan</button>
+                                        </form>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Step 3: Sedang Dikerjakan -->
+                            <div>
+                                <i class="fas fa-tools {{ in_array($workOrder->status, ['Sedang Dikerjakan', 'Menunggu Serah Terima', 'Selesai']) ? 'bg-info' : 'bg-secondary' }}"></i>
+                                <div class="timeline-item border-0 shadow-none bg-transparent">
+                                    <h3 class="timeline-header border-0 pb-1 {{ $workOrder->status == 'Sedang Dikerjakan' ? 'text-info font-weight-bold' : 'text-dark' }}">Sedang Dikerjakan</h3>
+                                    @if($workOrder->progresses && $workOrder->progresses->count() > 0)
+                                        <div class="timeline-body pt-0 text-muted text-sm pb-0">
+                                            <strong>Progres Terakhir:</strong><br>
+                                            {{ $workOrder->progresses->last()->description }}
+                                            <br><small class="text-info">{{ $workOrder->progresses->last()->created_at->diffForHumans() }}</small>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Step 4: Selesai / Serah Terima -->
+                            <div>
+                                <i class="fas fa-check {{ $workOrder->status === 'Selesai' ? 'bg-success' : 'bg-secondary' }}"></i>
+                                <div class="timeline-item border-0 shadow-none bg-transparent">
+                                    <h3 class="timeline-header border-0 pb-1 {{ $workOrder->status == 'Selesai' ? 'text-success font-weight-bold' : 'text-dark' }}">Selesai</h3>
+                                    @if($workOrder->engineer_report)
+                                        <div class="timeline-body pt-0 text-muted text-sm pb-0">
+                                            <strong>Laporan:</strong><br>
+                                            {{ $workOrder->engineer_report }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <i class="far fa-clock bg-gray"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
 
             <!-- Panel Engineer -->
@@ -172,10 +268,10 @@
                                         <table class="table table-bordered table-sm bg-white" id="engineer-material-table">
                                             <thead class="bg-light">
                                                 <tr>
-                                                    <th>Nama Material</th>
-                                                    <th>Spesifikasi</th>
-                                                    <th width="15%">Qty</th>
-                                                    <th width="10%">Aksi</th>
+                                                    <th style="min-width: 140px;">Nama Material</th>
+                                                    <th style="min-width: 140px;">Spesifikasi</th>
+                                                    <th width="15%" style="min-width: 80px;">Qty</th>
+                                                    <th width="10%" style="min-width: 60px;">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -237,6 +333,60 @@
                     </div>
                 @endif
 
+                <!-- Log Progres Pekerjaan -->
+                @if(in_array($workOrder->status, ['Sedang Dikerjakan', 'Menunggu Serah Terima', 'Selesai']))
+                    <div class="card shadow-sm border-0 rounded-4 mb-4 border-info">
+                        <div class="card-header bg-info text-white rounded-top-4">
+                            <h3 class="card-title"><i class="fas fa-tasks"></i> Log Progres Pekerjaan</h3>
+                        </div>
+                        <div class="card-body">
+                            @if($workOrder->progresses && $workOrder->progresses->count() > 0)
+                                <div class="timeline timeline-inverse mb-4">
+                                    @foreach($workOrder->progresses as $progress)
+                                        <div>
+                                            <i class="fas fa-check bg-info"></i>
+                                            <div class="timeline-item">
+                                                <span class="time"><i class="far fa-clock"></i> {{ $progress->created_at->format('d M Y H:i') }}</span>
+                                                <h3 class="timeline-header border-0"><strong>Progres Update</strong></h3>
+                                                <div class="timeline-body">
+                                                    {!! nl2br(e($progress->description)) !!}
+                                                    @if($progress->attachment)
+                                                        <br><br>
+                                                        <a href="{{ asset($progress->attachment) }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill"><i class="fas fa-image"></i> Lihat Lampiran</a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                    <div>
+                                        <i class="far fa-clock bg-gray"></i>
+                                    </div>
+                                </div>
+                            @else
+                                <p class="text-muted text-center my-3"><i class="fas fa-history fa-2x mb-2"></i><br>Belum ada log progres.</p>
+                            @endif
+
+                            @if($workOrder->status === 'Sedang Dikerjakan' && auth()->user()->id === $workOrder->assigned_engineer_id)
+                                <hr>
+                                <h5>Tambah Progres Baru</h5>
+                                <form action="{{ route('work-orders.store-progress', $workOrder->id) }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <div class="form-group">
+                                        <textarea name="description" class="form-control rounded-4" rows="2" placeholder="Tuliskan progres pekerjaan saat ini..." required></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" name="attachment" accept=".jpg,.jpeg,.png,.pdf">
+                                            <label class="custom-file-label">Lampiran progres (Opsional)...</label>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-info rounded-pill w-100"><i class="fas fa-paper-plane"></i> Kirim Progres</button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Laporan Penyelesaian (Form B Lanjutan) -->
                 @if(in_array($workOrder->status, ['Sedang Dikerjakan', 'Menunggu Serah Terima', 'Selesai']))
                     <div class="card shadow-sm border-0 rounded-4 mb-4">
@@ -282,22 +432,7 @@
     </div>
 </section>
 
-<!-- Modal PDF Preview -->
-<div class="modal fade" id="pdfModal" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header bg-primary text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
-                <h5 class="modal-title" id="pdfModalLabel"><i class="fas fa-file-pdf"></i> Preview Dokumen (PDF)</h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body p-0" style="height: 80vh;">
-                <iframe src="{{ route('work-orders.print', $workOrder->id) }}" width="100%" height="100%" style="border: none; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
+
 @endsection
 
 @push('scripts')

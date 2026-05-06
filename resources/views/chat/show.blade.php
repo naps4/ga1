@@ -59,11 +59,11 @@
                     <form action="{{ route('chat.send', $conversation) }}" method="POST" id="chat-form" class="mb-2">
                         @csrf
                         <div class="input-group">
-                            <input type="text" name="message" placeholder="Type Message ..." class="form-control" style="border-radius: 0.5rem 0 0 0.5rem;" required>
+                            <input type="text" name="message" placeholder="Ketik pesan..." class="form-control" style="border-radius: 0.5rem 0 0 0.5rem;" required>
                             <span class="input-group-append">
-                                <button type="submit" class="btn btn-primary" style="border-radius: 0 0.5rem 0.5rem 0; font-weight: 500;">
-                                    <i class="fas fa-paper-plane d-sm-none"></i>
-                                    <span class="d-none d-sm-inline">Send</span>
+                                <button type="submit" class="btn btn-primary px-4" style="border-radius: 0 0.5rem 0.5rem 0; font-weight: 500;">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span class="d-none d-sm-inline ml-1">Kirim</span>
                                 </button>
                             </span>
                         </div>
@@ -71,14 +71,14 @@
                     
                     <form action="{{ route('chat.upload', $conversation) }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        <div class="input-group">
+                        <div class="input-group input-group-sm">
                             <div class="custom-file">
                                 <input type="file" name="file" class="custom-file-input" id="file-upload" required>
-                                <label class="custom-file-label text-truncate" for="file-upload">File</label>
+                                <label class="custom-file-label text-truncate" for="file-upload">Lampirkan file (opsional)...</label>
                             </div>
                             <div class="input-group-append">
-                                <button type="submit" class="btn btn-secondary">
-                                    <i class="fas fa-paperclip"></i>
+                                <button type="submit" class="btn btn-secondary px-3">
+                                    <i class="fas fa-upload"></i> <span class="d-none d-sm-inline ml-1">Upload</span>
                                 </button>
                             </div>
                         </div>

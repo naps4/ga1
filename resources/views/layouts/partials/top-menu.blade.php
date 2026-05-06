@@ -3,31 +3,7 @@
                 Mobile : label halaman aktif (hamburger ada di navbar)
 ══════════════════════════════════════════════════ --}}
 
-<div class="top-menu-wrap d-md-none">
-    <div class="container-fluid">
-
-        {{-- Active page label (mobile only) --}}
-        <span class="d-md-none mobile-active-label flex-grow-1 text-center font-weight-700" style="font-size:.88rem;color:#1f2d3d;">
-            @php
-                $pageLabel = 'Dasbor';
-                if (request()->routeIs('project-requests.*'))  $pageLabel = auth()->user()->isClient() ? 'Tiket Saya' : 'Semua Tiket';
-                elseif (request()->routeIs('queues.*'))         $pageLabel = 'Antrian';
-                elseif (request()->routeIs('approvals.*'))      $pageLabel = 'Persetujuan';
-                elseif (request()->routeIs('chat.*'))           $pageLabel = 'Chat';
-                elseif (request()->routeIs('daily-logs.*'))     $pageLabel = 'Log Harian';
-                elseif (request()->routeIs('super-admin.users.*')) $pageLabel = 'Pengguna';
-                elseif (request()->routeIs('super-admin.reports*')) $pageLabel = 'Laporan';
-                elseif (request()->routeIs('super-admin.settings')) $pageLabel = 'Pengaturan';
-                elseif (request()->routeIs('super-admin.activity-logs')) $pageLabel = 'Knowledge Base';
-                elseif (request()->routeIs('work-orders.*'))    $pageLabel = 'Work Order GA';
-                elseif (request()->routeIs('profile.*'))        $pageLabel = 'Profil';
-                elseif (request()->routeIs('dashboard') || request()->routeIs('super-admin.dashboard')) $pageLabel = 'Dasbor';
-            @endphp
-            {{ $pageLabel }}
-        </span>
-
-    </div>
-</div>
+{{-- Mobile active page label removed as per request --}}
 
 {{-- ══════════════════════════════════════════════════
      MOBILE DRAWER OVERLAY
@@ -38,10 +14,16 @@
     {{-- Drawer Header --}}
     <div class="mobile-drawer-header">
         <div class="d-flex align-items-center" style="gap:.5rem;">
-            <div class="brand-icon" style="width:28px;height:28px;border-radius:6px;background:var(--theme-orange);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;">
-                <i class="fas fa-life-ring"></i>
-            </div>
-            <span style="font-weight:800;font-size:.95rem;color:#1f2d3d;">
+            @if(\App\Helpers\SettingsHelper::get('app_logo'))
+                <div class="brand-icon" style="width:28px;height:28px;border-radius:6px;background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <img src="{{ asset('storage/' . \App\Helpers\SettingsHelper::get('app_logo')) }}" alt="Logo" style="height: 100%; width: auto; object-fit: contain;">
+                </div>
+            @else
+                <div class="brand-icon" style="width:28px;height:28px;border-radius:6px;background:var(--theme-orange);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;">
+                    <i class="fas fa-life-ring"></i>
+                </div>
+            @endif
+            <span style="font-weight:800;font-size:.95rem;color:#1f2d3d;" class="mobile-drawer-title">
                 {{ \App\Helpers\SettingsHelper::get('app_name', config('app.name', 'Work Order GA')) }}
             </span>
         </div>
@@ -238,6 +220,7 @@ body.dark-mode .mobile-drawer-link:hover { background: #2d2d2d; color: #e2e8f0; 
 body.dark-mode .mobile-drawer-link.active { background: rgba(37,99,235,.2); color: #93c5fd; border-left-color: #60a5fa; }
 body.dark-mode .mobile-drawer-divider { background: #2d2d2d; }
 body.dark-mode .mobile-active-label  { color: var(--theme-dark); }
+body.dark-mode .mobile-drawer-title { color: #fff !important; }
 
 /* Keep top-menu-wrap height consistent on mobile */
 @media (max-width: 767px) {

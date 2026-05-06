@@ -102,6 +102,34 @@
                         </div>
                         <small class="form-text text-muted ml-5">Hanya Super Admin yang bisa login jika ini aktif.</small>
                     </div>
+
+                    <hr class="my-4 border-light">
+                    <h5 class="font-weight-bold mb-3" style="font-size: 1rem;">Informasi Perusahaan (Kop Surat)</h5>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-600 text-dark">Nama Perusahaan</label>
+                        <input type="text" name="company_name" class="form-control border-light bg-light" value="{{ old('company_name', $settings['company_name'] ?? '') }}" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-600 text-dark">Alamat Perusahaan</label>
+                        <textarea name="company_address" class="form-control border-light bg-light" rows="2" required>{{ old('company_address', $settings['company_address'] ?? '') }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label class="font-weight-600 text-dark">Telepon</label>
+                                <input type="tel" name="company_phone" class="form-control border-light bg-light" value="{{ old('company_phone', $settings['company_phone'] ?? '') }}" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label class="font-weight-600 text-dark">Email Perusahaan</label>
+                                <input type="email" name="company_email" class="form-control border-light bg-light" value="{{ old('company_email', $settings['company_email'] ?? '') }}" required>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-footer bg-white border-0 px-4 pb-4 pt-0 text-right">
                     <button type="submit" class="btn btn-primary px-4 py-2" style="border-radius: 0.5rem; font-weight: 500;">

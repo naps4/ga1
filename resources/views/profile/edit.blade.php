@@ -86,7 +86,7 @@
 
                     <div class="form-group">
                         <label for="phone">Phone</label>
-                        <input type="text" name="phone" id="phone" class="form-control @error('phone') is-invalid @enderror" 
+                        <input type="tel" name="phone" id="phone" class="form-control @error('phone') is-invalid @enderror" 
                                value="{{ old('phone', auth()->user()->phone) }}">
                         @error('phone')
                             <span class="invalid-feedback">{{ $message }}</span>
@@ -94,7 +94,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="company">Perusahaan</label>
+                        <label for="company">Departemen</label>
                         <input type="text" name="company" id="company" class="form-control @error('company') is-invalid @enderror" 
                                value="{{ old('company', auth()->user()->company) }}">
                         @error('company')

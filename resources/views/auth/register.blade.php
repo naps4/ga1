@@ -527,6 +527,14 @@
                             <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</div>
                         @enderror
                     </div>
+                    
+                    <div class="form-group">
+                        <input id="company" type="text" name="company" class="form-control" placeholder="Departemen" value="{{ old('company') }}" required>
+                        <i class="fas fa-building input-icon"></i>
+                        @error('company')
+                            <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</div>
+                        @enderror
+                    </div>
 
                     <div class="form-group is-password">
                         <input id="password" type="password" name="password" class="form-control" placeholder="Kata sandi" required autocomplete="new-password">

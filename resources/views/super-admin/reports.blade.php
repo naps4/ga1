@@ -8,8 +8,8 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-start align-items-md-center flex-column flex-md-row mb-4 pt-2">
     <div>
-        <h3 class="mb-1 font-weight-bold text-dark">Laporan Bulanan Kumulatif</h3>
-        <p class="text-muted mb-0 font-weight-500">Analitik tiket tahunan dengan tren bulanan dan pertumbuhan kumulatif.</p>
+        <h3 class="mb-1 font-weight-bold text-dark">Laporan Bulanan Kumulatif GA</h3>
+        <p class="text-muted mb-0 font-weight-500">Analitik Work Order GA tahunan — tren bulanan masuk, selesai, dan ditutup via Handover.</p>
     </div>
     <div class="d-flex flex-wrap align-items-center mt-3 mt-md-0 bg-white p-2 rounded shadow-sm border border-light w-100 w-md-auto">
         <form action="{{ route('super-admin.reports') }}" method="GET" class="d-flex align-items-center flex-grow-1 mr-md-2 mb-2 mb-md-0">
@@ -24,20 +24,16 @@
                 </select>
             </div>
         </form>
-        <div class="d-flex w-100 w-md-auto justify-content-between">
-            <div class="dropdown mr-2 flex-grow-1">
-                <button class="btn btn-primary btn-sm btn-block dropdown-toggle d-flex align-items-center justify-content-center shadow-sm" type="button" id="pdfDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border-radius: 0.5rem; font-weight: 500;">
-                    <i class="fas fa-file-pdf mr-2"></i> PDF
-                </button>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="pdfDropdown">
-                    <a class="dropdown-item" href="{{ route('reports.projects.pdf', ['period' => 'daily']) }}"><i class="fas fa-calendar-day mr-2 text-muted"></i> Harian</a>
-                    <a class="dropdown-item" href="{{ route('reports.projects.pdf', ['period' => 'weekly']) }}"><i class="fas fa-calendar-week mr-2 text-muted"></i> Mingguan</a>
-                    <a class="dropdown-item" href="{{ route('reports.projects.pdf', ['period' => 'monthly']) }}"><i class="fas fa-calendar-alt mr-2 text-muted"></i> Bulanan</a>
-                    <a class="dropdown-item" href="{{ route('reports.projects.pdf', ['period' => 'yearly']) }}"><i class="fas fa-calendar mr-2 text-muted"></i> Tahunan</a>
-                </div>
-            </div>
-            <a href="{{ route('super-admin.reports.export', ['year' => $selectedYear]) }}" class="btn btn-success btn-sm flex-grow-1 d-flex align-items-center justify-content-center shadow-sm" style="border-radius: 0.5rem; font-weight: 500;">
+        <div class="d-flex w-100 w-md-auto justify-content-center" style="gap: 8px;">
+            <a href="{{ route('super-admin.reports.export', ['year' => $selectedYear]) }}"
+               class="btn btn-success btn-sm flex-grow-1 d-flex align-items-center justify-content-center shadow-sm px-3"
+               style="border-radius: 0.5rem; font-weight: 500;">
                 <i class="fas fa-file-excel mr-2"></i> Excel
+            </a>
+            <a href="{{ route('super-admin.reports.export.pdf', ['year' => $selectedYear]) }}"
+               class="btn btn-danger btn-sm flex-grow-1 d-flex align-items-center justify-content-center shadow-sm px-3"
+               style="border-radius: 0.5rem; font-weight: 500;">
+                <i class="fas fa-file-pdf mr-2"></i> PDF
             </a>
         </div>
     </div>
@@ -46,19 +42,19 @@
 <div class="row">
     <div class="col-lg-3 col-sm-6 mb-3">
         <div class="support-stat-card">
-            <small class="text-muted d-block">Total Tiket Tahun {{ $selectedYear }}</small>
+            <small class="text-muted d-block">Total Work Order {{ $selectedYear }}</small>
             <div class="support-stat-value">{{ number_format($reportSummary['total_tiket_tahun']) }}</div>
         </div>
     </div>
     <div class="col-lg-3 col-sm-6 mb-3">
         <div class="support-stat-card">
-            <small class="text-muted d-block">Tiket Selesai</small>
+            <small class="text-muted d-block">WO Selesai</small>
             <div class="support-stat-value text-success">{{ number_format($reportSummary['total_selesai_tahun']) }}</div>
         </div>
     </div>
     <div class="col-lg-3 col-sm-6 mb-3">
         <div class="support-stat-card">
-            <small class="text-muted d-block">Tiket Ditutup</small>
+            <small class="text-muted d-block">WO Ditutup (Handover)</small>
             <div class="support-stat-value text-info">{{ number_format($reportSummary['total_ditutup_tahun']) }}</div>
         </div>
     </div>
@@ -75,8 +71,8 @@
         <div class="card support-shell-card mb-4">
             <div class="card-header border-0 bg-white pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
                 <div>
-                    <h3 class="card-title mb-0 font-weight-bold" style="font-size: 1.15rem;">Grafik Garis Informatif ({{ $selectedYear }})</h3>
-                    <small class="text-muted d-block mt-1">Masuk vs Selesai vs Ditutup vs Kumulatif</small>
+                    <h3 class="card-title mb-0 font-weight-bold" style="font-size: 1.15rem;">Tren Work Order GA ({{ $selectedYear }})</h3>
+                    <small class="text-muted d-block mt-1">WO Masuk vs Selesai vs Ditutup (Handover) vs Kumulatif</small>
                 </div>
             </div>
             <div class="card-body px-4 pb-4 pt-2">
@@ -89,19 +85,18 @@
 </div>
 
 <div class="row">
-{{--
     <div class="col-lg-6 mb-4">
         <div class="card support-shell-card h-100">
             <div class="card-header border-0 bg-white pt-4 px-4 pb-2">
-                <h3 class="card-title mb-0 font-weight-bold" style="font-size: 1.15rem;">Performa Petugas</h3>
+                <h3 class="card-title mb-0 font-weight-bold" style="font-size: 1.15rem;">Performa Teknisi (Work Orders)</h3>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0 align-middle">
                         <thead class="bg-light">
                             <tr>
-                                <th class="pl-4 border-bottom-0">Nama</th>
-                                <th class="border-bottom-0 text-center">Total Proyek</th>
+                                <th class="pl-4 border-bottom-0">Nama Teknisi</th>
+                                <th class="border-bottom-0 text-center">Total Tugas</th>
                                 <th class="border-bottom-0 text-center">Selesai</th>
                                 <th class="pr-4 border-bottom-0 text-right">Rasio Selesai</th>
                             </tr>
@@ -134,7 +129,6 @@
             </div>
         </div>
     </div>
---}}
 
     <div class="col-lg-6 mb-4">
         <div class="card support-shell-card h-100">
@@ -179,34 +173,34 @@
             labels: {!! json_encode($monthLabels->values()) !!},
             datasets: [
                 {
-                    label: 'Tiket Masuk',
+                    label: 'WO Masuk',
                     data: {!! json_encode($monthlyIncomingSeries->values()) !!},
-                    borderColor: '#2563eb', /* Theme Blue */
+                    borderColor: '#2563eb',
                     backgroundColor: 'rgba(37, 99, 235, 0.12)',
                     borderWidth: 2,
                     tension: 0.35,
                     fill: true,
                 },
                 {
-                    label: 'Tiket Selesai',
+                    label: 'WO Selesai',
                     data: {!! json_encode($monthlyResolvedSeries->values()) !!},
-                    borderColor: '#10b981', /* Theme Green */
+                    borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.08)',
                     borderWidth: 2,
                     tension: 0.35,
                     fill: false,
                 },
                 {
-                    label: 'Tiket Ditutup',
+                    label: 'WO Ditutup (Handover)',
                     data: {!! json_encode($monthlyClosedSeries->values()) !!},
-                    borderColor: '#f97316', /* Theme Orange */
+                    borderColor: '#f97316',
                     backgroundColor: 'rgba(249, 115, 22, 0.08)',
                     borderWidth: 2,
                     tension: 0.35,
                     fill: false,
                 },
                 {
-                    label: 'Kumulatif Tiket Masuk',
+                    label: 'Kumulatif WO Masuk',
                     data: {!! json_encode($monthlyCumulativeSeries->values()) !!},
                     borderColor: '#1f2d3d', /* Theme Dark */
                     backgroundColor: 'rgba(31, 45, 61, 0.08)',

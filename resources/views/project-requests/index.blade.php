@@ -106,26 +106,26 @@
                     <table class="table table-hover align-middle data-table mb-0">
                         <thead class="bg-light">
                             <tr>
-                                <th>ID</th>
-                                <th>Ticket</th>
+                                <th class="d-none d-md-table-cell">ID</th>
+                                <th class="d-none d-sm-table-cell">Ticket</th>
                                 <th>Nama Proyek</th>
                                 @if(!auth()->user()->isClient())
                                     <th class="d-none d-lg-table-cell">Client</th>
                                 @endif
                                 <th class="d-none d-lg-table-cell">Kategori</th>
                                 <th class="d-none d-xl-table-cell">Dampak/Urgensi</th>
-                                <th>Status</th>
+                                <th class="d-none d-sm-table-cell">Status Approval</th>
                                 <th>Status Tiket</th>
-                                <th>SLA Due</th>
+                                <th class="d-none d-sm-table-cell">SLA Due</th>
                                 <th class="d-none d-lg-table-cell">Diajukan</th>
-                                <th>Aksi</th>
+                                <th class="text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($requests as $request)
                                 <tr>
-                                    <td>{{ $request->id }}</td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">{{ $request->id }}</td>
+                                    <td class="d-none d-sm-table-cell">
                                         <span class="badge badge-dark">{{ $request->ticket_number ?? '-' }}</span>
                                     </td>
                                     <td>{{ $request->project_name }}</td>
@@ -137,13 +137,13 @@
                                         <span class="badge badge-light">{{ strtoupper($request->impact ?? 'medium') }}</span>
                                         <span class="badge badge-light">{{ strtoupper($request->urgency ?? 'medium') }}</span>
                                     </td>
-                                    <td>
+                                    <td class="d-none d-sm-table-cell">
                                         <span class="badge badge-{{ $request->request_status_badge_class }}">{{ $request->request_status_label }}</span>
                                     </td>
                                     <td>
-                                        <span class="badge badge-{{ $request->ticket_status_badge_class }}">{{ $request->ticket_status_label }}</span>
+                                        <span class="badge badge-{{ $request->ticket_status_badge_class }}" style="white-space: normal; text-align: center; display: inline-block;">{{ $request->ticket_status_label }}</span>
                                     </td>
-                                    <td>
+                                    <td class="d-none d-sm-table-cell">
                                         @if($request->sla_resolution_due_at)
                                             <span class="{{ $request->sla_resolution_due_at->isPast() && in_array($request->ticket_status, \App\Models\ProjectRequest::slaTrackedTicketStatuses(), true) ? 'text-danger font-weight-bold' : '' }}">
                                                 {{ $request->sla_resolution_due_at->format('d M Y H:i') }}
@@ -153,28 +153,28 @@
                                         @endif
                                     </td>
                                     <td class="d-none d-lg-table-cell">{{ $request->submitted_at ? $request->submitted_at->format('d M Y') : '-' }}</td>
-                                    <td>
+                                    <td class="text-right">
                                         <a href="{{ route('project-requests.show', $request) }}" class="btn btn-light text-info btn-sm mr-1 mb-1" title="Lihat" aria-label="Lihat tiket">
-                                            <i class="fas fa-eye"></i><span class="d-none d-xl-inline ml-1">Lihat</span>
+                                            <i class="fas fa-eye"></i><span class="d-none d-sm-inline ml-1">Lihat</span>
                                         </a>
                                         @if(auth()->user()->hasRole(['admin', 'super_admin']) && $request->status !== 'draft' && in_array($request->ticket_status, \App\Models\ProjectRequest::pausableTicketStatuses(), true))
                                             <form action="{{ route('project-requests.pause', $request) }}" method="POST" style="display: inline;" id="pause-form-{{ $request->id }}">
                                                 @csrf
                                                 <button type="button" class="btn btn-warning text-dark btn-sm mr-1 mb-1" title="Pause Tiket" aria-label="Pause tiket" onclick="confirmAction('pause-form-{{ $request->id }}', 'Pause tiket?', 'Tiket akan dijeda sementara sampai dijalankan kembali.', 'Ya, pause', '#f97316', 'warning')">
-                                                    <i class="fas fa-pause"></i><span class="d-none d-xl-inline ml-1">Pause</span>
+                                                    <i class="fas fa-pause"></i><span class="d-none d-sm-inline ml-1">Pause</span>
                                                 </button>
                                             </form>
                                         @elseif(auth()->user()->hasRole(['admin', 'super_admin']) && $request->status !== 'draft' && in_array($request->ticket_status, \App\Models\ProjectRequest::playableTicketStatuses(), true))
                                             <form action="{{ route('project-requests.play', $request) }}" method="POST" style="display: inline;" id="play-form-{{ $request->id }}">
                                                 @csrf
                                                 <button type="button" class="btn btn-success btn-sm mr-1 mb-1" title="Play Tiket" aria-label="Play tiket" onclick="confirmAction('play-form-{{ $request->id }}', 'Jalankan kembali tiket?', 'Tiket akan dilanjutkan kembali ke proses kerja aktif.', 'Ya, jalankan', '#10b981', 'question')">
-                                                    <i class="fas fa-play"></i><span class="d-none d-xl-inline ml-1">Play</span>
+                                                    <i class="fas fa-play"></i><span class="d-none d-sm-inline ml-1">Play</span>
                                                 </button>
                                             </form>
                                         @endif
                                         @if(auth()->user()->isClient() && in_array($request->status, ['draft', 'revision_requested']))
                                             <a href="{{ route('project-requests.edit', $request) }}" class="btn btn-warning btn-sm mr-1 mb-1" title="Ubah" aria-label="Ubah tiket">
-                                                <i class="fas fa-edit"></i><span class="d-none d-xl-inline ml-1">Ubah</span>
+                                                <i class="fas fa-edit"></i><span class="d-none d-sm-inline ml-1">Ubah</span>
                                             </a>
                                         @endif
                                         @if(auth()->user()->isClient() && $request->status == 'draft')
@@ -182,7 +182,7 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="btn btn-danger btn-sm mb-1" onclick="confirmDelete('delete-form-{{ $request->id }}')" title="Hapus" aria-label="Hapus tiket">
-                                                    <i class="fas fa-trash"></i><span class="d-none d-xl-inline ml-1">Hapus</span>
+                                                    <i class="fas fa-trash"></i><span class="d-none d-sm-inline ml-1">Hapus</span>
                                                 </button>
                                             </form>
                                         @endif

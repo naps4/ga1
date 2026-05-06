@@ -33,22 +33,22 @@
                         <thead class="bg-light">
                             <tr>
                                 <th>No. Tiket</th>
-                                <th>Tanggal</th>
-                                <th>Pemohon</th>
-                                <th>Departemen</th>
-                                <th>Teknisi</th>
+                                <th class="d-none d-md-table-cell">Tanggal</th>
+                                <th class="d-none d-sm-table-cell">Pemohon</th>
+                                <th class="d-none d-lg-table-cell">Departemen</th>
+                                <th class="d-none d-md-table-cell">Teknisi</th>
                                 <th>Status</th>
-                                <th>Aksi</th>
+                                <th class="text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($workOrders as $wo)
                                 <tr>
                                     <td><strong>#WO-{{ str_pad($wo->id, 4, '0', STR_PAD_LEFT) }}</strong></td>
-                                    <td>{{ $wo->created_at->format('d M Y H:i') }}</td>
-                                    <td>{{ $wo->user->name ?? '-' }}</td>
-                                    <td>{{ $wo->department ?? '-' }}</td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">{{ $wo->created_at->format('d M Y H:i') }}</td>
+                                    <td class="d-none d-sm-table-cell">{{ $wo->user->name ?? '-' }}</td>
+                                    <td class="d-none d-lg-table-cell">{{ $wo->department ?? '-' }}</td>
+                                    <td class="d-none d-md-table-cell">
                                         @if($wo->assignedEngineer)
                                             <span class="badge badge-info"><i class="fas fa-user-cog"></i> {{ $wo->assignedEngineer->name }}</span>
                                         @else
@@ -64,7 +64,7 @@
                                             elseif ($wo->status == 'Menunggu Serah Terima') $badgeClass = 'primary';
                                             elseif ($wo->status == 'Selesai') $badgeClass = 'success';
                                         @endphp
-                                        <span class="badge badge-{{ $badgeClass }}">{{ $wo->status }}</span>
+                                        <span class="badge badge-{{ $badgeClass }}" style="white-space: normal; text-align: center; display: inline-block;">{{ $wo->status }}</span>
                                         @if($wo->status === 'Menunggu Serah Terima')
                                             @php
                                                 $ho = $wo->handover;
@@ -78,9 +78,9 @@
                                             @endif
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="text-right">
                                         <a href="{{ route('work-orders.show', $wo->id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
-                                            <i class="fas fa-eye"></i> Detail
+                                            <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">Detail</span>
                                         </a>
                                     </td>
                                 </tr>

@@ -69,11 +69,11 @@
                     <table class="table table-hover mb-0 align-middle">
                         <thead class="bg-white">
                             <tr>
-                                <th class="pl-4 border-bottom-0">ID</th>
+                                <th class="pl-4 border-bottom-0 d-none d-sm-table-cell">ID</th>
                                 <th class="border-bottom-0">Nama</th>
                                 <th class="d-none d-md-table-cell border-bottom-0">Email</th>
                                 <th class="border-bottom-0">Role</th>
-                                <th class="border-bottom-0">Status</th>
+                                <th class="border-bottom-0 d-none d-sm-table-cell">Status</th>
                                 <th class="d-none d-lg-table-cell border-bottom-0">Dibuat</th>
                                 <th class="pr-4 border-bottom-0 text-right">Aksi</th>
                             </tr>
@@ -81,7 +81,7 @@
                         <tbody>
                             @forelse($users as $user)
                                 <tr>
-                                    <td class="pl-4 text-muted font-weight-500">{{ $user->id }}</td>
+                                    <td class="pl-4 text-muted font-weight-500 d-none d-sm-table-cell">{{ $user->id }}</td>
                                     <td><div class="font-weight-600 text-dark">{{ $user->name }}</div></td>
                                     <td class="d-none d-md-table-cell text-muted">{{ $user->email }}</td>
                                     <td>
@@ -95,7 +95,7 @@
                                             <span class="badge badge-secondary">Client</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="d-none d-sm-table-cell">
                                         @if($user->status == 'active')
                                             <span class="badge badge-success">Aktif</span>
                                         @elseif($user->status == 'suspended')

@@ -27,7 +27,7 @@
                         <b>Telepon</b> <span class="float-right">{{ $user->phone ?? '-' }}</span>
                     </li>
                     <li class="list-group-item">
-                        <b>Perusahaan</b> <span class="float-right">{{ $user->company ?? '-' }}</span>
+                        <b>Departemen</b> <span class="float-right">{{ $user->company ?? '-' }}</span>
                     </li>
                     <li class="list-group-item">
                         <b>Status</b> 

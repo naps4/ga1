@@ -67,21 +67,21 @@
                         <thead>
                             <tr>
                                 <th>No. Tiket</th>
-                                <th>Pemohon</th>
-                                <th>Teknisi</th>
+                                <th class="d-none d-sm-table-cell">Pemohon</th>
+                                <th class="d-none d-md-table-cell">Teknisi</th>
                                 <th>Status</th>
-                                <th>Aksi</th>
+                                <th class="text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($recentWO ?? [] as $wo)
                                 <tr>
                                     <td><strong>#WO-{{ str_pad($wo->id, 4, '0', STR_PAD_LEFT) }}</strong></td>
-                                    <td>{{ $wo->user->name ?? '-' }}</td>
-                                    <td>{{ $wo->assignedEngineer->name ?? '-' }}</td>
-                                    <td><span class="badge badge-info">{{ $wo->status }}</span></td>
-                                    <td>
-                                        <a href="{{ route('work-orders.show', $wo->id) }}" class="btn btn-sm btn-outline-primary rounded-pill">Detail</a>
+                                    <td class="d-none d-sm-table-cell">{{ $wo->user->name ?? '-' }}</td>
+                                    <td class="d-none d-md-table-cell">{{ $wo->assignedEngineer->name ?? '-' }}</td>
+                                    <td><span class="badge badge-info" style="white-space: normal; text-align: center; display: inline-block;">{{ $wo->status }}</span></td>
+                                    <td class="text-right">
+                                        <a href="{{ route('work-orders.show', $wo->id) }}" class="btn btn-sm btn-outline-primary rounded-pill"><i class="fas fa-eye"></i> <span class="d-none d-sm-inline">Detail</span></a>
                                     </td>
                                 </tr>
                             @empty

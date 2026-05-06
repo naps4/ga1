@@ -133,7 +133,7 @@
                                 <th class="border-bottom-0 text-center">Total</th>
                                 <th class="pr-4 border-bottom-0 text-right">Terselesaikan</th>
                             </tr>
-                                <th class="pl-4 border-bottom-0">Nomor Tiket</th>
+                        </thead>
                         <tbody>
                             @forelse($reportData['technicianPerformance'] as $row)
                                 <tr>

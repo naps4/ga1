@@ -62,32 +62,13 @@ class FpuController extends Controller
         return back()->with('success', $msg);
     }
 
-    // Alur Approval Berjenjang
-    public function verifyHrga(FpuRequest $fpu)
-    {
-        $fpu->update([
-            'status_approval' => 'Menunggu Oprt. Manager',
-            'verified_by_hrga' => auth()->id(),
-        ]);
-        return back()->with('success', 'FPU diverifikasi oleh HRGA.');
-    }
-
-    public function knowManager(FpuRequest $fpu)
-    {
-        $status = 'Menunggu Persetujuan Direktur/GM';
-
-        $fpu->update([
-            'status_approval' => $status,
-            'known_by_manager' => auth()->id(),
-        ]);
-
-        return back()->with('success', 'FPU diketahui oleh Oprt. Manager.');
-    }
-
-    public function approveGm(FpuRequest $fpu)
+    // Approval Admin (Single Step)
+    public function approveAll(FpuRequest $fpu)
     {
         $fpu->update([
             'status_approval' => 'Disetujui (Selesai)',
+            'verified_by_hrga' => auth()->id(),
+            'known_by_manager' => auth()->id(),
             'approved_by_gm' => auth()->id(),
             'approved_by_gm_at' => now(),
         ]);
@@ -95,7 +76,7 @@ class FpuController extends Controller
         // Kembalikan WO ke status pengerjaan
         $fpu->workOrder->update(['status' => 'Sedang Dikerjakan']);
 
-        return back()->with('success', 'FPU disetujui penuh. Pekerjaan dapat dilanjutkan.');
+        return back()->with('success', 'FPU telah disetujui oleh Admin.');
     }
 
     public function print(FpuRequest $fpu)

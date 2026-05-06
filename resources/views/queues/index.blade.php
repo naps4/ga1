@@ -80,8 +80,8 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th>ID</th>
-                            <th>Ticket</th>
+                            <th class="d-none d-md-table-cell">ID</th>
+                            <th class="d-none d-sm-table-cell">Ticket</th>
                             <th>Proyek</th>
                             <th class="d-none d-lg-table-cell">Client</th>
                             <th class="d-none d-md-table-cell">Petugas</th>
@@ -90,19 +90,19 @@
                             <th class="d-none d-xl-table-cell">SLA Jatuh Tempo</th>
                             <th class="d-none d-sm-table-cell">Progress</th>
                             <th class="d-none d-lg-table-cell">Batas Waktu</th>
-                            <th>Aksi</th>
+                            <th class="text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($queues as $queue)
                             <tr>
-                                <td>{{ $queue->id }}</td>
-                                <td>{{ $queue->projectRequest?->ticket_number ?? '-' }}</td>
+                                <td class="d-none d-md-table-cell">{{ $queue->id }}</td>
+                                <td class="d-none d-sm-table-cell">{{ $queue->projectRequest?->ticket_number ?? '-' }}</td>
                                 <td>{{ $queue->project_name }}</td>
                                 <td class="d-none d-lg-table-cell">{{ $queue->client_name }}</td>
                                 <td class="d-none d-md-table-cell">{{ $queue->assignedTo->name ?? 'Belum Ditugaskan' }}</td>
                                 <td>
-                                    <span class="badge badge-{{ $queue->status == 'Completed' ? 'success' : ($queue->status == 'In Progress' ? 'primary' : 'secondary') }}">
+                                    <span class="badge badge-{{ $queue->status == 'Completed' ? 'success' : ($queue->status == 'In Progress' ? 'primary' : 'secondary') }}" style="white-space: normal; text-align: center; display: inline-block;">
                                         {{ $queue->status }}
                                     </span>
                                 </td>
@@ -129,15 +129,15 @@
                                     <small>{{ $queue->progress }}%</small>
                                 </td>
                                 <td class="d-none d-lg-table-cell">{{ $queue->deadline ? $queue->deadline->format('d M Y') : '-' }}</td>
-                                <td>
-                                    <a href="{{ route('progress.show', $queue) }}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i> Lihat
+                                <td class="text-right">
+                                    <a href="{{ route('progress.show', $queue) }}" class="btn btn-sm btn-info rounded-pill">
+                                        <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">Lihat</span>
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="text-center">Belum ada proyek dalam antrian.</td>
+                                <td colspan="11" class="text-center text-muted py-4">Belum ada proyek dalam antrian.</td>
                             </tr>
                         @endforelse
                     </tbody>

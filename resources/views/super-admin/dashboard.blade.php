@@ -147,10 +147,10 @@
                     <table class="table table-hover mb-0">
                         <thead class="bg-light">
                             <tr>
-                                <th class="pl-4 border-bottom-0">ID</th>
+                                <th class="pl-4 border-bottom-0 d-none d-sm-table-cell">ID</th>
                                 <th class="border-bottom-0">Subjek</th>
                                 <th class="border-bottom-0 d-none d-md-table-cell">Pemohon</th>
-                                <th class="border-bottom-0">Prioritas</th>
+                                <th class="border-bottom-0 d-none d-sm-table-cell">Prioritas</th>
                                 <th class="border-bottom-0">Status</th>
                                 <th class="pr-4 border-bottom-0 d-none d-sm-table-cell">Diperbarui</th>
                             </tr>
@@ -158,18 +158,18 @@
                         <tbody>
                             @forelse(\App\Models\ProjectRequest::with('client')->latest()->take(8)->get() as $ticket)
                                 <tr>
-                                    <td class="pl-4"><strong>{{ $ticket->ticket_number ?? ('#' . $ticket->id) }}</strong></td>
+                                    <td class="pl-4 d-none d-sm-table-cell"><strong>{{ $ticket->ticket_number ?? ('#' . $ticket->id) }}</strong></td>
                                     <td>
                                         <a href="{{ route('project-requests.show', $ticket) }}" class="font-weight-600 text-dark">{{ \Illuminate\Support\Str::limit($ticket->project_name, 24) }}</a>
                                     </td>
                                     <td class="text-muted d-none d-md-table-cell">{{ $ticket->client?->name ?? '-' }}</td>
-                                    <td>
+                                    <td class="d-none d-sm-table-cell">
                                         <span class="badge badge-{{ ($ticket->impact === 'critical' || $ticket->urgency === 'critical' || $ticket->impact === 'high' || $ticket->urgency === 'high') ? 'danger' : (($ticket->impact === 'medium' || $ticket->urgency === 'medium') ? 'warning' : 'secondary') }}">
                                             {{ strtoupper($ticket->impact_label ?? 'SEDANG') }}
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge badge-{{ $ticket->ticket_status_badge_class }}">{{ $ticket->ticket_status_label }}</span>
+                                        <span class="badge badge-{{ $ticket->ticket_status_badge_class }}" style="white-space: normal; text-align: center; display: inline-block;">{{ $ticket->ticket_status_label }}</span>
                                     </td>
                                     <td class="pr-4 text-muted small d-none d-sm-table-cell">{{ $ticket->updated_at->diffForHumans() }}</td>
                                 </tr>
@@ -299,21 +299,21 @@
                         <thead class="bg-light">
                             <tr>
                                 <th class="pl-4 border-bottom-0">Tiket</th>
-                                <th class="border-bottom-0">Client</th>
+                                <th class="border-bottom-0 d-none d-sm-table-cell">Client</th>
                                 <th class="border-bottom-0">Status</th>
-                                <th class="pr-4 border-bottom-0">Waktu Tunggu</th>
+                                <th class="pr-4 border-bottom-0 text-right">Waktu Tunggu</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($slaWatchlist as $ticket)
                                 <tr>
                                     <td class="pl-4"><a href="{{ route('project-requests.show', $ticket) }}" class="font-weight-600 text-dark">{{ $ticket->ticket_number ?? ('#' . $ticket->id) }}</a></td>
-                                    <td>{{ $ticket->client?->name ?? '-' }}</td>
-                                    <td><span class="badge badge-{{ $ticket->ticket_status_badge_class }}">{{ $ticket->ticket_status_label }}</span></td>
-                                    <td class="pr-4">
+                                    <td class="d-none d-sm-table-cell">{{ $ticket->client?->name ?? '-' }}</td>
+                                    <td><span class="badge badge-{{ $ticket->ticket_status_badge_class }}" style="white-space: normal; text-align: center; display: inline-block;">{{ $ticket->ticket_status_label }}</span></td>
+                                    <td class="pr-4 text-right">
                                         @if($ticket->sla_resolution_due_at)
                                             <span class="{{ $ticket->sla_resolution_due_at->isPast() ? 'text-danger font-weight-bold' : 'text-muted small' }}">
-                                                <i class="far fa-clock mr-1"></i> {{ $ticket->created_at->diffForHumans() }}
+                                                <i class="far fa-clock mr-1"></i> <span class="d-none d-sm-inline">{{ $ticket->created_at->diffForHumans() }}</span><span class="d-inline d-sm-none">{{ $ticket->created_at->diffInDays() }}h</span>
                                             </span>
                                         @else
                                             -

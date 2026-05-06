@@ -239,6 +239,10 @@ class SuperAdminController extends Controller
             'maintenance_mode' => 'nullable|boolean',
             'app_logo' => 'nullable|image|max:2048', // max 2MB
             'app_favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,ico|max:1024', // max 1MB
+            'company_name' => 'required|string|max:200',
+            'company_address' => 'required|string|max:500',
+            'company_phone' => 'required|string|max:50',
+            'company_email' => 'required|email|max:100',
         ]);
 
         $settings = $this->loadSystemSettings();
@@ -285,6 +289,13 @@ class SuperAdminController extends Controller
         $settings['email_notifications'] = (bool) ($request->boolean('email_notifications'));
         $settings['notification_window_days'] = (int) $validated['notification_window_days'];
         $settings['maintenance_mode'] = (bool) ($request->boolean('maintenance_mode'));
+        
+        // Company Details
+        $settings['company_name'] = $validated['company_name'];
+        $settings['company_address'] = $validated['company_address'];
+        $settings['company_phone'] = $validated['company_phone'];
+        $settings['company_email'] = $validated['company_email'];
+
         $settings['updated_at'] = now()->toDateTimeString();
         $settings['updated_by'] = auth()->id();
 
@@ -297,60 +308,60 @@ class SuperAdminController extends Controller
 
     public function reports(Request $request)
     {
+        // ── Tahun yang tersedia (dari Work Orders) ──────────────────────────────
         $selectedYear = (int) $request->input('year', now()->year);
-        $availableYears = ProjectRequest::selectRaw('YEAR(created_at) as year')
+
+        $woYears = \App\Models\WorkOrder::selectRaw('YEAR(created_at) as year')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')
             ->values();
 
-        if ($availableYears->isEmpty()) {
-            $availableYears = collect([now()->year]);
-        }
+        $availableYears = $woYears->isNotEmpty() ? $woYears : collect([now()->year]);
 
         if (!$availableYears->contains($selectedYear)) {
             $selectedYear = (int) $availableYears->first();
         }
 
-        $monthlyProjects = ProjectRequest::select(
-            DB::raw('YEAR(created_at) as year'),
+        // ── Masuk per bulan ────────────────────────────────────────────────────
+        $monthlyMasuk = \App\Models\WorkOrder::select(
             DB::raw('MONTH(created_at) as month'),
             DB::raw('count(*) as count')
         )
         ->whereYear('created_at', $selectedYear)
-        ->groupBy('year', 'month')
-        ->orderBy('month')
-        ->get();
-
-        $monthlyResolved = ProjectRequest::select(
-            DB::raw('MONTH(resolved_at) as month'),
-            DB::raw('count(*) as count')
-        )
-        ->whereNotNull('resolved_at')
-        ->whereYear('resolved_at', $selectedYear)
         ->groupBy('month')
         ->orderBy('month')
-        ->get();
+        ->pluck('count', 'month');
 
-        $monthlyClosed = ProjectRequest::select(
-            DB::raw('MONTH(closed_at) as month'),
+        // ── Selesai per bulan ──────────────────────────────────────────────────
+        $monthlySelesai = \App\Models\WorkOrder::select(
+            DB::raw('MONTH(updated_at) as month'),
             DB::raw('count(*) as count')
         )
-        ->whereNotNull('closed_at')
-        ->whereYear('closed_at', $selectedYear)
+        ->where('status', 'Selesai')
+        ->whereYear('updated_at', $selectedYear)
         ->groupBy('month')
         ->orderBy('month')
-        ->get();
+        ->pluck('count', 'month');
 
-        $createdMap = $monthlyProjects->pluck('count', 'month');
-        $resolvedMap = $monthlyResolved->pluck('count', 'month');
-        $closedMap = $monthlyClosed->pluck('count', 'month');
+        // ── Ditutup (Selesai resmi via Handover) ───────────────────────────────
+        $monthlyDitutup = \App\Models\WoHandover::select(
+            DB::raw('MONTH(accepted_by_user_at) as month'),
+            DB::raw('count(*) as count')
+        )
+        ->whereNotNull('accepted_by_user_at')
+        ->whereYear('accepted_by_user_at', $selectedYear)
+        ->groupBy('month')
+        ->orderBy('month')
+        ->pluck('count', 'month');
 
         $months = collect(range(1, 12));
-        $monthLabels = $months->map(fn ($month) => Carbon::createFromDate($selectedYear, $month, 1)->translatedFormat('M Y'));
-        $monthlyIncomingSeries = $months->map(fn ($month) => (int) ($createdMap[$month] ?? 0));
-        $monthlyResolvedSeries = $months->map(fn ($month) => (int) ($resolvedMap[$month] ?? 0));
-        $monthlyClosedSeries = $months->map(fn ($month) => (int) ($closedMap[$month] ?? 0));
+        $monthLabels = $months->map(
+            fn ($m) => Carbon::createFromDate($selectedYear, $m, 1)->translatedFormat('M Y')
+        );
+        $monthlyIncomingSeries  = $months->map(fn ($m) => (int) ($monthlyMasuk[$m]   ?? 0));
+        $monthlyResolvedSeries  = $months->map(fn ($m) => (int) ($monthlySelesai[$m] ?? 0));
+        $monthlyClosedSeries    = $months->map(fn ($m) => (int) ($monthlyDitutup[$m] ?? 0));
 
         $runningTotal = 0;
         $monthlyCumulativeSeries = $monthlyIncomingSeries->map(function ($count) use (&$runningTotal) {
@@ -358,28 +369,31 @@ class SuperAdminController extends Controller
             return $runningTotal;
         });
 
+        // ── Ringkasan statistik ─────────────────────────────────────────────────
+        $totalWo = \App\Models\WorkOrder::whereYear('created_at', $selectedYear)->count();
         $reportSummary = [
-            'total_tiket_tahun' => $monthlyIncomingSeries->sum(),
-            'total_selesai_tahun' => $monthlyResolvedSeries->sum(),
-            'total_ditutup_tahun' => $monthlyClosedSeries->sum(),
-            'kumulatif_akhir_tahun' => $monthlyCumulativeSeries->last() ?? 0,
+            'total_tiket_tahun'      => $totalWo,
+            'total_selesai_tahun'    => $monthlyResolvedSeries->sum(),
+            'total_ditutup_tahun'    => $monthlyClosedSeries->sum(),
+            'kumulatif_akhir_tahun'  => $monthlyCumulativeSeries->last() ?? 0,
         ];
 
+        // ── Performa teknisi ────────────────────────────────────────────────────
         $developerPerformance = User::where('role', 'developer')
-            ->withCount(['assignedQueues as completed_projects' => function($query) {
-                $query->where('status', 'Completed');
+            ->withCount(['assignedWorkOrders as completed_projects' => function ($q) {
+                $q->where('status', 'Selesai');
             }])
-            ->withCount('assignedQueues as total_projects')
+            ->withCount('assignedWorkOrders as total_projects')
             ->get();
 
+        // ── Klien teraktif ──────────────────────────────────────────────────────
         $clientActivity = User::where('role', 'client')
-            ->withCount('projectRequests')
+            ->withCount(['workOrders as project_requests_count'])
             ->orderBy('project_requests_count', 'desc')
             ->take(10)
             ->get();
 
         return view('super-admin.reports', compact(
-            'monthlyProjects',
             'developerPerformance',
             'clientActivity',
             'availableYears',
@@ -483,67 +497,91 @@ class SuperAdminController extends Controller
         return $pdf->download('Laporan_Teknis_Harian_' . now()->format('Ymd_His') . '.pdf');
     }
 
-    public function exportMonthlyCumulativeReport(Request $request)
+    public function exportWorkOrderReportPdf(Request $request)
     {
         $selectedYear = (int) $request->input('year', now()->year);
 
-        $monthlyCreated = ProjectRequest::select(
-            DB::raw('MONTH(created_at) as month'),
-            DB::raw('count(*) as count')
-        )
-            ->whereYear('created_at', $selectedYear)
-            ->groupBy('month')
-            ->pluck('count', 'month');
+        // ── Data bulanan ──────────────────────────────────────────────────────
+        $monthlyCreated = \App\Models\WorkOrder::select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as count'))
+            ->whereYear('created_at', $selectedYear)->groupBy('month')->pluck('count', 'month');
 
-        $monthlyResolved = ProjectRequest::select(
-            DB::raw('MONTH(resolved_at) as month'),
-            DB::raw('count(*) as count')
-        )
-            ->whereNotNull('resolved_at')
-            ->whereYear('resolved_at', $selectedYear)
-            ->groupBy('month')
-            ->pluck('count', 'month');
+        $monthlySelesai = \App\Models\WorkOrder::select(DB::raw('MONTH(updated_at) as month'), DB::raw('count(*) as count'))
+            ->where('status', 'Selesai')->whereYear('updated_at', $selectedYear)
+            ->groupBy('month')->pluck('count', 'month');
 
-        $monthlyClosed = ProjectRequest::select(
-            DB::raw('MONTH(closed_at) as month'),
-            DB::raw('count(*) as count')
-        )
-            ->whereNotNull('closed_at')
-            ->whereYear('closed_at', $selectedYear)
-            ->groupBy('month')
-            ->pluck('count', 'month');
+        $monthlyDitutup = \App\Models\WoHandover::select(DB::raw('MONTH(accepted_by_user_at) as month'), DB::raw('count(*) as count'))
+            ->whereNotNull('accepted_by_user_at')->whereYear('accepted_by_user_at', $selectedYear)
+            ->groupBy('month')->pluck('count', 'month');
 
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-        ];
+        $monthlySummary = collect(range(1, 12))->map(fn ($m) => [
+            'label'   => Carbon::createFromDate($selectedYear, $m, 1)->translatedFormat('F Y'),
+            'masuk'   => (int) ($monthlyCreated[$m] ?? 0),
+            'selesai' => (int) ($monthlySelesai[$m] ?? 0),
+            'ditutup' => (int) ($monthlyDitutup[$m] ?? 0),
+        ]);
 
-        $fileName = 'laporan-bulanan-kumulatif-' . $selectedYear . '.csv';
+        // ── Performa teknisi ──────────────────────────────────────────────────
+        $techPerformance = User::where('role', 'developer')
+            ->withCount(['assignedWorkOrders as completed_projects' => fn ($q) => $q->where('status', 'Selesai')])
+            ->withCount('assignedWorkOrders as total_projects')
+            ->get();
 
-        return response()->streamDownload(function () use ($selectedYear, $monthlyCreated, $monthlyResolved, $monthlyClosed) {
-            $handle = fopen('php://output', 'w');
+        // ── Detail semua WO ───────────────────────────────────────────────────
+        $workOrders = \App\Models\WorkOrder::with([
+                'user',
+                'assignedEngineer',
+                'fpuRequest.materials',
+                'handover',
+            ])
+            ->whereYear('created_at', $selectedYear)->oldest()->get();
 
-            fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, ['Periode', 'Tiket Masuk', 'Tiket Selesai', 'Tiket Ditutup', 'Kumulatif Tiket Masuk']);
+        $totalDitutup = \App\Models\WoHandover::whereNotNull('accepted_by_user_at')
+            ->whereYear('accepted_by_user_at', $selectedYear)->count();
 
-            $runningTotal = 0;
-
-            foreach (range(1, 12) as $month) {
-                $incoming = (int) ($monthlyCreated[$month] ?? 0);
-                $resolved = (int) ($monthlyResolved[$month] ?? 0);
-                $closed = (int) ($monthlyClosed[$month] ?? 0);
-                $runningTotal += $incoming;
-
-                fputcsv($handle, [
-                    Carbon::createFromDate($selectedYear, $month, 1)->translatedFormat('F Y'),
-                    $incoming,
-                    $resolved,
-                    $closed,
-                    $runningTotal,
-                ]);
+        // ── Logo & company ────────────────────────────────────────────────────
+        $settings    = $this->loadSystemSettings();
+        $companyName = $settings['company_name'] ?? config('app.name', 'PT. FPU');
+        $logoPath    = null;
+        if (!empty($settings['app_logo'])) {
+            $candidate = storage_path('app/public/' . $settings['app_logo']);
+            if (file_exists($candidate)) {
+                $logoPath = $candidate;
             }
+        }
 
-            fclose($handle);
-        }, $fileName, $headers);
+        $dompdfPublicPath = $this->resolveDompdfPublicPath();
+        config([
+            'dompdf.public_path'      => $dompdfPublicPath,
+            'dompdf.options.chroot'   => realpath(dirname($dompdfPublicPath)) ?: base_path(),
+            'dompdf.options.isRemoteEnabled' => false,
+        ]);
+
+        $pdf = Pdf::loadView('reports.work-order-pdf', [
+            'selectedYear'   => $selectedYear,
+            'monthlySummary' => $monthlySummary,
+            'techPerformance'=> $techPerformance,
+            'workOrders'     => $workOrders,
+            'totalDitutup'   => $totalDitutup,
+            'companyName'    => $companyName,
+            'logoPath'       => $logoPath,
+            'generatedAt'    => now()->format('d M Y H:i:s'),
+            'generator'      => auth()->user()->name,
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return $pdf->download('Laporan_WO_GA_' . $selectedYear . '_' . now()->format('Ymd_His') . '.pdf');
+    }
+
+    public function exportMonthlyCumulativeReport(Request $request)
+    {
+        $selectedYear = (int) $request->input('year', now()->year);
+        $fileName = 'Laporan_WO_GA_' . $selectedYear . '_' . now()->format('Ymd_His') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\WorkOrderReportExport($selectedYear, auth()->user()->name),
+            $fileName
+        );
     }
 
     private function settingsFilePath(): string
@@ -713,6 +751,10 @@ class SuperAdminController extends Controller
             'email_notifications' => true,
             'notification_window_days' => 3,
             'maintenance_mode' => false,
+            'company_name' => 'PT. HERBATECH INNOPHARMA INDUSTRY',
+            'company_address' => 'Jl. Contoh Perusahaan No. 123, Gedung Perkantoran Lt. 4, Jakarta Pusat',
+            'company_phone' => '(021) 1234567',
+            'company_email' => 'info@herbatech.com',
         ];
     }
 
