@@ -15,14 +15,14 @@
 
     <style>
         :root {
-            --bg-dark: #020617;
-            --bg-accent: #0f172a;
-            --neon-blue: #3b82f6;
-            --neon-cyan: #06b6d4;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --glass-bg: rgba(30, 41, 59, 0.4);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg-dark: #0c0a06;
+            --bg-accent: #1a1408;
+            --neon-blue: #f59e0b;
+            --neon-cyan: #fbbf24;
+            --text-main: #fef9f0;
+            --text-muted: #a3946e;
+            --glass-bg: rgba(40, 32, 12, 0.45);
+            --glass-border: rgba(251, 191, 36, 0.15);
         }
 
         body, html {
@@ -97,7 +97,7 @@
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 1.2rem;
-            background: linear-gradient(to right, #fff, var(--neon-blue));
+            background: linear-gradient(to right, #fef9f0, #f59e0b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -1px;
@@ -237,21 +237,21 @@
         .btn-register {
             width: 100%;
             padding: 0.875rem;
-            background: linear-gradient(to right, var(--neon-blue), #2563eb);
-            color: #fff;
+            background: linear-gradient(to right, #d97706, #f59e0b);
+            color: #1a1408;
             border: none;
             border-radius: 0.75rem;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+            box-shadow: 0 4px 14px 0 rgba(245, 158, 11, 0.4);
             margin-top: 0.4rem;
         }
 
         .btn-register:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.55);
         }
 
         .text-center {
@@ -314,8 +314,8 @@
 
             body {
                 background:
-                    radial-gradient(circle at 15% 10%, rgba(14, 165, 233, 0.2), transparent 38%),
-                    radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.22), transparent 42%),
+                    radial-gradient(circle at 15% 10%, rgba(245, 158, 11, 0.18), transparent 38%),
+                    radial-gradient(circle at 85% 85%, rgba(180, 83, 9, 0.2), transparent 42%),
                     var(--bg-dark);
             }
 
@@ -479,28 +479,28 @@
                         >
                     </div>
                 @endif
-                <div class="sys-badge"><i class="fas fa-user-shield"></i> Access Provisioning</div>
+                <div class="sys-badge"><i class="fas fa-briefcase mr-1"></i> General Affair System</div>
                 <h1 class="brand-title">
                     @if(\App\Helpers\SettingsHelper::get('app_name'))
                         {{ \App\Helpers\SettingsHelper::get('app_name') }}
                     @else
-                        Developer & IT<br>Ticketing Portal
+                        Sistem Work Order<br>General Affair
                     @endif
                 </h1>
                 <p class="brand-desc">
-                    Daftarkan akun client baru untuk mulai membuat tiket, memantau progres, dan berkolaborasi langsung dengan tim developer.
+                    Portal pendaftaran akun untuk pemohon layanan General Affair — pengajuan Work Order, pemantauan status, dan koordinasi pengadaan material secara terpusat.
                 </p>
                 <div style="display: inline-block;">
-                    <div class="typewriter-text">> provisioning_new_client_profile...</div>
+                    <div class="typewriter-text">> mendaftarkan_akun_pemohon_baru...</div>
                 </div>
             </div>
         </div>
 
         <div class="form-section">
             <div class="glass-card">
-                <div class="mobile-kicker">Client Onboarding</div>
-                <h2 class="form-title">Create Account</h2>
-                <p class="form-subtitle">Isi data di bawah untuk membuat akun client</p>
+                <div class="mobile-kicker">Pendaftaran Akun</div>
+                <h2 class="form-title">Buat Akun</h2>
+                <p class="form-subtitle">Isi data di bawah untuk mendaftar sebagai pemohon GA</p>
 
                 @if ($errors->any())
                     <div class="alert alert-error">
@@ -559,12 +559,12 @@
                     </div>
 
                     <button type="submit" class="btn-register">
-                        Register Now <i class="fas fa-arrow-right"></i>
+                        <i class="fas fa-user-plus mr-2"></i> Daftar Sekarang
                     </button>
 
                     <div class="text-center mt-4">
                         <span class="muted-text">Sudah punya akun?</span>
-                        <a href="{{ route('login') }}" class="auth-link">Masuk di sini</a>
+                        <a href="{{ route('login') }}" class="auth-link">Masuk Portal GA</a>
                     </div>
                 </form>
             </div>
@@ -576,8 +576,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             particlesJS('particles-js', {
                 particles: {
-                    number: { value: 80, density: { enable: true, value_area: 800 } },
-                    color: { value: '#3b82f6' },
+                    number: { value: 60, density: { enable: true, value_area: 900 } },
+                    color: { value: '#f59e0b' },
                     shape: { type: 'circle' },
                     opacity: {
                         value: 0.5,
@@ -588,8 +588,8 @@
                     line_linked: {
                         enable: true,
                         distance: 150,
-                        color: '#3b82f6',
-                        opacity: 0.2,
+                        color: '#f59e0b',
+                        opacity: 0.15,
                         width: 1
                     },
                     move: {

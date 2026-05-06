@@ -17,14 +17,14 @@
     
     <style>
         :root {
-            --bg-dark: #020617;
-            --bg-accent: #0f172a;
-            --neon-blue: #3b82f6;
-            --neon-cyan: #06b6d4;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --glass-bg: rgba(30, 41, 59, 0.4);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg-dark: #0c0a06;
+            --bg-accent: #1a1408;
+            --neon-blue: #f59e0b;
+            --neon-cyan: #fbbf24;
+            --text-main: #fef9f0;
+            --text-muted: #a3946e;
+            --glass-bg: rgba(40, 32, 12, 0.45);
+            --glass-border: rgba(251, 191, 36, 0.15);
         }
 
         body, html {
@@ -101,7 +101,7 @@
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 1.5rem;
-            background: linear-gradient(to right, #fff, var(--neon-blue));
+            background: linear-gradient(to right, #fef9f0, #f59e0b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -1px;
@@ -524,19 +524,19 @@
                         >
                     </div>
                 @endif
-                <div class="sys-badge"><i class="fas fa-terminal mr-2"></i> System Authenticated</div>
+                <div class="sys-badge"><i class="fas fa-briefcase mr-1"></i> General Affair System</div>
                 <h1 class="brand-title">
                     @if(\App\Helpers\SettingsHelper::get('app_name'))
                         {{ \App\Helpers\SettingsHelper::get('app_name') }}
                     @else
-                        Developer & IT<br>Ticketing Portal
+                        Sistem Work Order<br>General Affair
                     @endif
                 </h1>
                 <p class="brand-desc">
-                    Centralized management system for software development, IT service requests, and rigorous quality control tracking.
+                    Portal terpusat untuk pengelolaan Work Order General Affair — dari pengajuan kebutuhan, penugasan teknisi, pengadaan material, hingga serah terima pekerjaan.
                 </p>
                 <div style="display: inline-block;">
-                    <div class="typewriter-text">> Awaiting user credentials...</div>
+                    <div class="typewriter-text">> masukkan_kredensial_anda...</div>
                 </div>
             </div>
         </div>
@@ -544,10 +544,9 @@
         <!-- Right Form Section -->
         <div class="form-section">
             <div class="glass-card">
-                <div class="mobile-kicker">Secure Mobile Access</div>
-                
-                <h2 class="form-title">Secure Access</h2>
-                <p class="form-subtitle">Enter your credentials to proceed</p>
+                <div class="mobile-kicker">Portal GA</div>
+                <h2 class="form-title">Masuk Sistem</h2>
+                <p class="form-subtitle">Masukkan kredensial untuk mengakses portal GA</p>
 
                 @if (session('status') || session('success'))
                     <div class="alert alert-success">
@@ -585,21 +584,21 @@
                     <div class="checkbox-wrapper">
                         <label class="custom-control-label">
                             <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}>
-                            <span>Remember session</span>
+                            <span>Ingat sesi login</span>
                         </label>
                         @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}" class="forgot-link">Recover key</a>
+                            <a href="{{ route('password.request') }}" class="forgot-link">Lupa kata sandi?</a>
                         @endif
                     </div>
 
                     <button type="submit" class="btn-login">
-                        Initialize Session <i class="fas fa-arrow-right ml-2"></i>
+                        <i class="fas fa-sign-in-alt mr-2"></i> Masuk Portal
                     </button>
                     
                     @if (Route::has('register'))
                         <div class="text-center mt-4" style="font-size: 0.9rem;">
-                            <span class="text-muted">New personnel?</span> 
-                            <a href="{{ route('register') }}" class="forgot-link">Request access</a>
+                            <span class="text-muted">Belum punya akun?</span> 
+                            <a href="{{ route('register') }}" class="forgot-link">Daftar di sini</a>
                         </div>
                     @endif
                 </form>
