@@ -103,7 +103,7 @@
                                     <select name="assigned_engineer_id" class="form-control rounded-left-pill" required>
                                         <option value="">-- Pilih Teknisi --</option>
                                         @foreach($engineers as $engineer)
-                                            <option value="{{ $engineer->id }}">{{ $engineer->name }} ({{ $engineer->role }})</option>
+                                            <option value="{{ $engineer->id }}">{{ $engineer->name }}</option>
                                         @endforeach
                                     </select>
                                     <div class="input-group-append">
