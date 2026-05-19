@@ -116,6 +116,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('handovers/{workOrder}', [HandoverController::class, 'show'])->name('handovers.show');
     Route::post('handovers/{handover}', [HandoverController::class, 'update'])->name('handovers.update');
     Route::post('handovers/{handover}/approve-all', [HandoverController::class, 'approveAll'])->name('handovers.approve-all');
+    Route::post('handovers/{handover}/accept', [HandoverController::class, 'acceptUser'])->name('handovers.accept');
     Route::get('handovers/{workOrder}/print', [HandoverController::class, 'print'])->name('handovers.print');
 });
 

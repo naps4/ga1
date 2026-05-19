@@ -72,16 +72,23 @@ class HandoverController extends Controller
         return view('print.handover', compact('handover'));
     }
 
-    public function acceptUser(WoHandover $handover)
+    public function acceptUser(Request $request, WoHandover $handover)
     {
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'feedback' => 'nullable|string|max:1000',
+        ]);
+
         $handover->update([
             'accepted_by' => auth()->id(),
             'accepted_by_user_at' => now(),
+            'rating' => $request->rating,
+            'feedback' => $request->feedback,
         ]);
 
         // Ubah status utama Work Order menjadi Selesai
         $handover->workOrder->update(['status' => 'Selesai']);
 
-        return back()->with('success', 'Anda telah menerima hasil pekerjaan. Tiket resmi ditutup.');
+        return back()->with('success', 'Anda telah menerima hasil pekerjaan dan memberikan penilaian. Tiket resmi ditutup.');
     }
 }
