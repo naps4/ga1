@@ -24,6 +24,26 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Fallback route untuk melayani file dari storage lokal tanpa perlu symlink public/storage
+// Ini mengatasi masalah "file lampiran tidak bisa dibuka di hosting" karena symlink terputus.
+Route::get('/storage/{path}', function ($path) {
+    $absolutePath = realpath(storage_path('app/public/' . $path));
+    $publicStoragePath = realpath(storage_path('app/public'));
+
+    // Pastikan file valid dan berada secara rekursif di dalam direktori storage/app/public 
+    // untuk mencegah directory traversal vulnerability (misal membaca file .env).
+    if (!$absolutePath || !str_starts_with($absolutePath, $publicStoragePath) || !file_exists($absolutePath)) {
+        abort(404);
+    }
+
+    // Hindari melayani folder (hanya file)
+    if (is_dir($absolutePath)) {
+        abort(404);
+    }
+
+    return response()->file($absolutePath);
+})->where('path', '.*');
+
 Route::redirect('/', '/login');
 
 Route::get('/dashboard', function () {
