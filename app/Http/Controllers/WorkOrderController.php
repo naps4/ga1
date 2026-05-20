@@ -65,6 +65,57 @@ class WorkOrderController extends Controller
         return redirect()->route('work-orders.index')->with('success', 'Work Order berhasil dibuat.');
     }
 
+    public function edit(WorkOrder $workOrder)
+    {
+        // Hanya bisa diedit oleh pembuat dan jika status masih 'Menunggu Penugasan'
+        if ($workOrder->user_id !== auth()->id() || $workOrder->status !== 'Menunggu Penugasan') {
+            return redirect()->route('work-orders.index')->withErrors(['error' => 'Work Order ini tidak dapat diedit.']);
+        }
+
+        return view('work-orders.edit', compact('workOrder'));
+    }
+
+    public function update(Request $request, WorkOrder $workOrder)
+    {
+        if ($workOrder->user_id !== auth()->id() || $workOrder->status !== 'Menunggu Penugasan') {
+            return redirect()->route('work-orders.index')->withErrors(['error' => 'Work Order ini tidak dapat diubah.']);
+        }
+
+        $request->validate([
+            'description' => 'required|string',
+            'attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ]);
+
+        $attachmentPath = $workOrder->attachment_request;
+        if ($request->hasFile('attachment')) {
+            FileUploadHelper::delete($workOrder->attachment_request);
+            $attachmentPath = FileUploadHelper::upload(
+                $request->file('attachment'),
+                'work_orders',
+                'req'
+            );
+        }
+
+        $workOrder->update([
+            'description'        => $request->description,
+            'attachment_request' => $attachmentPath,
+        ]);
+
+        return redirect()->route('work-orders.index')->with('success', 'Work Order berhasil diperbarui.');
+    }
+
+    public function destroy(WorkOrder $workOrder)
+    {
+        if ($workOrder->user_id !== auth()->id() || $workOrder->status !== 'Menunggu Penugasan') {
+            return redirect()->route('work-orders.index')->withErrors(['error' => 'Work Order ini tidak dapat dihapus.']);
+        }
+
+        FileUploadHelper::delete($workOrder->attachment_request);
+        $workOrder->delete();
+
+        return redirect()->route('work-orders.index')->with('success', 'Work Order berhasil dihapus.');
+    }
+
     public function show(WorkOrder $workOrder)
     {
         $workOrder->load('user', 'assignedEngineer', 'fpuRequest.materials', 'handover', 'progresses');

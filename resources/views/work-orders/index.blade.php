@@ -26,6 +26,19 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" style="border-radius: 1rem;" role="alert">
+                <ul class="mb-0 pl-3">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
         <div class="card shadow-sm border-0 rounded-4">
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -79,9 +92,23 @@
                                         @endif
                                     </td>
                                     <td class="text-right">
-                                        <a href="{{ route('work-orders.show', $wo->id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
-                                            <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">Detail</span>
-                                        </a>
+                                        <div class="btn-group">
+                                            <a href="{{ route('work-orders.show', $wo->id) }}" class="btn btn-sm btn-outline-primary rounded-pill mr-1">
+                                                <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">Detail</span>
+                                            </a>
+                                            @if($wo->user_id === auth()->id() && $wo->status === 'Menunggu Penugasan')
+                                                <a href="{{ route('work-orders.edit', $wo->id) }}" class="btn btn-sm btn-outline-warning rounded-pill mr-1">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form action="{{ route('work-orders.destroy', $wo->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus tiket ini?');" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
