@@ -85,7 +85,7 @@
                             @if($workOrder->attachment_request)
                             <tr>
                                 <th class="text-muted">Lampiran Pengajuan</th>
-                                <td>: <a href="{{ asset($workOrder->attachment_request) }}" target="_blank" class="btn btn-xs btn-outline-info rounded-pill"><i class="fas fa-paperclip"></i> Lihat Lampiran</a></td>
+                                <td>: <a href="{{ asset('storage/' . $workOrder->attachment_request) }}" target="_blank" class="btn btn-xs btn-outline-info rounded-pill"><i class="fas fa-paperclip"></i> Lihat Lampiran</a></td>
                             </tr>
                             @endif
                         </table>
@@ -308,7 +308,7 @@
                                     @endif
                                     @if($workOrder->attachment_check)
                                         <hr>
-                                        <a href="{{ asset($workOrder->attachment_check) }}" target="_blank" class="btn btn-xs btn-info rounded-pill"><i class="fas fa-image"></i> Lihat Bukti Pengecekan</a>
+                                        <a href="{{ asset('storage/' . $workOrder->attachment_check) }}" target="_blank" class="btn btn-xs btn-info rounded-pill"><i class="fas fa-image"></i> Lihat Bukti Pengecekan</a>
                                     @endif
                                 </div>
                             @else
@@ -352,7 +352,7 @@
                                                     {!! nl2br(e($progress->description)) !!}
                                                     @if($progress->attachment)
                                                         <br><br>
-                                                        <a href="{{ asset($progress->attachment) }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill"><i class="fas fa-image"></i> Lihat Lampiran</a>
+                                                        <a href="{{ asset('storage/' . $progress->attachment) }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill"><i class="fas fa-image"></i> Lihat Lampiran</a>
                                                     @endif
                                                 </div>
                                             </div>
@@ -415,7 +415,7 @@
                                     <p>{{ $workOrder->engineer_report ?? 'Belum ada laporan.' }}</p>
                                     @if($workOrder->attachment_report)
                                         <hr>
-                                        <a href="{{ asset($workOrder->attachment_report) }}" target="_blank" class="btn btn-xs btn-success rounded-pill"><i class="fas fa-check-double"></i> Lihat Bukti Penyelesaian</a>
+                                        <a href="{{ asset('storage/' . $workOrder->attachment_report) }}" target="_blank" class="btn btn-xs btn-success rounded-pill"><i class="fas fa-check-double"></i> Lihat Bukti Penyelesaian</a>
                                     @endif
                                 </div>
                                 @if(in_array($workOrder->status, ['Menunggu Serah Terima', 'Selesai']))

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\WorkOrder;
 use App\Models\FpuRequest;
 use App\Models\User;
+use App\Helpers\FileUploadHelper;
 use Illuminate\Http\Request;
 
 class WorkOrderController extends Controller
@@ -39,25 +40,26 @@ class WorkOrderController extends Controller
     {
         $request->validate([
             'description' => 'required|string',
-            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         $user = auth()->user();
         
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
-            $filename = time() . '_req_' . str_replace(' ', '_', $file->getClientOriginalName());
-            $file->move(public_path('uploads/work_orders'), $filename);
-            $attachmentPath = 'uploads/work_orders/' . $filename;
+            $attachmentPath = FileUploadHelper::upload(
+                $request->file('attachment'),
+                'work_orders',
+                'req'
+            );
         }
 
         WorkOrder::create([
-            'user_id' => $user->id,
-            'department' => $user->company, // Menggunakan company sebagai department sementara
-            'description' => $request->description,
+            'user_id'            => $user->id,
+            'department'         => $user->company, // Menggunakan company sebagai department sementara
+            'description'        => $request->description,
             'attachment_request' => $attachmentPath,
-            'status' => 'Menunggu Penugasan',
+            'status'             => 'Menunggu Penugasan',
         ]);
 
         return redirect()->route('work-orders.index')->with('success', 'Work Order berhasil dibuat.');
@@ -82,7 +84,7 @@ class WorkOrderController extends Controller
 
         $workOrder->update([
             'assigned_engineer_id' => $request->assigned_engineer_id,
-            'status' => 'Pengecekan Engineer',
+            'status'               => 'Pengecekan Engineer',
         ]);
 
         return back()->with('success', 'Teknisi berhasil ditugaskan.');
@@ -92,37 +94,41 @@ class WorkOrderController extends Controller
     {
         // Engineer update hasil pengecekan
         $request->validate([
-            'check_result' => 'required|string',
+            'check_result'   => 'required|string',
             'engineer_needs' => 'nullable|string',
             'needs_material' => 'nullable|boolean',
-            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'attachment'     => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         $needsMaterial = $request->boolean('needs_material');
-        $status = $needsMaterial ? 'Menunggu Pengadaan Material' : 'Sedang Dikerjakan';
+        $status        = $needsMaterial ? 'Menunggu Pengadaan Material' : 'Sedang Dikerjakan';
         
         $attachmentPath = $workOrder->attachment_check;
         if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
-            $filename = time() . '_chk_' . str_replace(' ', '_', $file->getClientOriginalName());
-            $file->move(public_path('uploads/work_orders'), $filename);
-            $attachmentPath = 'uploads/work_orders/' . $filename;
+            // Hapus file lama jika ada sebelum upload yang baru
+            FileUploadHelper::delete($workOrder->attachment_check);
+
+            $attachmentPath = FileUploadHelper::upload(
+                $request->file('attachment'),
+                'work_orders',
+                'chk'
+            );
         }
 
         $workOrder->update([
-            'check_result' => $request->check_result,
-            'engineer_needs' => $request->engineer_needs,
+            'check_result'     => $request->check_result,
+            'engineer_needs'   => $request->engineer_needs,
             'attachment_check' => $attachmentPath,
-            'status' => $status,
+            'status'           => $status,
         ]);
 
         // Trigger logic untuk FPU jika butuh material
         if ($needsMaterial && !$workOrder->fpuRequest) {
             $fpu = $workOrder->fpuRequest()->create([
-                'priority' => $request->priority ?? 'Biasa',
-                'executor_type' => $request->executor_type ?? 'Internal',
-                'type' => $request->type ?? 'Lainnya',
-                'category' => $request->category ?? 'Pengadaan',
+                'priority'        => $request->priority ?? 'Biasa',
+                'executor_type'   => $request->executor_type ?? 'Internal',
+                'type'            => $request->type ?? 'Lainnya',
+                'category'        => $request->category ?? 'Pengadaan',
                 'status_approval' => 'Menunggu Verifikasi HRGA'
             ]);
             
@@ -132,8 +138,8 @@ class WorkOrderController extends Controller
                         $fpu->materials()->create([
                             'material_name' => $mat['name'],
                             'specification' => $mat['spec'] ?? null,
-                            'qty' => $mat['qty'] ?? 1,
-                            'unit' => 'Pcs',
+                            'qty'           => $mat['qty'] ?? 1,
+                            'unit'          => 'Pcs',
                         ]);
                     }
                 }
@@ -164,20 +170,21 @@ class WorkOrderController extends Controller
     {
         $request->validate([
             'description' => 'required|string',
-            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
-            $filename = time() . '_prog_' . str_replace(' ', '_', $file->getClientOriginalName());
-            $file->move(public_path('uploads/work_orders'), $filename);
-            $attachmentPath = 'uploads/work_orders/' . $filename;
+            $attachmentPath = FileUploadHelper::upload(
+                $request->file('attachment'),
+                'work_orders',
+                'prog'
+            );
         }
 
         $workOrder->progresses()->create([
             'description' => $request->description,
-            'attachment' => $attachmentPath,
+            'attachment'  => $attachmentPath,
         ]);
 
         return back()->with('success', 'Progress pekerjaan berhasil ditambahkan.');
@@ -187,21 +194,25 @@ class WorkOrderController extends Controller
     {
         $request->validate([
             'engineer_report' => 'required|string',
-            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'attachment'      => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
         
         $attachmentPath = $workOrder->attachment_report;
         if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
-            $filename = time() . '_rep_' . str_replace(' ', '_', $file->getClientOriginalName());
-            $file->move(public_path('uploads/work_orders'), $filename);
-            $attachmentPath = 'uploads/work_orders/' . $filename;
+            // Hapus file laporan lama jika ada
+            FileUploadHelper::delete($workOrder->attachment_report);
+
+            $attachmentPath = FileUploadHelper::upload(
+                $request->file('attachment'),
+                'work_orders',
+                'rep'
+            );
         }
 
         $workOrder->update([
-            'engineer_report' => $request->engineer_report,
+            'engineer_report'   => $request->engineer_report,
             'attachment_report' => $attachmentPath,
-            'status' => 'Menunggu Serah Terima',
+            'status'            => 'Menunggu Serah Terima',
         ]);
 
         return back()->with('success', 'Laporan pekerjaan berhasil dikirim.');
