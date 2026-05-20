@@ -14,6 +14,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         :root {
             --bg-dark: #0c0a06;
             --bg-accent: #1a1408;
@@ -29,7 +33,7 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            min-height: 100%;
+            min-height: 100vh;
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-main);
@@ -322,17 +326,16 @@
             .form-section {
                 width: 100%;
                 border-left: none;
-                border-top: 1px solid var(--glass-border);
-                order: -1;
-                padding: 1.25rem 1rem;
+                padding: 2rem 1rem 3rem;
                 background: transparent;
                 backdrop-filter: none;
                 -webkit-backdrop-filter: none;
             }
 
             .brand-section {
-                padding: 1.5rem 1rem 2rem;
+                padding: 3rem 1rem 1rem;
                 justify-content: flex-start;
+                flex: none;
             }
 
             .brand-content {
