@@ -168,29 +168,17 @@
                 </tr>
                 <tr>
                     <td>
-                        <div style="height: 35px;">
-                            @if($fpu->verified_by_hrga)
-                                <span style="color: green; font-style: italic; font-size: 9px; display: block; margin-top: 15px;">V. Approved</span>
-                            @endif
-                        </div>
+                        <div style="height: 35px;"></div>
                         <strong style="text-decoration: underline;">{{ $fpu->verifiedByHrga->name ?? (auth()->user()->name ?? '.......................') }}</strong><br>
                         <span style="font-size: 10px;">Supervisor General Affair</span>
                     </td>
                     <td>
-                        <div style="height: 35px;">
-                            @if($fpu->known_by_manager)
-                                <span style="color: green; font-style: italic; font-size: 9px; display: block; margin-top: 15px;">V. Approved</span>
-                            @endif
-                        </div>
+                        <div style="height: 35px;"></div>
                         <strong style="text-decoration: underline;">{{ $fpu->knownByManager->name ?? '.......................' }}</strong><br>
                         <span style="font-size: 10px;">Oprt. Manager</span>
                     </td>
                     <td>
-                        <div style="height: 35px;">
-                            @if($fpu->approved_by_gm)
-                                <span style="color: green; font-style: italic; font-size: 9px; display: block; margin-top: 15px;">V. Approved</span>
-                            @endif
-                        </div>
+                        <div style="height: 35px;"></div>
                         <strong style="text-decoration: underline;">{{ $fpu->approvedByGm->name ?? '.......................' }}</strong><br>
                         <span style="font-size: 10px;">Direktur/GM</span>
                     </td>
