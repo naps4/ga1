@@ -159,7 +159,7 @@
 <!-- Section 4: Approval 1 -->
 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
     <tr>
-        <td style="width: 70%; padding: 0; vertical-align: top;">
+        <td style="width: 100%; padding: 0; vertical-align: top;">
             <table class="approval-table" style="margin-top: 0;">
                 <tr>
                     <td class="approval-header">Diajukan oleh</td>
@@ -168,9 +168,13 @@
                 </tr>
                 <tr>
                     <td>
-                        <div style="height: 40px;"></div>
-                        <strong style="text-decoration: underline;">{{ $fpu->workOrder->assignedEngineer->name }}</strong><br>
-                        <span style="font-size: 10px;">Spv/Officer/Staff</span>
+                        <div style="height: 35px;">
+                            @if($fpu->verified_by_hrga)
+                                <span style="color: green; font-style: italic; font-size: 9px; display: block; margin-top: 15px;">V. Approved</span>
+                            @endif
+                        </div>
+                        <strong style="text-decoration: underline;">{{ $fpu->verifiedByHrga->name ?? (auth()->user()->name ?? '.......................') }}</strong><br>
+                        <span style="font-size: 10px;">Supervisor General Affair</span>
                     </td>
                     <td>
                         <div style="height: 35px;">
@@ -195,24 +199,6 @@
             <div style="font-size: 9px; font-style: italic; margin-top: 3px;">
                 Persetujuan direktur hanya untuk FPU uang, melibatkan pihak Eksternal
             </div>
-        </td>
-        <td style="width: 30%; padding: 0 0 0 10px; vertical-align: top;">
-            <table class="approval-table" style="margin-top: 0;">
-                <tr>
-                    <td class="approval-header">Verifikasi</td>
-                </tr>
-                <tr>
-                    <td>
-                        <div style="height: 35px;">
-                            @if($fpu->verified_by_hrga)
-                                <span style="color: green; font-style: italic; font-size: 9px; display: block; margin-top: 15px;">V. Approved</span>
-                            @endif
-                        </div>
-                        <strong style="text-decoration: underline;">{{ $fpu->verifiedByHrga->name ?? '.......................' }}</strong><br>
-                        <span style="font-size: 10px;">HRGA</span>
-                    </td>
-                </tr>
-            </table>
         </td>
     </tr>
 </table>
