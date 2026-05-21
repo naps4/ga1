@@ -160,6 +160,22 @@
 </table>
 
 <!-- Section 4: Approval 1 -->
+@php
+    $verifierName = $fpu->verifiedByHrga->name ?? '';
+    if (!$verifierName || stripos($verifierName, 'admin') !== false) {
+        $verifierName = 'Bagus Dwi Harjanto';
+    }
+
+    $managerName = $fpu->knownByManager->name ?? '';
+    if (!$managerName || stripos($managerName, 'admin') !== false) {
+        $managerName = 'Rifqi Aulaqi Yunahar';
+    }
+
+    $gmName = $fpu->approvedByGm->name ?? '';
+    if (!$gmName || stripos($gmName, 'admin') !== false) {
+        $gmName = 'Lisa Hana';
+    }
+@endphp
 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
     <tr>
         <td style="width: 100%; padding: 0; vertical-align: top;">
@@ -172,17 +188,17 @@
                 <tr>
                     <td>
                         <div style="height: 65px;"></div>
-                        <strong style="text-decoration: underline;">{{ $fpu->verifiedByHrga->name ?? (auth()->user()->name ?? '.......................') }}</strong><br>
+                        <strong style="text-decoration: underline;">{{ $verifierName }}</strong><br>
                         <span style="font-size: 10px;">Supervisor General Affair</span>
                     </td>
                     <td>
                         <div style="height: 65px;"></div>
-                        <strong style="text-decoration: underline;">{{ $fpu->knownByManager->name ?? 'Rifqi Aulawi Yunahar' }}</strong><br>
+                        <strong style="text-decoration: underline;">{{ $managerName }}</strong><br>
                         <span style="font-size: 10px;">Operational Manager</span>
                     </td>
                     <td>
                         <div style="height: 65px;"></div>
-                        <strong style="text-decoration: underline;">{{ $fpu->approvedByGm->name ?? 'Lisa Hana' }}</strong><br>
+                        <strong style="text-decoration: underline;">{{ $gmName }}</strong><br>
                         <span style="font-size: 10px;">General Manager</span>
                     </td>
                 </tr>
