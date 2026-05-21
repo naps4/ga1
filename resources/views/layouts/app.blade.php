@@ -1548,7 +1548,7 @@
                     </div>
                 </div>
                 <div class="modal-body p-0 bg-light" style="flex: 1; overflow: hidden; position: relative;">
-                    <div id="globalPreviewLoading" class="position-absolute w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-light" style="z-index: 10; top: 0; left: 0;">
+                    <div id="globalPreviewLoading" class="position-absolute w-100 h-100 flex-column align-items-center justify-content-center bg-light" style="z-index: 10; top: 0; left: 0; display: flex;">
                         <div class="spinner-border text-primary mb-2" role="status">
                             <span class="sr-only">Loading...</span>
                         </div>
@@ -1567,111 +1567,91 @@
     <script>
         $(document).ready(function() {
             var loadingTimeout = null;
+            var $loader = $('#globalPreviewLoading');
+            var $iframe = $('#globalPreviewIframe');
+            var $imgContainer = $('#globalPreviewImageContainer');
+            var $img = $('#globalPreviewImage');
+            var $printBtn = $('#globalPreviewPrintBtn');
+            var $modal = $('#globalPreviewModal');
+            var $label = $('#globalPreviewModalLabel');
 
-            function hideLoader() {
-                if (loadingTimeout) {
-                    clearTimeout(loadingTimeout);
-                    loadingTimeout = null;
-                }
-                $('#globalPreviewLoading').fadeOut(150);
+            function showLoader() {
+                // Use inline style — element has no d-flex class so this works reliably
+                $loader[0].style.display = 'flex';
             }
 
-            // Exposed globally so iframe onload attribute can call it
-            window.globalPreviewHideLoader = hideLoader;
+            function hideLoader() {
+                if (loadingTimeout) { clearTimeout(loadingTimeout); loadingTimeout = null; }
+                // Force hide via inline style — overrides everything
+                $loader[0].style.display = 'none';
+            }
 
             $(document).on('click', 'a', function(e) {
                 var href = $(this).attr('href');
                 if (!href || href === '#' || href.indexOf('javascript:') === 0) return;
 
-                // Clean href for extension detection (strip query strings and hashes)
+                // Strip query strings / hashes for extension detection
                 var cleanHref = href.split('?')[0].split('#')[0].toLowerCase();
 
-                // Detect print pages
                 var isPrint = href.indexOf('/print') !== -1;
-
-                // Detect previewable storage files
                 var isImage = href.indexOf('storage/') !== -1 && (
-                    cleanHref.endsWith('.png') ||
-                    cleanHref.endsWith('.jpg') ||
-                    cleanHref.endsWith('.jpeg') ||
-                    cleanHref.endsWith('.gif') ||
-                    cleanHref.endsWith('.webp')
+                    cleanHref.endsWith('.png') || cleanHref.endsWith('.jpg') ||
+                    cleanHref.endsWith('.jpeg') || cleanHref.endsWith('.gif') || cleanHref.endsWith('.webp')
                 );
                 var isPdf = href.indexOf('storage/') !== -1 && cleanHref.endsWith('.pdf');
 
                 if (!isPrint && !isImage && !isPdf) return;
-
                 e.preventDefault();
 
-                // Clear any old timeout
+                // --- Reset modal state ---
                 if (loadingTimeout) { clearTimeout(loadingTimeout); loadingTimeout = null; }
-
-                // Reset modal to initial state
-                $('#globalPreviewIframe').hide().attr('src', 'about:blank');
-                $('#globalPreviewImageContainer').removeClass('d-flex').addClass('d-none');
-                $('#globalPreviewImage').attr('src', '');
-                $('#globalPreviewPrintBtn').hide();
-                $('#globalPreviewLoading').css('display', 'flex');
-                $('#globalPreviewModal').modal('show');
+                var iframeEl = $iframe[0];
+                if (iframeEl) { iframeEl.onload = null; iframeEl.src = 'about:blank'; }
+                $iframe.hide();
+                $imgContainer.removeClass('d-flex').addClass('d-none');
+                $img.attr('src', '');
+                $printBtn.hide();
+                showLoader();
+                $modal.modal('show');
 
                 if (isPrint) {
-                    // --- PRINT PAGE in iframe ---
-                    $('#globalPreviewModalLabel').html('<i class="fas fa-print mr-2 text-primary"></i>Cetak Dokumen');
-                    $('#globalPreviewPrintBtn').show().off('click').on('click', function() {
-                        var iframe = document.getElementById('globalPreviewIframe');
-                        if (iframe && iframe.contentWindow) {
-                            iframe.contentWindow.focus();
-                            iframe.contentWindow.print();
+                    $label.html('<i class="fas fa-print mr-2 text-primary"></i>Cetak Dokumen');
+                    $printBtn.show().off('click').on('click', function() {
+                        if (iframeEl && iframeEl.contentWindow) {
+                            iframeEl.contentWindow.focus();
+                            iframeEl.contentWindow.print();
                         }
                     });
-
-                    // Use native onload (more reliable than jQuery .on('load') for cross-origin iframes)
-                    var iframeEl = document.getElementById('globalPreviewIframe');
                     iframeEl.onload = function() {
-                        if (iframeEl.getAttribute('src') !== 'about:blank') {
-                            hideLoader();
-                        }
+                        if (iframeEl.src !== 'about:blank') { hideLoader(); }
                     };
-
-                    $('#globalPreviewIframe').attr('src', href).show();
-
-                    // Safety fallback: hide after 3 seconds regardless
+                    $iframe.attr('src', href).show();
                     loadingTimeout = setTimeout(hideLoader, 3000);
 
                 } else if (isImage) {
-                    // --- IMAGE: show immediately, no waiting ---
-                    $('#globalPreviewModalLabel').html('<i class="fas fa-image mr-2 text-success"></i>Pratinjau Lampiran');
-                    $('#globalPreviewImage').attr('src', href);
-                    $('#globalPreviewImageContainer').removeClass('d-none').addClass('d-flex');
-                    // Hide spinner immediately for images - browser shows them progressively
-                    hideLoader();
+                    $label.html('<i class="fas fa-image mr-2 text-success"></i>Pratinjau Lampiran');
+                    $img.attr('src', href);
+                    $imgContainer.removeClass('d-none').addClass('d-flex');
+                    hideLoader(); // Images show immediately — no waiting needed
 
                 } else if (isPdf) {
-                    // --- PDF in iframe ---
-                    $('#globalPreviewModalLabel').html('<i class="fas fa-file-pdf mr-2 text-danger"></i>Pratinjau PDF');
-
-                    var iframeEl2 = document.getElementById('globalPreviewIframe');
-                    iframeEl2.onload = function() {
-                        if (iframeEl2.getAttribute('src') !== 'about:blank') {
-                            hideLoader();
-                        }
+                    $label.html('<i class="fas fa-file-pdf mr-2 text-danger"></i>Pratinjau PDF');
+                    iframeEl.onload = function() {
+                        if (iframeEl.src !== 'about:blank') { hideLoader(); }
                     };
-
-                    $('#globalPreviewIframe').attr('src', href).show();
-
-                    // Safety fallback: hide after 3 seconds regardless
+                    $iframe.attr('src', href).show();
                     loadingTimeout = setTimeout(hideLoader, 3000);
                 }
             });
 
-            // Clean up when modal is dismissed
-            $('#globalPreviewModal').on('hidden.bs.modal', function () {
+            // Clean up on modal close
+            $modal.on('hidden.bs.modal', function () {
                 if (loadingTimeout) { clearTimeout(loadingTimeout); loadingTimeout = null; }
-                var iframeEl = document.getElementById('globalPreviewIframe');
+                var iframeEl = $iframe[0];
                 if (iframeEl) { iframeEl.onload = null; iframeEl.src = 'about:blank'; }
-                $('#globalPreviewIframe').hide();
-                $('#globalPreviewImage').attr('src', '');
-                $('#globalPreviewLoading').css('display', 'none');
+                $iframe.hide();
+                $img.attr('src', '');
+                hideLoader();
             });
         });
     </script>
