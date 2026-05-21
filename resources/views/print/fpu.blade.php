@@ -132,7 +132,10 @@
         </tr>
     </thead>
     <tbody>
-        @php $maxRows = 10; @endphp
+        @php 
+            $itemCount = count($fpu->materials);
+            $maxRows = $itemCount > 5 ? 10 : 5; 
+        @endphp
         @foreach($fpu->materials as $index => $mat)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
@@ -143,7 +146,7 @@
                 <td>{{ $mat->notes ?? '-' }}</td>
             </tr>
         @endforeach
-        @for($i = count($fpu->materials); $i < $maxRows; $i++)
+        @for($i = $itemCount; $i < $maxRows; $i++)
             <tr>
                 <td style="height: 18px;"></td>
                 <td></td>
@@ -168,19 +171,19 @@
                 </tr>
                 <tr>
                     <td>
-                        <div style="height: 35px;"></div>
+                        <div style="height: 65px;"></div>
                         <strong style="text-decoration: underline;">{{ $fpu->verifiedByHrga->name ?? (auth()->user()->name ?? '.......................') }}</strong><br>
                         <span style="font-size: 10px;">Supervisor General Affair</span>
                     </td>
                     <td>
-                        <div style="height: 35px;"></div>
-                        <strong style="text-decoration: underline;">{{ $fpu->knownByManager->name ?? '.......................' }}</strong><br>
-                        <span style="font-size: 10px;">Oprt. Manager</span>
+                        <div style="height: 65px;"></div>
+                        <strong style="text-decoration: underline;">{{ $fpu->knownByManager->name ?? 'Rifqi Aulawi Yunahar' }}</strong><br>
+                        <span style="font-size: 10px;">Operational Manager</span>
                     </td>
                     <td>
-                        <div style="height: 35px;"></div>
-                        <strong style="text-decoration: underline;">{{ $fpu->approvedByGm->name ?? '.......................' }}</strong><br>
-                        <span style="font-size: 10px;">Direktur/GM</span>
+                        <div style="height: 65px;"></div>
+                        <strong style="text-decoration: underline;">{{ $fpu->approvedByGm->name ?? 'Lisa Hana' }}</strong><br>
+                        <span style="font-size: 10px;">General Manager</span>
                     </td>
                 </tr>
             </table>
