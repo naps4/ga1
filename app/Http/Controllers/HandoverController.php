@@ -68,7 +68,7 @@ class HandoverController extends Controller
             abort(404, 'Berita Acara belum dibuat.');
         }
         
-        $handover->load('workOrder.user', 'workOrder.assignedEngineer');
+        $handover->load('workOrder.user', 'workOrder.assignedEngineer', 'preparedBy');
         return view('print.handover', compact('handover'));
     }
 

@@ -210,17 +210,15 @@
         <div class="signature-col" style="width: 50%;">
             <p>Pihak Pelaksana / Yang Menyerahkan,</p>
             <div class="signature-space">
-                <!-- Tanda Tangan Teknisi -->
+                <!-- Tanda Tangan Admin -->
             </div>
-            <p class="signature-name">{{ $handover->workOrder->assignedEngineer->name ?? '.......................' }}</p>
-            <small>Teknisi / Engineer</small>
+            <p class="signature-name">{{ auth()->user()->name ?? ($handover->preparedBy->name ?? '.......................') }}</p>
+            <small>Supervisor General Affair</small>
         </div>
         <div class="signature-col" style="width: 50%;">
             <p>Pihak Pemohon / Yang Menerima,</p>
             <div class="signature-space">
-                @if($handover->accepted_by)
-                    <span style="display:inline-block; margin-top:30px; font-style:italic; font-size:12px; color:green;">Disetujui di Sistem</span>
-                @endif
+                <!-- Tanda Tangan Pemohon -->
             </div>
             <p class="signature-name">{{ $handover->workOrder->user->name ?? '.......................' }}</p>
             <small>{{ $handover->workOrder->department ?? 'Departemen Pemohon' }}</small>
