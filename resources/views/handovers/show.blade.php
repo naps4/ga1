@@ -39,7 +39,7 @@
         <div class="page-title-wrap">
             <h1 class="m-0">Penyerahan Hasil (Form D)</h1>
             <div class="d-flex align-items-center">
-                <a href="{{ route('handovers.print', $handover->work_order_id) }}" target="_blank" class="btn btn-primary rounded-pill mr-2 shadow-sm">
+                <a href="{{ route('handovers.print', $handover->work_order_id) }}" class="btn btn-primary rounded-pill mr-2 shadow-sm">
                     <i class="fas fa-print"></i> Cetak Berita Acara (PDF)
                 </a>
                 <a href="{{ route('work-orders.show', $handover->work_order_id) }}" class="btn btn-outline-secondary rounded-pill">

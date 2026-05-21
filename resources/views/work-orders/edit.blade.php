@@ -43,7 +43,7 @@
                                 <label class="form-label">Lampiran Foto/Dokumen <span class="text-muted">(Opsional)</span></label>
                                 @if($workOrder->attachment_request)
                                     <div class="mb-2">
-                                        <a href="{{ asset('storage/' . $workOrder->attachment_request) }}" target="_blank" class="btn btn-sm btn-info rounded-pill"><i class="fas fa-paperclip"></i> Lihat Lampiran Saat Ini</a>
+                                        <a href="{{ asset('storage/' . $workOrder->attachment_request) }}" class="btn btn-sm btn-info rounded-pill"><i class="fas fa-paperclip"></i> Lihat Lampiran Saat Ini</a>
                                         <small class="text-muted ml-2">Upload file baru untuk menggantikan lampiran lama.</small>
                                     </div>
                                 @endif
