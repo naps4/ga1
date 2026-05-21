@@ -1566,35 +1566,71 @@
     <!-- Script for Global Preview Modal -->
     <script>
         $(document).ready(function() {
+            var loadingTimeout = null;
+
+            function hideLoader() {
+                if (loadingTimeout) {
+                    clearTimeout(loadingTimeout);
+                    loadingTimeout = null;
+                }
+                $('#globalPreviewLoading').hide();
+            }
+
             $(document).on('click', 'a', function(e) {
                 var href = $(this).attr('href');
                 if (!href || href === '#' || href.indexOf('javascript:') === 0) return;
+                
+                // Clean the href to get pure file extension (ignoring query strings and hashes)
+                var cleanHref = href.split('?')[0].split('#')[0];
                 
                 // Check if it's a print link
                 var isPrint = href.indexOf('/print') !== -1;
                 
                 // Check if it's a previewable file link in storage (e.g. PDF, Images)
                 var isStorageFile = href.indexOf('storage/') !== -1 && (
-                    href.toLowerCase().endsWith('.pdf') || 
-                    href.toLowerCase().endsWith('.png') || 
-                    href.toLowerCase().endsWith('.jpg') || 
-                    href.toLowerCase().endsWith('.jpeg')
+                    cleanHref.toLowerCase().endsWith('.pdf') || 
+                    cleanHref.toLowerCase().endsWith('.png') || 
+                    cleanHref.toLowerCase().endsWith('.jpg') || 
+                    cleanHref.toLowerCase().endsWith('.jpeg')
                 );
                 
                 if (isPrint || isStorageFile) {
                     e.preventDefault();
                     
-                    // Show modal
+                    // Clear any running safety timeout
+                    if (loadingTimeout) {
+                        clearTimeout(loadingTimeout);
+                    }
+                    
+                    // Reset modal content and show loading spinner
                     $('#globalPreviewModal').modal('show');
                     $('#globalPreviewLoading').css('display', 'flex');
-                    $('#globalPreviewIframe').hide().attr('src', 'about:blank');
+                    
+                    // Unbind previous events and reset sources to avoid showing old assets
+                    $('#globalPreviewIframe').off('load error').hide().attr('src', 'about:blank');
                     $('#globalPreviewImageContainer').removeClass('d-flex').addClass('d-none');
-                    $('#globalPreviewImage').attr('src', '');
+                    $('#globalPreviewImage').off('load error').attr('src', '');
                     $('#globalPreviewPrintBtn').hide();
                     
+                    // Setup safety timeout: fallback to hide loader in 4 seconds if browser/plugin fails to trigger events
+                    loadingTimeout = setTimeout(function() {
+                        hideLoader();
+                    }, 4000);
+
                     if (isPrint) {
                         $('#globalPreviewModalLabel').html('<i class="fas fa-print mr-2 text-primary"></i>Cetak Dokumen');
+                        
+                        // Bind load event BEFORE setting the src attribute to prevent race condition
+                        $('#globalPreviewIframe').on('load', function() {
+                            if ($(this).attr('src') !== 'about:blank') {
+                                hideLoader();
+                            }
+                        }).on('error', function() {
+                            hideLoader();
+                        });
+
                         $('#globalPreviewIframe').attr('src', href).show();
+                        
                         $('#globalPreviewPrintBtn').show().off('click').on('click', function() {
                             var iframe = document.getElementById('globalPreviewIframe');
                             if (iframe && iframe.contentWindow) {
@@ -1603,27 +1639,47 @@
                             }
                         });
                     } else {
-                        $('#globalPreviewModalLabel').html('<i class="fas fa-image mr-2 text-success"></i>Pratinjau Lampiran');
-                        var isImage = href.toLowerCase().endsWith('.png') || href.toLowerCase().endsWith('.jpg') || href.toLowerCase().endsWith('.jpeg');
+                        var isImage = cleanHref.toLowerCase().endsWith('.png') || cleanHref.toLowerCase().endsWith('.jpg') || cleanHref.toLowerCase().endsWith('.jpeg');
                         if (isImage) {
+                            $('#globalPreviewModalLabel').html('<i class="fas fa-image mr-2 text-success"></i>Pratinjau Lampiran');
+                            
+                            // Bind load event for image BEFORE setting src
+                            $('#globalPreviewImage').on('load', function() {
+                                hideLoader();
+                            }).on('error', function() {
+                                hideLoader();
+                            });
+                            
                             $('#globalPreviewImage').attr('src', href);
                             $('#globalPreviewImageContainer').removeClass('d-none').addClass('d-flex');
-                            $('#globalPreviewLoading').hide();
                         } else {
+                            // PDF or other documents inside iframe
+                            $('#globalPreviewModalLabel').html('<i class="fas fa-file-pdf mr-2 text-danger"></i>Pratinjau Lampiran');
+                            
+                            // Bind load event BEFORE setting the src attribute
+                            $('#globalPreviewIframe').on('load', function() {
+                                if ($(this).attr('src') !== 'about:blank') {
+                                    hideLoader();
+                                }
+                            }).on('error', function() {
+                                hideLoader();
+                            });
+
                             $('#globalPreviewIframe').attr('src', href).show();
                         }
                     }
-                    
-                    // Hide loading once iframe is loaded
-                    $('#globalPreviewIframe').off('load').on('load', function() {
-                        $('#globalPreviewLoading').hide();
-                    });
                 }
             });
 
-            // Ensure iframe is cleared when modal is hidden
+            // Ensure iframe is cleared and events are unbound when modal is hidden
             $('#globalPreviewModal').on('hidden.bs.modal', function () {
-                $('#globalPreviewIframe').attr('src', 'about:blank');
+                if (loadingTimeout) {
+                    clearTimeout(loadingTimeout);
+                    loadingTimeout = null;
+                }
+                $('#globalPreviewIframe').off('load error').attr('src', 'about:blank');
+                $('#globalPreviewImage').off('load error').attr('src', '');
+                $('#globalPreviewLoading').hide();
             });
         });
     </script>
