@@ -1530,6 +1530,104 @@
         });
     </script>
 
+    <!-- Global Document & Attachment Preview Modal -->
+    <div class="modal fade" id="globalPreviewModal" tabindex="-1" role="dialog" aria-labelledby="globalPreviewModalLabel" aria-hidden="true" style="z-index: 2050;">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width: 90%; height: 85vh; margin: 7.5vh auto;">
+            <div class="modal-content border-0 shadow-lg" style="height: 100%; display: flex; flex-direction: column; border-radius: 1rem; overflow: hidden;">
+                <div class="modal-header bg-white border-bottom border-light align-items-center py-3 px-4">
+                    <h5 class="modal-title font-weight-bold text-primary" id="globalPreviewModalLabel">
+                        <i class="fas fa-file-alt mr-2 text-info"></i>Pratinjau Dokumen
+                    </h5>
+                    <div class="modal-actions d-flex align-items-center ml-auto">
+                        <button type="button" class="btn btn-sm btn-success rounded-pill mr-3 px-3 shadow-sm" id="globalPreviewPrintBtn" style="display: none; font-weight: 500;">
+                            <i class="fas fa-print mr-1"></i> Cetak / Simpan PDF
+                        </button>
+                        <button type="button" class="close ml-0 p-2" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body p-0 bg-light" style="flex: 1; overflow: hidden; position: relative;">
+                    <div id="globalPreviewLoading" class="position-absolute w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-light" style="z-index: 10; top: 0; left: 0;">
+                        <div class="spinner-border text-primary mb-2" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <span class="text-muted font-weight-500">Memuat berkas...</span>
+                    </div>
+                    <iframe id="globalPreviewIframe" src="about:blank" frameborder="0" style="width: 100%; height: 100%; border: 0; display: none;"></iframe>
+                    <div id="globalPreviewImageContainer" class="w-100 h-100 d-none justify-content-center align-items-center p-4" style="overflow: auto; background-color: rgba(0,0,0,0.03);">
+                        <img id="globalPreviewImage" src="" class="img-fluid rounded shadow" style="max-height: 100%; object-fit: contain; background: white; padding: 10px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script for Global Preview Modal -->
+    <script>
+        $(document).ready(function() {
+            $(document).on('click', 'a', function(e) {
+                var href = $(this).attr('href');
+                if (!href || href === '#' || href.indexOf('javascript:') === 0) return;
+                
+                // Check if it's a print link
+                var isPrint = href.indexOf('/print') !== -1;
+                
+                // Check if it's a previewable file link in storage (e.g. PDF, Images)
+                var isStorageFile = href.indexOf('storage/') !== -1 && (
+                    href.toLowerCase().endsWith('.pdf') || 
+                    href.toLowerCase().endsWith('.png') || 
+                    href.toLowerCase().endsWith('.jpg') || 
+                    href.toLowerCase().endsWith('.jpeg')
+                );
+                
+                if (isPrint || isStorageFile) {
+                    e.preventDefault();
+                    
+                    // Show modal
+                    $('#globalPreviewModal').modal('show');
+                    $('#globalPreviewLoading').css('display', 'flex');
+                    $('#globalPreviewIframe').hide().attr('src', 'about:blank');
+                    $('#globalPreviewImageContainer').removeClass('d-flex').addClass('d-none');
+                    $('#globalPreviewImage').attr('src', '');
+                    $('#globalPreviewPrintBtn').hide();
+                    
+                    if (isPrint) {
+                        $('#globalPreviewModalLabel').html('<i class="fas fa-print mr-2 text-primary"></i>Cetak Dokumen');
+                        $('#globalPreviewIframe').attr('src', href).show();
+                        $('#globalPreviewPrintBtn').show().off('click').on('click', function() {
+                            var iframe = document.getElementById('globalPreviewIframe');
+                            if (iframe && iframe.contentWindow) {
+                                iframe.contentWindow.focus();
+                                iframe.contentWindow.print();
+                            }
+                        });
+                    } else {
+                        $('#globalPreviewModalLabel').html('<i class="fas fa-image mr-2 text-success"></i>Pratinjau Lampiran');
+                        var isImage = href.toLowerCase().endsWith('.png') || href.toLowerCase().endsWith('.jpg') || href.toLowerCase().endsWith('.jpeg');
+                        if (isImage) {
+                            $('#globalPreviewImage').attr('src', href);
+                            $('#globalPreviewImageContainer').removeClass('d-none').addClass('d-flex');
+                            $('#globalPreviewLoading').hide();
+                        } else {
+                            $('#globalPreviewIframe').attr('src', href).show();
+                        }
+                    }
+                    
+                    // Hide loading once iframe is loaded
+                    $('#globalPreviewIframe').off('load').on('load', function() {
+                        $('#globalPreviewLoading').hide();
+                    });
+                }
+            });
+
+            // Ensure iframe is cleared when modal is hidden
+            $('#globalPreviewModal').on('hidden.bs.modal', function () {
+                $('#globalPreviewIframe').attr('src', 'about:blank');
+            });
+        });
+    </script>
+
     @stack('scripts')
 </body>
 </html>
