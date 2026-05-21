@@ -172,7 +172,7 @@
                     <td>
                         <div class="comparison-photo-container">
                             @if($handover->workOrder->attachment_request)
-                                <img src="{{ asset($handover->workOrder->attachment_request) }}" class="comparison-photo" alt="Foto Awal Pelaporan">
+                                <img src="{{ asset('storage/' . $handover->workOrder->attachment_request) }}" class="comparison-photo" alt="Foto Awal Pelaporan">
                             @else
                                 <span class="no-photo-text">Tidak ada lampiran foto awal</span>
                             @endif
@@ -187,7 +187,7 @@
                     <td>
                         <div class="comparison-photo-container">
                             @if($handover->workOrder->attachment_report)
-                                <img src="{{ asset($handover->workOrder->attachment_report) }}" class="comparison-photo" alt="Foto Hasil Pekerjaan">
+                                <img src="{{ asset('storage/' . $handover->workOrder->attachment_report) }}" class="comparison-photo" alt="Foto Hasil Pekerjaan">
                             @else
                                 <span class="no-photo-text">Tidak ada lampiran foto hasil</span>
                             @endif
