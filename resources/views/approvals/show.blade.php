@@ -70,7 +70,7 @@
                                             >
                                                 <i class="fas fa-eye mr-1"></i> Lihat
                                             </button>
-                                            <a href="{{ route('project-requirements.download', $req) }}" class="btn btn-sm btn-light text-primary">
+                                            <a href="{{ route('project-requirements.download', $req) }}" target="_blank" class="btn btn-sm btn-light text-primary">
                                                 <i class="fas fa-download mr-1"></i> Unduh
                                             </a>
                                         </td>

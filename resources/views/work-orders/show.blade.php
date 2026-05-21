@@ -6,7 +6,7 @@
         <div class="page-title-wrap">
             <h1 class="m-0">Detail Work Order #WO-{{ str_pad($workOrder->id, 4, '0', STR_PAD_LEFT) }}</h1>
             <div class="d-flex align-items-center">
-                <a href="{{ route('work-orders.print', $workOrder->id) }}" class="btn btn-primary rounded-pill mr-2 shadow-sm">
+                <a href="{{ route('work-orders.print', $workOrder->id) }}" target="_blank" class="btn btn-primary rounded-pill mr-2 shadow-sm">
                     <i class="fas fa-print"></i> Cetak Dokumen (PDF)
                 </a>
                 <a href="{{ route('work-orders.index') }}" class="btn btn-outline-secondary rounded-pill">

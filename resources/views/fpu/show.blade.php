@@ -6,7 +6,7 @@
         <div class="page-title-wrap">
             <h1 class="m-0">Formulir Pelayanan Umum (FPU)</h1>
             <div class="d-flex align-items-center">
-                <a href="{{ route('fpu.print', $fpu->id) }}" class="btn btn-primary rounded-pill mr-2 shadow-sm">
+                <a href="{{ route('fpu.print', $fpu->id) }}" target="_blank" class="btn btn-primary rounded-pill mr-2 shadow-sm">
                     <i class="fas fa-print"></i> Cetak FPU (PDF)
                 </a>
                 <a href="{{ route('work-orders.show', $fpu->work_order_id) }}" class="btn btn-outline-secondary rounded-pill">

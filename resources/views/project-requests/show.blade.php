@@ -120,7 +120,7 @@
                                             >
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            <a href="{{ route('project-requirements.download', $req) }}" class="btn btn-sm btn-light text-primary">
+                                            <a href="{{ route('project-requirements.download', $req) }}" target="_blank" class="btn btn-sm btn-light text-primary">
                                                 <i class="fas fa-download"></i>
                                             </a>
                                         </td>
