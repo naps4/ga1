@@ -163,16 +163,16 @@
 @php
     $verifierName = $fpu->verifiedByHrga->name ?? '';
     if (!$verifierName || stripos($verifierName, 'admin') !== false) {
-        $verifierName = 'Bagus Dwi Harjanto';
+        $verifierName = 'Bagus D. Harjanto';
     }
 
     $managerName = $fpu->knownByManager->name ?? '';
-    if (!$managerName || stripos($managerName, 'admin') !== false) {
-        $managerName = 'Rifqi Aulaqi Yunahar';
+    if (!$managerName || stripos($managerName, 'admin') !== false || stripos($managerName, 'Bagus') !== false) {
+        $managerName = 'Rifqi Aulawi Yunahar';
     }
 
     $gmName = $fpu->approvedByGm->name ?? '';
-    if (!$gmName || stripos($gmName, 'admin') !== false) {
+    if (!$gmName || stripos($gmName, 'admin') !== false || stripos($gmName, 'Bagus') !== false) {
         $gmName = 'Lisa Hana';
     }
 @endphp
