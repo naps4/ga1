@@ -163,13 +163,15 @@
 @php
     $verifierName = $fpu->verifiedByHrga->name ?? '';
     if (!$verifierName || stripos($verifierName, 'admin') !== false) {
-        $verifierName = 'Bagus D. Harjanto';
+        $verifierName = 'Bagus Dwi Harjanto';
     }
 
     $managerName = $fpu->knownByManager->name ?? '';
     if (!$managerName || stripos($managerName, 'admin') !== false || stripos($managerName, 'Bagus') !== false) {
         $managerName = 'Rifqi Aulawi Yunahar';
     }
+
+    $fatName = 'Berlian Muhammad Subkhansyah Ubay';
 
     $gmName = $fpu->approvedByGm->name ?? '';
     if (!$gmName || stripos($gmName, 'admin') !== false || stripos($gmName, 'Bagus') !== false) {
@@ -181,23 +183,29 @@
         <td style="width: 100%; padding: 0; vertical-align: top;">
             <table class="approval-table" style="margin-top: 0;">
                 <tr>
-                    <td class="approval-header">Diajukan oleh</td>
-                    <td class="approval-header">Diketahui</td>
+                    <td class="approval-header">Diajukan</td>
+                    <td class="approval-header">Diperiksa</td>
                     <td class="approval-header">Disetujui</td>
+                    <td class="approval-header">Diketahui</td>
                 </tr>
                 <tr>
                     <td>
-                        <div style="height: 65px;"></div>
+                        <div style="height: 75px;"></div>
                         <strong style="text-decoration: underline;">{{ $verifierName }}</strong><br>
-                        <span style="font-size: 10px;">Supervisor General Affair</span>
+                        <span style="font-size: 10px;">Supervisor GA</span>
                     </td>
                     <td>
-                        <div style="height: 65px;"></div>
+                        <div style="height: 75px;"></div>
                         <strong style="text-decoration: underline;">{{ $managerName }}</strong><br>
                         <span style="font-size: 10px;">Operational Manager</span>
                     </td>
                     <td>
-                        <div style="height: 65px;"></div>
+                        <div style="height: 75px;"></div>
+                        <strong style="text-decoration: underline;">{{ $fatName }}</strong><br>
+                        <span style="font-size: 10px;">Manager FAT</span>
+                    </td>
+                    <td>
+                        <div style="height: 75px;"></div>
                         <strong style="text-decoration: underline;">{{ $gmName }}</strong><br>
                         <span style="font-size: 10px;">General Manager</span>
                     </td>
@@ -264,7 +272,7 @@
                     </td>
                     <td>
                         <div style="height: 40px;"></div>
-                        <strong style="text-decoration: underline;">Oprt. Manager</strong>
+                        <strong style="text-decoration: underline;">Admin GA</strong>
                     </td>
                     <td>
                         <div style="height: 40px;"></div>

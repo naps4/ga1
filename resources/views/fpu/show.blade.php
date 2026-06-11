@@ -34,9 +34,16 @@
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-header bg-white border-bottom border-light">
                         <h3 class="card-title text-primary"><i class="fas fa-edit"></i> Detail Form C (FPU)</h3>
+                        @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && $fpu->status_approval !== 'Disetujui (Selesai)' && $fpu->status_approval !== 'Menunggu Verifikasi HRGA' && request('edit') != 1)
+                            <div class="card-tools">
+                                <a href="{{ route('fpu.show', $fpu->id) }}?edit=1" class="btn btn-sm btn-outline-primary rounded-pill">
+                                    <i class="fas fa-edit"></i> Edit FPU
+                                </a>
+                            </div>
+                        @endif
                     </div>
-                    <!-- Form hanya bisa diedit oleh Admin (HRGA) dan saat status masih draft / belum verifikasi -->
-                    @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && $fpu->status_approval === 'Menunggu Verifikasi HRGA')
+                    <!-- Form bisa diedit jika status belum Disetujui (Selesai) DAN (status masih Menunggu Verifikasi HRGA ATAU parameter edit=1 ada) -->
+                    @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && $fpu->status_approval !== 'Disetujui (Selesai)' && ($fpu->status_approval === 'Menunggu Verifikasi HRGA' || request('edit') == 1))
                         <form action="{{ route('fpu.update', $fpu->id) }}" method="POST">
                             @csrf
                             <div class="card-body">
@@ -123,8 +130,13 @@
 
                             </div>
                             <div class="card-footer bg-white border-top border-light text-right">
-                                <button type="submit" name="action" value="draft" class="btn btn-outline-primary rounded-pill"><i class="fas fa-save"></i> Simpan Draft</button>
-                                <button type="submit" name="action" value="verify" class="btn btn-success rounded-pill ml-2"><i class="fas fa-check-circle"></i> Simpan & Verifikasi HRGA</button>
+                                @if($fpu->status_approval === 'Menunggu Verifikasi HRGA')
+                                    <button type="submit" name="action" value="draft" class="btn btn-outline-primary rounded-pill"><i class="fas fa-save"></i> Simpan Draft</button>
+                                    <button type="submit" name="action" value="verify" class="btn btn-success rounded-pill ml-2"><i class="fas fa-check-circle"></i> Simpan & Verifikasi HRGA</button>
+                                @else
+                                    <a href="{{ route('fpu.show', $fpu->id) }}" class="btn btn-outline-secondary rounded-pill"><i class="fas fa-times"></i> Batal</a>
+                                    <button type="submit" name="action" value="update" class="btn btn-primary rounded-pill ml-2"><i class="fas fa-save"></i> Simpan Perubahan</button>
+                                @endif
                             </div>
                         </form>
                     @else
@@ -177,7 +189,7 @@
                     <div class="card-body">
                         <div class="text-center mb-4">
                             <h5 class="font-weight-bold">Status Saat Ini:</h5>
-                            <span class="badge badge-warning text-lg px-3 py-2 rounded-pill">{{ $fpu->status_approval }}</span>
+                            <span class="badge badge-warning text-lg px-3 py-2 rounded-pill">{{ $fpu->status_approval === 'Menunggu Oprt. Manager' ? 'Menunggu Admin GA' : $fpu->status_approval }}</span>
                         </div>
 
                         <div class="timeline timeline-inverse">

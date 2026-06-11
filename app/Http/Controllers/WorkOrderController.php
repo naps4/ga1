@@ -171,6 +171,8 @@ class WorkOrderController extends Controller
             'engineer_needs'   => $request->engineer_needs,
             'attachment_check' => $attachmentPath,
             'status'           => $status,
+            'rejection_note'   => null,
+            'is_check_approved'=> false,
         ]);
 
         // Trigger logic untuk FPU jika butuh material
@@ -198,6 +200,69 @@ class WorkOrderController extends Controller
         }
 
         return back()->with('success', 'Hasil pengecekan & pengajuan material berhasil diupdate.');
+    }
+
+    public function rejectCheck(Request $request, WorkOrder $workOrder)
+    {
+        // Pastikan hanya Admin / Super Admin yang bisa reject
+        if (auth()->user()->role !== 'admin' && auth()->user()->role !== 'super_admin') {
+            return back()->withErrors(['error' => 'Hanya Admin yang dapat menolak hasil pengecekan.']);
+        }
+
+        $request->validate([
+            'rejection_note' => 'required|string',
+        ]);
+
+        // Hapus FPU jika ada
+        if ($workOrder->fpuRequest) {
+            $workOrder->fpuRequest->delete();
+        }
+
+        // Update Work Order
+        $workOrder->update([
+            'status'         => 'Pengecekan Engineer',
+            'rejection_note' => $request->rejection_note,
+            'is_check_approved' => false,
+        ]);
+
+        // Tambah log progress untuk history
+        $workOrder->progresses()->create([
+            'description' => 'Hasil pengecekan ditolak oleh Admin. Catatan revisi: ' . $request->rejection_note,
+        ]);
+
+        return back()->with('success', 'Hasil pengecekan berhasil ditolak dan dikembalikan ke teknisi.');
+    }
+
+    public function approveCheck(Request $request, WorkOrder $workOrder)
+    {
+        // Pastikan hanya Admin / Super Admin yang bisa approve
+        if (auth()->user()->role !== 'admin' && auth()->user()->role !== 'super_admin') {
+            return back()->withErrors(['error' => 'Hanya Admin yang dapat menyetujui hasil pengecekan.']);
+        }
+
+        // Approve FPU jika ada
+        if ($workOrder->fpuRequest) {
+            $workOrder->fpuRequest->update([
+                'status_approval' => 'Disetujui (Selesai)',
+                'verified_by_hrga' => auth()->id(),
+                'known_by_manager' => auth()->id(),
+                'approved_by_gm' => auth()->id(),
+                'approved_by_gm_at' => now(),
+            ]);
+        }
+
+        // Update Work Order status ke Sedang Dikerjakan
+        $workOrder->update([
+            'status' => 'Sedang Dikerjakan',
+            'is_check_approved' => true,
+        ]);
+
+        // Tambah log progress
+        $workOrder->progresses()->create([
+            'description' => 'Hasil pengecekan & FPU disetujui oleh Admin. Pekerjaan dilanjutkan ke tahap pengerjaan.',
+        ]);
+
+        return back()->with('success', 'Hasil pengecekan & FPU berhasil disetujui.');
     }
 
     public function startWork(WorkOrder $workOrder)

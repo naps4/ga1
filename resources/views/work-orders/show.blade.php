@@ -208,15 +208,21 @@
                     </div>
                     <div class="card-body">
                         @if($workOrder->status === 'Pengecekan Engineer' && auth()->user()->id === $workOrder->assigned_engineer_id)
+                            @if($workOrder->rejection_note)
+                                <div class="alert alert-warning rounded-4 shadow-sm mb-3">
+                                    <strong><i class="fas fa-exclamation-triangle"></i> Revisi Diperlukan:</strong><br>
+                                    {{ $workOrder->rejection_note }}
+                                </div>
+                            @endif
                             <form action="{{ route('work-orders.update-check', $workOrder->id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <div class="form-group">
                                     <label>Hasil Pengecekan Lapangan</label>
-                                    <textarea name="check_result" class="form-control rounded-4" rows="3" required></textarea>
+                                    <textarea name="check_result" class="form-control rounded-4" rows="3" required>{{ old('check_result', $workOrder->check_result) }}</textarea>
                                 </div>
                                 <div class="form-group">
                                     <label>Kebutuhan Material/Barang</label>
-                                    <textarea name="engineer_needs" class="form-control rounded-4" rows="2" placeholder="(Opsional) Tuliskan jika butuh sparepart..."></textarea>
+                                    <textarea name="engineer_needs" class="form-control rounded-4" rows="2" placeholder="(Opsional) Tuliskan jika butuh sparepart...">{{ old('engineer_needs', $workOrder->engineer_needs) }}</textarea>
                                 </div>
                                 <div class="form-group">
                                     <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success mb-3">
@@ -311,6 +317,50 @@
                                         <a href="{{ asset('storage/' . $workOrder->attachment_check) }}" class="btn btn-xs btn-info rounded-pill"><i class="fas fa-image"></i> Lihat Bukti Pengecekan</a>
                                     @endif
                                 </div>
+
+                                 @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && in_array($workOrder->status, ['Menunggu Pengadaan Material', 'Sedang Dikerjakan']))
+                                    @if(!$workOrder->is_check_approved)
+                                        <div class="mt-3 p-3 bg-light rounded-4 border border-danger">
+                                            <h5 class="text-danger font-weight-bold"><i class="fas fa-times-circle"></i> Tindakan Hasil Cek</h5>
+                                            <p class="text-sm text-muted">Jika ada kesalahan pada hasil pengecekan atau pengajuan material, Anda dapat menolak hasil cek ini. Jika sesuai, silakan setujui untuk melanjutkan pengerjaan.</p>
+                                            
+                                            <!-- Form Reject -->
+                                            <form action="{{ route('work-orders.reject-check', $workOrder->id) }}" method="POST" id="reject-form">
+                                                @csrf
+                                                <div class="form-group">
+                                                    <label>Alasan Penolakan / Revisi</label>
+                                                    <textarea name="rejection_note" class="form-control rounded-4" rows="2" placeholder="Tuliskan catatan revisi untuk teknisi..." required></textarea>
+                                                </div>
+                                            </form>
+
+                                            <!-- Form Approve -->
+                                            <form action="{{ route('work-orders.approve-check', $workOrder->id) }}" method="POST" id="approve-form">
+                                                @csrf
+                                            </form>
+
+                                             <div class="row">
+                                                <div class="col-md-6 mb-2 mb-md-0">
+                                                    <button type="submit" form="reject-form" class="btn btn-danger rounded-pill btn-block font-weight-bold">
+                                                        <i class="fas fa-times-circle mr-1"></i> Reject & Kembalikan
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <button type="submit" form="approve-form" class="btn btn-success rounded-pill btn-block font-weight-bold">
+                                                        <i class="fas fa-check-circle mr-1"></i> Approve / Setujui
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="mt-3 alert alert-success rounded-4 shadow-sm border-0 d-flex align-items-center">
+                                            <i class="fas fa-check-circle fa-2x mr-3 text-success"></i>
+                                            <div>
+                                                <h6 class="font-weight-bold mb-1 text-success">Hasil Cek Disetujui</h6>
+                                                <p class="text-xs mb-0 text-dark">Hasil pengecekan lapangan ini telah disetujui oleh Admin dan terkunci dari revisi.</p>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endif
                             @else
                                 <p class="text-muted text-center my-4"><i class="fas fa-clock fa-2x mb-2"></i><br>Menunggu pengecekan teknisi...</p>
                             @endif
@@ -325,7 +375,7 @@
                             <h3 class="card-title"><i class="fas fa-box"></i> Pengadaan Material (Form C)</h3>
                         </div>
                         <div class="card-body">
-                            <p><strong>Status FPU:</strong> <span class="badge badge-warning">{{ $workOrder->fpuRequest->status_approval }}</span></p>
+                            <p><strong>Status FPU:</strong> <span class="badge badge-warning">{{ $workOrder->fpuRequest->status_approval === 'Menunggu Oprt. Manager' ? 'Menunggu Admin GA' : $workOrder->fpuRequest->status_approval }}</span></p>
                             <a href="{{ route('fpu.show', $workOrder->fpuRequest->id) }}" class="btn btn-outline-warning rounded-pill btn-block text-dark font-weight-bold">
                                 <i class="fas fa-file-invoice"></i> Buka / Kelola Form C (FPU)
                             </a>

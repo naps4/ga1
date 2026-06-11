@@ -69,7 +69,7 @@ Route::get('/dashboard', function () {
         $viewData['pendingAssignment'] = \App\Models\WorkOrder::where('status', 'Menunggu Penugasan')->count();
         $viewData['activeWO'] = \App\Models\WorkOrder::whereNotIn('status', ['Selesai', 'Ditolak'])->count();
         
-        $viewData['pendingFpu'] = \App\Models\FpuRequest::whereIn('status_approval', ['Menunggu Verifikasi HRGA', 'Menunggu Oprt. Manager'])->count();
+        $viewData['pendingFpu'] = \App\Models\FpuRequest::whereIn('status_approval', ['Menunggu Verifikasi HRGA', 'Menunggu Admin GA'])->count();
         $viewData['recentWO'] = \App\Models\WorkOrder::orderBy('created_at', 'desc')->take(5)->get();
     }
     
@@ -121,6 +121,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('work-orders', WorkOrderController::class);
     Route::post('work-orders/{workOrder}/assign', [WorkOrderController::class, 'assign'])->name('work-orders.assign');
     Route::post('work-orders/{workOrder}/check', [WorkOrderController::class, 'updateCheck'])->name('work-orders.update-check');
+    Route::post('work-orders/{workOrder}/reject-check', [WorkOrderController::class, 'rejectCheck'])->name('work-orders.reject-check');
+    Route::post('work-orders/{workOrder}/approve-check', [WorkOrderController::class, 'approveCheck'])->name('work-orders.approve-check');
     Route::post('work-orders/{workOrder}/progress', [WorkOrderController::class, 'storeProgress'])->name('work-orders.store-progress');
     Route::post('work-orders/{workOrder}/start', [WorkOrderController::class, 'startWork'])->name('work-orders.start');
     Route::post('work-orders/{workOrder}/report', [WorkOrderController::class, 'updateReport'])->name('work-orders.update-report');

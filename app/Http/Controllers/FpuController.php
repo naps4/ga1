@@ -52,14 +52,20 @@ class FpuController extends Controller
 
             if ($request->action === 'verify') {
                 $fpu->update([
-                    'status_approval' => 'Menunggu Oprt. Manager',
+                    'status_approval' => 'Menunggu Admin GA',
                     'verified_by_hrga' => auth()->id(),
                 ]);
             }
         });
 
-        $msg = $request->action === 'verify' ? 'FPU berhasil disimpan & diverifikasi.' : 'Draft FPU berhasil disimpan.';
-        return back()->with('success', $msg);
+        $msg = 'Draft FPU berhasil disimpan.';
+        if ($request->action === 'verify') {
+            $msg = 'FPU berhasil disimpan & diverifikasi.';
+        } elseif ($request->action === 'update') {
+            $msg = 'Perubahan FPU berhasil disimpan.';
+        }
+
+        return redirect()->route('fpu.show', $fpu->id)->with('success', $msg);
     }
 
     // Approval Admin (Single Step)
