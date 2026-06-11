@@ -18,6 +18,10 @@ class FpuController extends Controller
 
     public function update(Request $request, FpuRequest $fpu)
     {
+        if ($fpu->status_approval === 'Ditolak/Revisi' || $fpu->status_approval === 'Disetujui (Selesai)') {
+            return redirect()->route('fpu.show', $fpu->id)->withErrors(['error' => 'FPU yang ditolak/revisi atau disetujui tidak dapat diubah oleh Admin.']);
+        }
+
         // Menyimpan data Form FPU (Oleh Admin / HRGA)
         $request->validate([
             'priority' => 'required|string',
@@ -71,6 +75,10 @@ class FpuController extends Controller
     // Approval Admin (Single Step)
     public function approveAll(FpuRequest $fpu)
     {
+        if ($fpu->status_approval === 'Ditolak/Revisi') {
+            return back()->withErrors(['error' => 'FPU yang ditolak/revisi tidak dapat disetujui.']);
+        }
+
         $fpu->update([
             'status_approval' => 'Disetujui (Selesai)',
             'verified_by_hrga' => auth()->id(),

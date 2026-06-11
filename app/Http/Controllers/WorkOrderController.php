@@ -176,26 +176,59 @@ class WorkOrderController extends Controller
         ]);
 
         // Trigger logic untuk FPU jika butuh material
-        if ($needsMaterial && !$workOrder->fpuRequest) {
-            $fpu = $workOrder->fpuRequest()->create([
-                'priority'        => $request->priority ?? 'Biasa',
-                'executor_type'   => $request->executor_type ?? 'Internal',
-                'type'            => $request->type ?? 'Lainnya',
-                'category'        => $request->category ?? 'Pengadaan',
-                'status_approval' => 'Menunggu Verifikasi HRGA'
-            ]);
-            
-            if ($request->has('materials') && is_array($request->materials)) {
-                foreach ($request->materials as $mat) {
-                    if (!empty($mat['name'])) {
-                        $fpu->materials()->create([
-                            'material_name' => $mat['name'],
-                            'specification' => $mat['spec'] ?? null,
-                            'qty'           => $mat['qty'] ?? 1,
-                            'unit'          => 'Pcs',
-                        ]);
+        if ($needsMaterial) {
+            if ($workOrder->fpuRequest) {
+                // Update FPU yang sudah ada
+                $fpu = $workOrder->fpuRequest;
+                $fpu->update([
+                    'priority'        => $request->priority ?? 'Biasa',
+                    'executor_type'   => $request->executor_type ?? 'Internal',
+                    'type'            => $request->type ?? 'Lainnya',
+                    'category'        => $request->category ?? 'Pengadaan',
+                    'status_approval' => 'Menunggu Verifikasi HRGA'
+                ]);
+
+                // Sinkronisasi material
+                $fpu->materials()->delete();
+                if ($request->has('materials') && is_array($request->materials)) {
+                    foreach ($request->materials as $mat) {
+                        if (!empty($mat['name'])) {
+                            $fpu->materials()->create([
+                                'material_name' => $mat['name'],
+                                'specification' => $mat['spec'] ?? null,
+                                'qty'           => $mat['qty'] ?? 1,
+                                'unit'          => 'Pcs',
+                            ]);
+                        }
                     }
                 }
+            } else {
+                // Buat FPU baru
+                $fpu = $workOrder->fpuRequest()->create([
+                    'priority'        => $request->priority ?? 'Biasa',
+                    'executor_type'   => $request->executor_type ?? 'Internal',
+                    'type'            => $request->type ?? 'Lainnya',
+                    'category'        => $request->category ?? 'Pengadaan',
+                    'status_approval' => 'Menunggu Verifikasi HRGA'
+                ]);
+                
+                if ($request->has('materials') && is_array($request->materials)) {
+                    foreach ($request->materials as $mat) {
+                        if (!empty($mat['name'])) {
+                            $fpu->materials()->create([
+                                'material_name' => $mat['name'],
+                                'specification' => $mat['spec'] ?? null,
+                                'qty'           => $mat['qty'] ?? 1,
+                                'unit'          => 'Pcs',
+                            ]);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Jika tidak butuh material tapi sebelumnya ada FpuRequest, hapus FpuRequest
+            if ($workOrder->fpuRequest) {
+                $workOrder->fpuRequest->delete();
             }
         }
 
@@ -213,9 +246,11 @@ class WorkOrderController extends Controller
             'rejection_note' => 'required|string',
         ]);
 
-        // Hapus FPU jika ada
+        // Update status FPU jika ada ke Ditolak/Revisi alih-alih menghapusnya
         if ($workOrder->fpuRequest) {
-            $workOrder->fpuRequest->delete();
+            $workOrder->fpuRequest->update([
+                'status_approval' => 'Ditolak/Revisi',
+            ]);
         }
 
         // Update Work Order
@@ -240,35 +275,30 @@ class WorkOrderController extends Controller
             return back()->withErrors(['error' => 'Hanya Admin yang dapat menyetujui hasil pengecekan.']);
         }
 
-        // Approve FPU jika ada
-        if ($workOrder->fpuRequest) {
-            $workOrder->fpuRequest->update([
-                'status_approval' => 'Disetujui (Selesai)',
-                'verified_by_hrga' => auth()->id(),
-                'known_by_manager' => auth()->id(),
-                'approved_by_gm' => auth()->id(),
-                'approved_by_gm_at' => now(),
-            ]);
-        }
+        // Tentukan status Work Order berikutnya: tetap Menunggu Pengadaan Material jika butuh material, atau langsung Sedang Dikerjakan jika tidak.
+        $needsMaterial = $workOrder->fpuRequest ? true : false;
+        $status = $needsMaterial ? 'Menunggu Pengadaan Material' : 'Sedang Dikerjakan';
 
-        // Update Work Order status ke Sedang Dikerjakan
+        // Set is_check_approved ke true tetapi jangan langsung menyelesaikan/menyetujui FPU agar Admin dapat mengedit FPU terlebih dahulu
         $workOrder->update([
-            'status' => 'Sedang Dikerjakan',
+            'status' => $status,
             'is_check_approved' => true,
         ]);
 
         // Tambah log progress
         $workOrder->progresses()->create([
-            'description' => 'Hasil pengecekan & FPU disetujui oleh Admin. Pekerjaan dilanjutkan ke tahap pengerjaan.',
+            'description' => 'Hasil pengecekan disetujui oleh Admin. ' . ($needsMaterial ? 'Menunggu pengadaan material & FPU.' : 'Pekerjaan dilanjutkan ke tahap pengerjaan.'),
         ]);
 
-        return back()->with('success', 'Hasil pengecekan & FPU berhasil disetujui.');
+        return back()->with('success', 'Hasil pengecekan berhasil disetujui.');
     }
 
     public function startWork(WorkOrder $workOrder)
     {
-        // Pastikan tiket sedang dalam status yang valid untuk dimulai
-        if ($workOrder->status === 'Menunggu Pengadaan Material') {
+        // Pastikan tiket sedang dalam status yang valid untuk dimulai, hasil cek telah disetujui, dan FPU telah diverifikasi/disetujui
+        $fpuVerified = $workOrder->fpuRequest && in_array($workOrder->fpuRequest->status_approval, ['Menunggu Admin GA', 'Disetujui (Selesai)']);
+
+        if ($workOrder->status === 'Menunggu Pengadaan Material' && $workOrder->is_check_approved && $fpuVerified) {
             $workOrder->update(['status' => 'Sedang Dikerjakan']);
             
             // Tambahkan initial progress log automatically
@@ -279,7 +309,7 @@ class WorkOrderController extends Controller
             return back()->with('success', 'Status pengerjaan dimulai (Sedang Dikerjakan).');
         }
 
-        return back()->with('error', 'Tidak dapat memulai pengerjaan dari status ini.');
+        return back()->with('error', 'Tidak dapat memulai pengerjaan. Pengajuan FPU (Form C) belum diverifikasi.');
     }
 
     public function storeProgress(Request $request, WorkOrder $workOrder)

@@ -34,7 +34,7 @@
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-header bg-white border-bottom border-light">
                         <h3 class="card-title text-primary"><i class="fas fa-edit"></i> Detail Form C (FPU)</h3>
-                        @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && $fpu->status_approval !== 'Disetujui (Selesai)' && $fpu->status_approval !== 'Menunggu Verifikasi HRGA' && request('edit') != 1)
+                        @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && $fpu->status_approval !== 'Disetujui (Selesai)' && $fpu->status_approval !== 'Ditolak/Revisi' && $fpu->status_approval !== 'Menunggu Verifikasi HRGA' && request('edit') != 1)
                             <div class="card-tools">
                                 <a href="{{ route('fpu.show', $fpu->id) }}?edit=1" class="btn btn-sm btn-outline-primary rounded-pill">
                                     <i class="fas fa-edit"></i> Edit FPU
@@ -42,8 +42,8 @@
                             </div>
                         @endif
                     </div>
-                    <!-- Form bisa diedit jika status belum Disetujui (Selesai) DAN (status masih Menunggu Verifikasi HRGA ATAU parameter edit=1 ada) -->
-                    @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && $fpu->status_approval !== 'Disetujui (Selesai)' && ($fpu->status_approval === 'Menunggu Verifikasi HRGA' || request('edit') == 1))
+                    <!-- Form bisa diedit jika status belum Disetujui (Selesai) DAN belum Ditolak/Revisi DAN (status masih Menunggu Verifikasi HRGA ATAU parameter edit=1 ada) -->
+                    @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && $fpu->status_approval !== 'Disetujui (Selesai)' && $fpu->status_approval !== 'Ditolak/Revisi' && ($fpu->status_approval === 'Menunggu Verifikasi HRGA' || request('edit') == 1))
                         <form action="{{ route('fpu.update', $fpu->id) }}" method="POST">
                             @csrf
                             <div class="card-body">
@@ -207,13 +207,17 @@
                                             <small class="text-muted"><i class="fas fa-calendar-alt mr-1"></i> {{ \Carbon\Carbon::parse($fpu->approved_by_gm_at)->translatedFormat('d F Y H:i') }}</small>
                                         @else
                                             @if(auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin')
-                                                <p class="text-muted mb-3">Klik tombol di bawah untuk menyetujui FPU ini dan melanjutkan pekerjaan.</p>
-                                                <form action="{{ route('fpu.approve-all', $fpu->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-success btn-block rounded-pill shadow-sm">
-                                                        <i class="fas fa-check-double mr-1"></i> Approve FPU (Selesai)
-                                                    </button>
-                                                </form>
+                                                @if($fpu->status_approval === 'Ditolak/Revisi')
+                                                    <span class="text-muted"><i class="fas fa-times-circle text-danger"></i> FPU ditolak dan dikembalikan ke teknisi.</span>
+                                                @else
+                                                    <p class="text-muted mb-3">Klik tombol di bawah untuk menyetujui FPU ini dan melanjutkan pekerjaan.</p>
+                                                    <form action="{{ route('fpu.approve-all', $fpu->id) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-success btn-block rounded-pill shadow-sm">
+                                                            <i class="fas fa-check-double mr-1"></i> Approve FPU (Selesai)
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             @else
                                                 <span class="text-muted">Menunggu persetujuan Admin/HRGA.</span>
                                             @endif

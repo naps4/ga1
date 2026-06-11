@@ -149,7 +149,7 @@
                                             {{ $workOrder->engineer_needs }}
                                         </div>
                                     @endif
-                                    @if($workOrder->status === 'Menunggu Pengadaan Material' && auth()->user()->id === $workOrder->assigned_engineer_id)
+                                    @if($workOrder->status === 'Menunggu Pengadaan Material' && $workOrder->is_check_approved && $workOrder->fpuRequest && in_array($workOrder->fpuRequest->status_approval, ['Menunggu Admin GA', 'Disetujui (Selesai)']) && auth()->user()->id === $workOrder->assigned_engineer_id)
                                     <div class="timeline-body pt-1 pb-0">
                                         <form action="{{ route('work-orders.start', $workOrder->id) }}" method="POST">
                                             @csrf
@@ -226,13 +226,14 @@
                                 </div>
                                 <div class="form-group">
                                     <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success mb-3">
-                                        <input type="checkbox" class="custom-control-input" id="needs_material" name="needs_material" value="1">
+                                        <input type="checkbox" class="custom-control-input" id="needs_material" name="needs_material" value="1"
+                                            {{ old('needs_material', $workOrder->fpuRequest ? '1' : '') == '1' ? 'checked' : '' }}>
                                         <label class="custom-control-label" for="needs_material">Butuh Pengadaan Material (Buka Form C/FPU)</label>
                                     </div>
                                 </div>
 
                                 <!-- Bagian Form C (FPU) Langsung -->
-                                <div id="form-c-container" style="display: none;" class="mb-4 p-3 bg-light rounded-4 border border-warning">
+                                <div id="form-c-container" style="display: {{ old('needs_material', $workOrder->fpuRequest ? '1' : '') == '1' ? 'block' : 'none' }};" class="mb-4 p-3 bg-light rounded-4 border border-warning">
                                     <h5 class="text-warning font-weight-bold"><i class="fas fa-box"></i> Rincian Material (Form C)</h5>
                                     <p class="text-sm text-muted">Silakan tentukan klasifikasi dan rinci material/barang yang dibutuhkan untuk pekerjaan ini.</p>
                                     
@@ -240,32 +241,32 @@
                                         <div class="col-md-3">
                                             <label class="text-sm">Prioritas</label>
                                             <select name="priority" class="form-control form-control-sm">
-                                                <option value="Biasa">Biasa</option>
-                                                <option value="Penting">Penting</option>
-                                                <option value="Sangat Penting">Sangat Penting</option>
+                                                <option value="Biasa" {{ old('priority', $workOrder->fpuRequest->priority ?? '') == 'Biasa' ? 'selected' : '' }}>Biasa</option>
+                                                <option value="Penting" {{ old('priority', $workOrder->fpuRequest->priority ?? '') == 'Penting' ? 'selected' : '' }}>Penting</option>
+                                                <option value="Sangat Penting" {{ old('priority', $workOrder->fpuRequest->priority ?? '') == 'Sangat Penting' ? 'selected' : '' }}>Sangat Penting</option>
                                             </select>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="text-sm">Pelaksana</label>
                                             <select name="executor_type" class="form-control form-control-sm">
-                                                <option value="Internal">Internal</option>
-                                                <option value="Eksternal">Eksternal</option>
+                                                <option value="Internal" {{ old('executor_type', $workOrder->fpuRequest->executor_type ?? '') == 'Internal' ? 'selected' : '' }}>Internal</option>
+                                                <option value="Eksternal" {{ old('executor_type', $workOrder->fpuRequest->executor_type ?? '') == 'Eksternal' ? 'selected' : '' }}>Eksternal</option>
                                             </select>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="text-sm">Jenis</label>
                                             <select name="type" class="form-control form-control-sm">
-                                                <option value="Bangunan">Bangunan</option>
-                                                <option value="Kendaraan">Kendaraan</option>
-                                                <option value="Lainnya">Lainnya</option>
+                                                <option value="Bangunan" {{ old('type', $workOrder->fpuRequest->type ?? '') == 'Bangunan' ? 'selected' : '' }}>Bangunan</option>
+                                                <option value="Kendaraan" {{ old('type', $workOrder->fpuRequest->type ?? '') == 'Kendaraan' ? 'selected' : '' }}>Kendaraan</option>
+                                                <option value="Lainnya" {{ old('type', $workOrder->fpuRequest->type ?? '') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                                             </select>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="text-sm">Kategori</label>
                                             <select name="category" class="form-control form-control-sm">
-                                                <option value="Pembuatan">Pembuatan</option>
-                                                <option value="Perbaikan">Perbaikan</option>
-                                                <option value="Pengadaan">Pengadaan</option>
+                                                <option value="Pembuatan" {{ old('category', $workOrder->fpuRequest->category ?? '') == 'Pembuatan' ? 'selected' : '' }}>Pembuatan</option>
+                                                <option value="Perbaikan" {{ old('category', $workOrder->fpuRequest->category ?? '') == 'Perbaikan' ? 'selected' : '' }}>Perbaikan</option>
+                                                <option value="Pengadaan" {{ old('category', $workOrder->fpuRequest->category ?? '') == 'Pengadaan' ? 'selected' : '' }}>Pengadaan</option>
                                             </select>
                                         </div>
                                     </div>
@@ -281,12 +282,23 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr>
-                                                    <td><input type="text" name="materials[0][name]" class="form-control form-control-sm" placeholder="Contoh: Lampu LED"></td>
-                                                    <td><input type="text" name="materials[0][spec]" class="form-control form-control-sm" placeholder="Contoh: 18 Watt Philips"></td>
-                                                    <td><input type="number" name="materials[0][qty]" class="form-control form-control-sm" value="1" min="1"></td>
-                                                    <td><button type="button" class="btn btn-danger btn-sm remove-mat-row"><i class="fas fa-trash"></i></button></td>
-                                                </tr>
+                                                @if($workOrder->fpuRequest && $workOrder->fpuRequest->materials->count() > 0)
+                                                    @foreach($workOrder->fpuRequest->materials as $index => $mat)
+                                                        <tr>
+                                                            <td><input type="text" name="materials[{{ $index }}][name]" value="{{ old('materials.'.$index.'.name', $mat->material_name) }}" class="form-control form-control-sm" required placeholder="Contoh: Lampu LED"></td>
+                                                            <td><input type="text" name="materials[{{ $index }}][spec]" value="{{ old('materials.'.$index.'.spec', $mat->specification) }}" class="form-control form-control-sm" placeholder="Contoh: 18 Watt Philips"></td>
+                                                            <td><input type="number" name="materials[{{ $index }}][qty]" value="{{ old('materials.'.$index.'.qty', $mat->qty) }}" class="form-control form-control-sm" min="1" required></td>
+                                                            <td><button type="button" class="btn btn-danger btn-sm remove-mat-row"><i class="fas fa-trash"></i></button></td>
+                                                        </tr>
+                                                    @endforeach
+                                                @else
+                                                    <tr>
+                                                        <td><input type="text" name="materials[0][name]" class="form-control form-control-sm" placeholder="Contoh: Lampu LED"></td>
+                                                        <td><input type="text" name="materials[0][spec]" class="form-control form-control-sm" placeholder="Contoh: 18 Watt Philips"></td>
+                                                        <td><input type="number" name="materials[0][qty]" class="form-control form-control-sm" value="1" min="1"></td>
+                                                        <td><button type="button" class="btn btn-danger btn-sm remove-mat-row"><i class="fas fa-trash"></i></button></td>
+                                                    </tr>
+                                                @endif
                                             </tbody>
                                         </table>
                                     </div>
@@ -493,18 +505,18 @@
         
         if (toggleMaterial && formCContainer) {
             toggleMaterial.addEventListener('change', function() {
+                const firstInput = document.querySelector('#engineer-material-table tbody tr:first-child input[name^="materials"][name$="[name]"]');
                 if (this.checked) {
                     formCContainer.style.display = 'block';
-                    // Tambahkan required pada baris pertama jika dimunculkan
-                    document.querySelector('input[name="materials[0][name]"]').setAttribute('required', 'required');
+                    if (firstInput) firstInput.setAttribute('required', 'required');
                 } else {
                     formCContainer.style.display = 'none';
-                    document.querySelector('input[name="materials[0][name]"]').removeAttribute('required');
+                    if (firstInput) firstInput.removeAttribute('required');
                 }
             });
         }
 
-        let rowCount = 1;
+        let rowCount = {{ $workOrder->fpuRequest && $workOrder->fpuRequest->materials->count() > 0 ? $workOrder->fpuRequest->materials->count() : 1 }};
         const tbody = document.querySelector('#engineer-material-table tbody');
         const addBtn = document.getElementById('add-mat-row');
         
