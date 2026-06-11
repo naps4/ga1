@@ -183,10 +183,10 @@
         <td style="width: 100%; padding: 0; vertical-align: top;">
             <table class="approval-table" style="margin-top: 0;">
                 <tr>
-                    <td class="approval-header">Diajukan</td>
-                    <td class="approval-header">Diperiksa</td>
-                    <td class="approval-header">Disetujui</td>
-                    <td class="approval-header">Diketahui</td>
+                    <td class="approval-header">Di Ajukan</td>
+                    <td class="approval-header">Di Diketahui</td>
+                    <td class="approval-header">Di Periksa</td>
+                    <td class="approval-header">Di Setujui</td>
                 </tr>
                 <tr>
                     <td>
