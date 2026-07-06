@@ -49,6 +49,12 @@
             </a>
         </li>
 
+        <li>
+            <a href="{{ route('atk-requests.index') }}" class="mobile-drawer-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}">
+                <i class="fas fa-pencil-alt"></i><span>Permintaan ATK</span>
+            </a>
+        </li>
+
         @if(auth()->user()->isSuperAdmin())
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Work Order GA</span></a></li>
             <li><a href="{{ route('super-admin.reports') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.reports*') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i><span>Laporan GA</span></a></li>

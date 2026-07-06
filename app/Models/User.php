@@ -57,6 +57,11 @@ class User extends Authenticatable
         return $this->hasMany(ProjectRequest::class, 'client_id');
     }
 
+    public function atkRequests()
+    {
+        return $this->hasMany(AtkRequest::class);
+    }
+
     public function approvedProjects()
     {
         return $this->hasMany(ProjectRequest::class, 'approved_by');

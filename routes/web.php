@@ -140,6 +140,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('handovers/{handover}/approve-all', [HandoverController::class, 'approveAll'])->name('handovers.approve-all');
     Route::post('handovers/{handover}/accept', [HandoverController::class, 'acceptUser'])->name('handovers.accept');
     Route::get('handovers/{workOrder}/print', [HandoverController::class, 'print'])->name('handovers.print');
+
+    // Rute Permintaan ATK (Alat Tulis Kantor)
+    Route::resource('atk-requests', \App\Http\Controllers\AtkRequestController::class);
+    Route::post('atk-requests/{atkRequest}/approve', [\App\Http\Controllers\AtkRequestController::class, 'approve'])->name('atk-requests.approve');
+    Route::post('atk-requests/{atkRequest}/reject', [\App\Http\Controllers\AtkRequestController::class, 'reject'])->name('atk-requests.reject');
+    Route::post('atk-requests/{atkRequest}/handover', [\App\Http\Controllers\AtkRequestController::class, 'handover'])->name('atk-requests.handover');
+    Route::get('atk-requests/{atkRequest}/print', [\App\Http\Controllers\AtkRequestController::class, 'print'])->name('atk-requests.print');
 });
 
 // Approval Routes (Admin and Super Admin only)

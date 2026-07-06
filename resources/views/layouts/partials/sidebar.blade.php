@@ -35,6 +35,14 @@
                     </a>
                 </li>
 
+                <!-- Permintaan ATK -->
+                <li class="nav-item">
+                    <a href="{{ route('atk-requests.index') }}" class="nav-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-pencil-alt"></i>
+                        <p>Permintaan ATK</p>
+                    </a>
+                </li>
+
                 @if(auth()->user()->isClient())
                     <!-- Client Menu -->
                     <li class="nav-header">PROYEK SAYA</li>
