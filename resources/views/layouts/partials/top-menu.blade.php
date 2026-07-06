@@ -51,7 +51,7 @@
 
         <li>
             <a href="{{ route('atk-requests.index') }}" class="mobile-drawer-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}">
-                <i class="fas fa-pencil-alt"></i><span>Permintaan ATK</span>
+                <i class="fas fa-pencil-alt"></i><span>Permintaan</span>
             </a>
         </li>
 

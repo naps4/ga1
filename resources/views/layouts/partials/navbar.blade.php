@@ -32,7 +32,7 @@
 
             <li>
                 <a href="{{ route('atk-requests.index') }}" class="top-menu-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}">
-                    <span>Permintaan ATK</span>
+                    <span>Permintaan</span>
                 </a>
             </li>
 

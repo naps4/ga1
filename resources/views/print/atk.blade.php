@@ -1,6 +1,6 @@
 @extends('layouts.print')
 
-@section('title', 'ATK-' . str_pad($atkRequest->id, 4, '0', STR_PAD_LEFT))
+@section('title', (($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT-' : 'ATK-') . str_pad($atkRequest->id, 4, '0', STR_PAD_LEFT))
 
 @section('custom_header')
     <!-- Override the default kop surat to match the scanned paper form -->
@@ -75,6 +75,13 @@
 <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 10px;">
     <tr>
         <td style="width: 50%; border: none; vertical-align: bottom; padding-bottom: 5px;">
+            @php
+                $logo = \App\Helpers\SettingsHelper::get('app_logo');
+                $logoPath = $logo ? storage_path('app/public/' . $logo) : null;
+            @endphp
+            @if($logo && $logoPath && file_exists($logoPath))
+                <img src="{{ asset('storage/' . $logo) }}" style="max-height: 45px; max-width: 180px; display: block; margin-bottom: 5px;">
+            @endif
             <div style="font-weight: 900; font-size: 15px; color: #000; letter-spacing: 0.5px;">
                 {{ \App\Helpers\SettingsHelper::get('company_name', 'HERBATECH') }}
             </div>
@@ -104,24 +111,22 @@
 
 <!-- Title -->
 <div style="text-align: center; margin-top: 15px; margin-bottom: 15px;">
-    <h5 style="margin: 0; font-weight: bold; font-size: 13px; text-decoration: underline; letter-spacing: 0.5px;">FORM PERMINTAAN ATK (ALAT TULIS KANTOR)</h5>
+    <h5 style="margin: 0; font-weight: bold; font-size: 13px; text-decoration: underline; letter-spacing: 0.5px;">
+        FORM PERMINTAAN {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'KEBUTUHAN RUMAH TANGGA' : 'ATK (ALAT TULIS KANTOR)' }}
+    </h5>
 </div>
 
 <!-- Main Selected Items Table -->
 @php
-    $orderedNames = [
-        'Amplop Coklat', 'Amplop Putih', 'Baterai', 'Binder Clips', 'Box File', 'Buku', 'Business File',
-        'Cartridge tinta pita dot matrix', 'Clear Holder Document', 'Clear Sleeves', 'Cutter', 'Isi Cutter',
-        'Double Tape', 'Gunting', 'Isi Pulpen', 'Isi Staples', 'Kalkulator', 'Kertas 70 Gr', 'Kertas 80 Gr',
-        'Kertas Continuos Form 9 1/2 x 11', 'Kertas Continuos Form 9 1/2 x 11 (Bagi 2)', 'Kertas Foto/sticker',
-        'Lakban ( Coklat / Hitam / Bening )*', 'Lem Kertas', 'Map Dengan Pengait', 'Map Tanpa Pengait',
-        'Ordner', 'Paper Clips', 'Pembatas File', 'Pembolong Kertas', 'Pencabut Staples', 'Penggaris',
-        'Penghapus', 'Pensil', 'Pita Printer', 'Post IT', 'Pulpen', 'Rautan Pensil', 'Sellotape',
-        'Sheet Protector', 'Spidol Kecil/OPM', 'Spidol Papan Tulis', 'Stabilo', 'Staples', 'Tape Dispenser',
-        'Tinta ( 678 / 703 / 802 )', 'Tinta PG740', 'Tinta CL741', 'Tinta Stempel Tanpa Bantalan (Simanis)',
-        'Tip ex', 'Sticker label', 'Baterai AA', 'Baterai AAA'
-    ];
-    $standardItemsByName = collect($standardItems)->keyBy('name');
+    $isHousehold = ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga';
+    if ($isHousehold) {
+        $orderedNames = collect($householdItems)->pluck('name')->toArray();
+        $itemsByName = collect($householdItems)->keyBy('name');
+    } else {
+        // Let's use the full list of ATK standard items
+        $orderedNames = collect($standardItems)->pluck('name')->toArray();
+        $itemsByName = collect($standardItems)->keyBy('name');
+    }
 @endphp
 
 <table class="atk-print-table">
@@ -145,9 +150,9 @@
             @endphp
             @if($qty > 0)
                 @php
-                    $itemConfig = $standardItemsByName->get($name);
+                    $itemConfig = $itemsByName->get($name);
                     $unit = $itemConfig ? $itemConfig['unit'] : 'Pcs';
-                    $options = $itemConfig ? $itemConfig['options'] : [];
+                    $options = $itemConfig && isset($itemConfig['options']) ? $itemConfig['options'] : [];
                     
                     // Parse options
                     $checkedOpts = [];
@@ -271,9 +276,16 @@
 <!-- Ketentuan Box -->
 <div style="border: 1.5px solid #000; margin-top: 15px; padding: 6px; font-family: Arial, sans-serif; font-size: 9px; line-height: 1.35;">
     <strong>Ketentuan :</strong>
-    <ol style="margin: 0; padding-left: 15px;">
-        <li>Mohon diisi yang diperlukan selama 1 bulan (estimasi) Jika kurang dari 1 bulan ATK sudah habis dan atau ada keperluan mendadak (urgent) mengenai ATK mohon agar bisa menunggu priode bulan berikutnya.</li>
-        <li>Pengisian Permintaan & Penyerahan Form Permintaan ATK paling lambat tanggal 28 disetiap bulannya.</li>
-    </ol>
+    @if(($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga')
+        <ol style="margin: 0; padding-left: 15px;">
+            <li>Mohon diisi kebutuhan selama 1 bulan (estimasi).</li>
+            <li>Pengisian Permintaan & Penyerahan Form paling lambat tanggal 28 disetiap bulannya.</li>
+        </ol>
+    @else
+        <ol style="margin: 0; padding-left: 15px;">
+            <li>Mohon diisi yang diperlukan selama 1 bulan (estimasi) Jika kurang dari 1 bulan ATK sudah habis dan atau ada keperluan mendadak (urgent) mengenai ATK mohon agar bisa menunggu priode bulan berikutnya.</li>
+            <li>Pengisian Permintaan & Penyerahan Form Permintaan ATK paling lambat tanggal 28 disetiap bulannya.</li>
+        </ol>
+    @endif
 </div>
 @endsection

@@ -28,6 +28,10 @@ class SettingsHelper
                 'email_notifications' => true,
                 'notification_window_days' => 3,
                 'maintenance_mode' => false,
+                'company_name' => 'PT. HERBATECH INNOPHARMA INDUSTRY',
+                'company_address' => 'Jl. Contoh Perusahaan No. 123, Gedung Perkantoran Lt. 4, Jakarta Pusat',
+                'company_phone' => '(021) 1234567',
+                'company_email' => 'info@herbatech.com',
             ];
             
             return $defaults[$key] ?? $default;

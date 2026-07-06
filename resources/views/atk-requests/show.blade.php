@@ -2,7 +2,7 @@
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Beranda</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('atk-requests.index') }}">Permintaan ATK</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('atk-requests.index') }}">Permintaan</a></li>
     <li class="breadcrumb-item active">Detail</li>
 @endsection
 
@@ -22,7 +22,7 @@
         <div class="card shadow-sm border-0 rounded-4 mb-4">
             <div class="card-header bg-white border-bottom border-light d-flex justify-content-between align-items-center">
                 <h3 class="card-title text-primary font-weight-bold mb-0">
-                    <i class="fas fa-file-alt mr-2"></i>Detail Permintaan ATK - ATK-{{ str_pad($atkRequest->id, 4, '0', STR_PAD_LEFT) }}
+                    <i class="fas fa-file-alt mr-2"></i>Detail Permintaan {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'Rumah Tangga' : 'ATK' }} - {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($atkRequest->id, 4, '0', STR_PAD_LEFT) }}
                 </h3>
                 <div>
                     <a href="{{ route('atk-requests.print', $atkRequest->id) }}" target="_blank" class="btn btn-primary rounded-pill btn-sm shadow-sm mr-2">

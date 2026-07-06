@@ -2,7 +2,7 @@
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Beranda</a></li>
-    <li class="breadcrumb-item active">Permintaan ATK</li>
+    <li class="breadcrumb-item active">Permintaan</li>
 @endsection
 
 @section('content')
@@ -22,21 +22,87 @@
             <div class="card-header border-0 bg-white d-flex justify-content-between align-items-center flex-wrap" style="gap:.5rem; padding:1rem 1.25rem .6rem;">
                 <div>
                     <h3 class="card-title mb-0 font-weight-bold" style="font-size:1.05rem;">
-                        <i class="fas fa-pencil-alt mr-2 text-primary"></i>Daftar Permintaan ATK (Alat Tulis Kantor)
+                        <i class="fas fa-boxes mr-2 text-primary"></i>Daftar Permintaan
                     </h3>
-                    <p class="text-muted mb-0 d-none d-md-block" style="font-size:.78rem;margin-top:.2rem;">Pengajuan kebutuhan ATK divisi bulanan paling lambat tanggal 28</p>
+                    <p class="text-muted mb-0 d-none d-md-block" style="font-size:.78rem;margin-top:.2rem;">Pengajuan kebutuhan ATK / RT divisi bulanan paling lambat tanggal 28</p>
                 </div>
                 <a href="{{ route('atk-requests.create') }}" class="btn btn-primary btn-sm shadow-sm" style="border-radius:.6rem;white-space:nowrap;">
                     <i class="fas fa-plus mr-1"></i> Permintaan Baru
                 </a>
             </div>
 
+            @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
+            {{-- Filter Panel --}}
+            <div class="px-4 py-3 bg-light border-top border-bottom">
+                <form action="{{ route('atk-requests.index') }}" method="GET" id="filterForm">
+                    <div class="row">
+                        <div class="col-md-2 col-sm-6 mb-2">
+                            <label class="small font-weight-bold text-muted">Tanggal Mulai</label>
+                            <input type="date" name="start_date" class="form-control form-control-sm" value="{{ request('start_date') }}" style="border-radius: 0.5rem;">
+                        </div>
+                        <div class="col-md-2 col-sm-6 mb-2">
+                            <label class="small font-weight-bold text-muted">Tanggal Selesai</label>
+                            <input type="date" name="end_date" class="form-control form-control-sm" value="{{ request('end_date') }}" style="border-radius: 0.5rem;">
+                        </div>
+                        <div class="col-md-2 col-sm-6 mb-2">
+                            <label class="small font-weight-bold text-muted">Tipe</label>
+                            <select name="request_type" class="form-control form-control-sm" style="border-radius: 0.5rem;">
+                                <option value="all" {{ request('request_type') == 'all' ? 'selected' : '' }}>Semua Tipe</option>
+                                <option value="ATK" {{ request('request_type') == 'ATK' ? 'selected' : '' }}>ATK</option>
+                                <option value="Rumah Tangga" {{ request('request_type') == 'Rumah Tangga' ? 'selected' : '' }}>Rumah Tangga</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-sm-6 mb-2">
+                            <label class="small font-weight-bold text-muted">Status</label>
+                            <select name="status_approval" class="form-control form-control-sm" style="border-radius: 0.5rem;">
+                                <option value="all" {{ request('status_approval') == 'all' ? 'selected' : '' }}>Semua Status</option>
+                                <option value="Draft" {{ request('status_approval') == 'Draft' ? 'selected' : '' }}>Draft</option>
+                                <option value="Menunggu Persetujuan" {{ request('status_approval') == 'Menunggu Persetujuan' ? 'selected' : '' }}>Menunggu Persetujuan</option>
+                                <option value="Disetujui" {{ request('status_approval') == 'Disetujui' ? 'selected' : '' }}>Disetujui</option>
+                                <option value="Ditolak/Revisi" {{ request('status_approval') == 'Ditolak/Revisi' ? 'selected' : '' }}>Ditolak/Revisi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-sm-6 mb-2">
+                            <label class="small font-weight-bold text-muted">Nama Barang</label>
+                            <input type="text" name="item_name" class="form-control form-control-sm" placeholder="Cari item..." value="{{ request('item_name') }}" style="border-radius: 0.5rem;">
+                        </div>
+                        <div class="col-md-2 col-sm-6 mb-2">
+                            <label class="small font-weight-bold text-muted">Divisi</label>
+                            <input type="text" name="divisi" class="form-control form-control-sm" placeholder="Nama divisi..." value="{{ request('divisi') }}" style="border-radius: 0.5rem;">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap" style="gap: .5rem;">
+                        <div>
+                            <button type="submit" class="btn btn-primary btn-sm shadow-sm px-3" style="border-radius: 0.5rem;">
+                                <i class="fas fa-filter mr-1"></i> Filter
+                            </button>
+                            <a href="{{ route('atk-requests.index') }}" class="btn btn-secondary btn-sm shadow-sm px-3" style="border-radius: 0.5rem;">
+                                <i class="fas fa-undo mr-1"></i> Reset
+                            </a>
+                        </div>
+                        
+                        <div class="d-flex" style="gap: .5rem;">
+                            <button type="button" onclick="exportPdf('detail')" class="btn btn-danger btn-sm shadow-sm px-3" style="border-radius: 0.5rem;">
+                                <i class="fas fa-file-pdf mr-1"></i> Ekspor PDF (Detail)
+                            </button>
+                            
+                            <button type="button" onclick="exportPdf('aggregation')" class="btn btn-warning btn-sm text-dark shadow-sm px-3" style="border-radius: 0.5rem;">
+                                <i class="fas fa-boxes mr-1"></i> Ekspor PDF (Total Kebutuhan)
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            @endif
+
             {{-- Table --}}
             <div class="table-responsive" style="padding:0 1.25rem 1.25rem;">
                 <table class="table table-hover mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th style="width: 80px;">No. Doc</th>
+                            <th style="width: 100px;">No. Doc</th>
+                            <th style="width: 130px;">Tipe</th>
                             <th>Tanggal Pengajuan</th>
                             <th>Nama Pengaju</th>
                             <th>Divisi</th>
@@ -50,7 +116,20 @@
                         @forelse($requests as $req)
                         <tr>
                             <td>
-                                <strong class="text-primary">ATK-{{ str_pad($req->id, 4, '0', STR_PAD_LEFT) }}</strong>
+                                <strong class="text-primary">
+                                    {{ ($req->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($req->id, 4, '0', STR_PAD_LEFT) }}
+                                </strong>
+                            </td>
+                            <td>
+                                @if(($req->request_type ?? 'ATK') === 'Rumah Tangga')
+                                    <span class="badge badge-warning px-2 py-1 text-dark" style="border-radius: 0.5rem; font-size: 0.75rem;">
+                                        <i class="fas fa-home mr-1"></i> Rumah Tangga
+                                    </span>
+                                @else
+                                    <span class="badge badge-primary px-2 py-1" style="border-radius: 0.5rem; font-size: 0.75rem;">
+                                        <i class="fas fa-pencil-alt mr-1"></i> ATK
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 <span class="font-weight-600" style="font-size:.85rem;">{{ $req->tanggal_pengajuan->format('d M Y') }}</span>
@@ -92,7 +171,8 @@
                                     
                                     @if($req->status_approval === 'Draft')
                                         <button class="btn btn-sm btn-danger btn-delete" style="border-radius:.45rem;"
-                                            data-id="{{ $req->id }}" data-name="ATK-{{ str_pad($req->id, 4, '0', STR_PAD_LEFT) }}" title="Hapus">
+                                            data-id="{{ $req->id }}" 
+                                            data-name="{{ ($req->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($req->id, 4, '0', STR_PAD_LEFT) }}" title="Hapus">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                         <form id="delete-form-{{ $req->id }}" action="{{ route('atk-requests.destroy', $req) }}" method="POST" class="d-none">
@@ -104,9 +184,9 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5">
+                            <td colspan="9" class="text-center py-5">
                                 <i class="fas fa-pencil-alt fa-2x text-muted mb-2 d-block"></i>
-                                <span class="text-muted">Belum ada pengajuan ATK. <a href="{{ route('atk-requests.create') }}">Buat pengajuan baru</a>.</span>
+                                <span class="text-muted">Belum ada pengajuan. <a href="{{ route('atk-requests.create') }}">Buat pengajuan baru</a>.</span>
                             </td>
                         </tr>
                         @endforelse
@@ -141,5 +221,20 @@ document.querySelectorAll('.btn-delete').forEach(function(btn) {
         });
     });
 });
+
+function exportPdf(mode) {
+    const form = document.getElementById('filterForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams();
+    
+    for (const [key, value] of formData.entries()) {
+        if (value) {
+            params.append(key, value);
+        }
+    }
+    params.append('mode', mode);
+    
+    window.location.href = "{{ route('atk-requests.export-pdf') }}?" + params.toString();
+}
 </script>
 @endpush

@@ -2,7 +2,7 @@
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Beranda</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('atk-requests.index') }}">Permintaan ATK</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('atk-requests.index') }}">Permintaan</a></li>
     <li class="breadcrumb-item active">Edit</li>
 @endsection
 
@@ -16,8 +16,8 @@
             <!-- Metadata Card -->
             <div class="card shadow-sm border-0 rounded-4 mb-4">
                 <div class="card-header bg-white border-bottom border-light">
-                    <h3 class="card-title text-primary font-weight-bold">
-                        <i class="fas fa-edit mr-2"></i>Edit Pengajuan Permintaan ATK - ATK-{{ str_pad($atkRequest->id, 4, '0', STR_PAD_LEFT) }}
+                    <h3 class="card-title text-primary font-weight-bold" id="form-title">
+                        <i class="fas fa-edit mr-2"></i>Edit Pengajuan Permintaan
                     </h3>
                 </div>
                 <div class="card-body">
@@ -31,17 +31,26 @@
                     <div class="row">
                         <div class="col-md-3">
                             <div class="form-group">
+                                <label for="request_type" class="font-weight-600">Tipe Permintaan</label>
+                                <select name="request_type" id="request_type" class="form-control font-weight-bold text-primary" required>
+                                    <option value="ATK" {{ ($atkRequest->request_type ?? 'ATK') === 'ATK' ? 'selected' : '' }}>Alat Tulis Kantor (ATK)</option>
+                                    <option value="Rumah Tangga" {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'selected' : '' }}>Kebutuhan Rumah Tangga (RT)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
                                 <label for="nama" class="font-weight-600">Nama Pengaju</label>
                                 <input type="text" name="nama" id="nama" class="form-control" value="{{ old('nama', $atkRequest->nama) }}" required>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
                                 <label for="divisi" class="font-weight-600">Divisi / Unit Kerja</label>
                                 <input type="text" name="divisi" id="divisi" class="form-control" value="{{ old('divisi', $atkRequest->divisi) }}" required>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
                                 <label for="periode" class="font-weight-600">Periode Permintaan</label>
                                 <select name="periode" id="periode" class="form-control" required>
@@ -51,7 +60,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
                                 <label for="tanggal_pengajuan" class="font-weight-600">Tanggal Pengajuan</label>
                                 <input type="date" name="tanggal_pengajuan" id="tanggal_pengajuan" class="form-control" value="{{ old('tanggal_pengajuan', $atkRequest->tanggal_pengajuan->format('Y-m-d')) }}" required>
@@ -77,7 +86,7 @@
                             <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
                                 <label class="btn btn-outline-primary active rounded-left px-4 font-weight-bold" id="tab-standard-btn">
                                     <input type="radio" name="selection_mode" id="mode-standard" checked>
-                                    <i class="fas fa-clipboard-list mr-1"></i> Item Standar
+                                    <i class="fas fa-clipboard-list mr-1"></i> <span id="mode-standard-text">Item Standar</span>
                                 </label>
                                 <label class="btn btn-outline-primary rounded-right px-4 font-weight-bold" id="tab-custom-btn">
                                     <input type="radio" name="selection_mode" id="mode-custom">
@@ -92,7 +101,7 @@
                                 <div class="form-group">
                                     <label for="select-category" class="font-weight-600">1. Pilih Kategori</label>
                                     <select id="select-category" class="form-control rounded-pill">
-                                        <option value="">-- Pilih Kategori ATK --</option>
+                                        <option value="">-- Pilih Kategori --</option>
                                     </select>
                                 </div>
                                 
@@ -172,8 +181,8 @@
                 <div class="col-lg-7">
                     <div class="card shadow-sm border-0 rounded-4 mb-4">
                         <div class="card-header bg-white border-bottom border-light p-3 d-flex justify-content-between align-items-center">
-                            <h4 class="card-title text-primary font-weight-bold mb-0">
-                                <i class="fas fa-list-ul mr-2"></i>Daftar Permintaan ATK Anda
+                            <h4 class="card-title text-primary font-weight-bold mb-0" id="summary-title">
+                                <i class="fas fa-list-ul mr-2"></i>Daftar Permintaan Anda
                             </h4>
                             <span class="badge badge-info py-2 px-3 rounded-pill" id="totalItemsSelected">0 Item Dipilih</span>
                         </div>
@@ -207,13 +216,8 @@
             </div>
 
             <!-- Terms and Conditions Card -->
-            <div class="alert alert-info rounded-4 border-0 p-3 mb-4 shadow-sm" style="background-color: #e3f2fd; border-left: 5px solid #2196f3 !important; color: #0d47a1;">
-                <h5 class="alert-heading font-weight-bold mb-2"><i class="fas fa-info-circle mr-2"></i>Ketentuan Permintaan ATK</h5>
-                <ul class="mb-0 small" style="padding-left: 20px;">
-                    <li>Mohon diisi yang diperlukan selama <strong>1 bulan (estimasi)</strong>.</li>
-                    <li>Jika kurang dari 1 bulan ATK sudah habis dan atau ada keperluan mendadak (urgent) mengenai ATK, mohon agar bisa menunggu periode bulan berikutnya.</li>
-                    <li>Pengisian Permintaan & Penyerahan Form Permintaan ATK paling lambat <strong>tanggal 28</strong> disetiap bulannya.</li>
-                </ul>
+            <div class="alert alert-info rounded-4 border-0 p-3 mb-4 shadow-sm" id="rules-card" style="background-color: #e3f2fd; border-left: 5px solid #2196f3 !important; color: #0d47a1;">
+                <!-- Dynamically updated -->
             </div>
 
             <!-- Form Actions -->
@@ -256,30 +260,114 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const standardItems = @json($standardItems);
-        const categories = [...new Set(standardItems.map(item => item.category))];
+        const householdItems = @json($householdItems);
         
-        // Populate Categories
+        const typeSelect = document.getElementById('request_type');
+        typeSelect.dataset.lastValue = typeSelect.value;
+        
+        let currentItems = typeSelect.value === 'Rumah Tangga' ? householdItems : standardItems;
+
+        // Populate Categories Function
         const categorySelect = document.getElementById('select-category');
-        categories.forEach(cat => {
-            const opt = document.createElement('option');
-            opt.value = cat;
-            opt.textContent = cat;
-            categorySelect.appendChild(opt);
+        const itemSelect = document.getElementById('select-item');
+        const optionsContainer = document.getElementById('item-options-container');
+
+        function populateCategories() {
+            const categories = [...new Set(currentItems.map(item => item.category))];
+            
+            categorySelect.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+            itemSelect.innerHTML = '<option value="">-- Pilih Barang --</option>';
+            itemSelect.disabled = true;
+            optionsContainer.innerHTML = '';
+            
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                categorySelect.appendChild(opt);
+            });
+        }
+
+        // Handle Request Type Change
+        typeSelect.addEventListener('change', function(e) {
+            const rows = document.querySelectorAll('#summary-table-body tr');
+            if (rows.length > 0) {
+                Swal.fire({
+                    title: 'Ganti Tipe Permintaan?',
+                    text: 'Mengubah tipe permintaan akan mengosongkan semua barang yang sudah Anda masukkan ke tabel ringkasan.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Ganti',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('summary-table-body').innerHTML = '';
+                        updateUIState();
+                        switchType();
+                    } else {
+                        typeSelect.value = typeSelect.dataset.lastValue;
+                    }
+                });
+            } else {
+                switchType();
+            }
         });
+
+        function switchType() {
+            const val = typeSelect.value;
+            typeSelect.dataset.lastValue = val;
+            
+            const formTitle = document.getElementById('form-title');
+            const summaryTitle = document.getElementById('summary-title');
+            const modeStandardText = document.getElementById('mode-standard-text');
+            const rulesCard = document.getElementById('rules-card');
+            
+            if (val === 'Rumah Tangga') {
+                currentItems = householdItems;
+                formTitle.innerHTML = '<i class="fas fa-edit mr-2"></i>Edit Pengajuan Kebutuhan Rumah Tangga (RT)';
+                summaryTitle.innerHTML = '<i class="fas fa-list-ul mr-2"></i>Daftar Kebutuhan Rumah Tangga Anda';
+                modeStandardText.textContent = 'Barang Standar RT';
+                rulesCard.innerHTML = `
+                    <h5 class="alert-heading font-weight-bold mb-2"><i class="fas fa-info-circle mr-2"></i>Ketentuan Permintaan Kebutuhan Rumah Tangga</h5>
+                    <ul class="mb-0 small" style="padding-left: 20px;">
+                        <li>Mohon diisi kebutuhan selama <strong>1 bulan (estimasi)</strong>.</li>
+                        <li>Pengisian Permintaan & Penyerahan Form paling lambat <strong>tanggal 28</strong> disetiap bulannya.</li>
+                    </ul>
+                `;
+            } else {
+                currentItems = standardItems;
+                formTitle.innerHTML = '<i class="fas fa-edit mr-2"></i>Edit Pengajuan Permintaan ATK';
+                summaryTitle.innerHTML = '<i class="fas fa-list-ul mr-2"></i>Daftar Permintaan ATK Anda';
+                modeStandardText.textContent = 'Item Standar ATK';
+                rulesCard.innerHTML = `
+                    <h5 class="alert-heading font-weight-bold mb-2"><i class="fas fa-info-circle mr-2"></i>Ketentuan Permintaan ATK</h5>
+                    <ul class="mb-0 small" style="padding-left: 20px;">
+                        <li>Mohon diisi yang diperlukan selama <strong>1 bulan (estimasi)</strong>.</li>
+                        <li>Jika kurang dari 1 bulan ATK sudah habis dan atau ada keperluan mendadak (urgent) mengenai ATK, mohon agar bisa menunggu periode bulan berikutnya.</li>
+                        <li>Pengisian Permintaan & Penyerahan Form Permintaan ATK paling lambat <strong>tanggal 28</strong> disetiap bulannya.</li>
+                    </ul>
+                `;
+            }
+            populateCategories();
+        }
+        
+        // Initial configuration
+        switchType();
         
         // Handle Category Change
         categorySelect.addEventListener('change', function() {
             const category = this.value;
-            const itemSelect = document.getElementById('select-item');
             itemSelect.innerHTML = '<option value="">-- Pilih Barang --</option>';
-            document.getElementById('item-options-container').innerHTML = '';
+            optionsContainer.innerHTML = '';
             
             if (!category) {
                 itemSelect.disabled = true;
                 return;
             }
             
-            const filtered = standardItems.filter(item => item.category === category);
+            const filtered = currentItems.filter(item => item.category === category);
             filtered.forEach(item => {
                 const opt = document.createElement('option');
                 opt.value = item.name;
@@ -290,16 +378,14 @@
         });
         
         // Handle Item Change
-        const itemSelect = document.getElementById('select-item');
         itemSelect.addEventListener('change', function() {
             const itemName = this.value;
-            const optionsContainer = document.getElementById('item-options-container');
             optionsContainer.innerHTML = '';
             
             if (!itemName) return;
             
-            const item = standardItems.find(i => i.name === itemName);
-            if (item && item.options.length > 0) {
+            const item = currentItems.find(i => i.name === itemName);
+            if (item && item.options && item.options.length > 0) {
                 const label = document.createElement('label');
                 label.className = 'font-weight-600 d-block mb-1 mt-2';
                 label.innerHTML = '<i class="fas fa-cog mr-1 text-muted"></i> Spesifikasi / Opsi:';
@@ -377,7 +463,7 @@
             }
             
             const qty = parseInt(document.getElementById('input-qty').value) || 1;
-            const item = standardItems.find(i => i.name === itemName);
+            const item = currentItems.find(i => i.name === itemName);
             const unit = item ? item.unit : 'Pcs';
             
             // Get selected options
@@ -556,7 +642,7 @@
                     e.preventDefault();
                     Swal.fire({
                         title: 'Perhatian!',
-                        text: 'Anda harus memilih minimal 1 item ATK untuk mengajukan permintaan.',
+                        text: 'Anda harus memilih minimal 1 item untuk mengajukan permintaan.',
                         icon: 'warning',
                         confirmButtonColor: '#007bff'
                     });
@@ -576,7 +662,7 @@
             const qty = dbItem.quantity;
             const unit = dbItem.unit;
             
-            const itemConfig = standardItems.find(i => i.name === name);
+            const itemConfig = currentItems.find(i => i.name === name);
             const standardOptions = itemConfig ? itemConfig.options : [];
             
             const desc = dbItem.description || '';

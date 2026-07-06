@@ -142,6 +142,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('handovers/{workOrder}/print', [HandoverController::class, 'print'])->name('handovers.print');
 
     // Rute Permintaan ATK (Alat Tulis Kantor)
+    Route::get('atk-requests-export/pdf', [\App\Http\Controllers\AtkRequestController::class, 'exportPdf'])->name('atk-requests.export-pdf');
     Route::resource('atk-requests', \App\Http\Controllers\AtkRequestController::class);
     Route::post('atk-requests/{atkRequest}/approve', [\App\Http\Controllers\AtkRequestController::class, 'approve'])->name('atk-requests.approve');
     Route::post('atk-requests/{atkRequest}/reject', [\App\Http\Controllers\AtkRequestController::class, 'reject'])->name('atk-requests.reject');

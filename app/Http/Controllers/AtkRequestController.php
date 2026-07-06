@@ -70,16 +70,99 @@ class AtkRequestController extends Controller
         ['name' => 'Rautan Pensil', 'unit' => 'Pcs', 'options' => ['Kecil', 'Meja'], 'category' => 'Lain-lain']
     ];
 
+    public static $householdItems = [
+        ['name' => 'Hand Soap', 'unit' => 'Pcs', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        ['name' => 'Sabun Cuci Piring', 'unit' => 'Pcs', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        ['name' => 'Wipol', 'unit' => 'Pcs/Botol', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        ['name' => 'Soklin lantai', 'unit' => 'Pack', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        ['name' => 'Soklin Liquid', 'unit' => 'Pack', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        ['name' => 'Pewangi Pakaian/molto', 'unit' => 'Pack', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        ['name' => 'Hand Sanitizer', 'unit' => 'Pcs/Botol', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        ['name' => 'Karbol WC', 'unit' => 'Pack', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        ['name' => 'Clink Pembersih Kaca', 'unit' => 'Pcs', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        
+        ['name' => 'Pewangi ruangan gantung', 'unit' => 'Pcs', 'options' => [], 'category' => 'Pewangi Ruangan'],
+        ['name' => 'Pewangi Ruangan Spray', 'unit' => 'Pcs', 'options' => [], 'category' => 'Pewangi Ruangan'],
+        ['name' => 'Alat Pewangi Ruangan automantic', 'unit' => 'Pcs', 'options' => [], 'category' => 'Pewangi Ruangan'],
+        ['name' => 'Isi Pewangi Ruangan automantic', 'unit' => 'Pcs', 'options' => [], 'category' => 'Pewangi Ruangan'],
+        ['name' => 'Karbol Lemari', 'unit' => 'Pack', 'options' => [], 'category' => 'Pewangi Ruangan'],
+        
+        ['name' => 'Tissu Kotak Besar', 'unit' => 'Pack', 'options' => [], 'category' => 'Tisu & Kebersihan Diri'],
+        ['name' => 'Tissu Kotak Kecil', 'unit' => 'Pack', 'options' => [], 'category' => 'Tisu & Kebersihan Diri'],
+        ['name' => 'Tissu Toilet', 'unit' => 'Roll', 'options' => [], 'category' => 'Tisu & Kebersihan Diri'],
+        ['name' => 'Hairnet', 'unit' => 'Pack', 'options' => [], 'category' => 'Tisu & Kebersihan Diri'],
+        ['name' => 'Sarung tangan latex', 'unit' => 'Pack', 'options' => [], 'category' => 'Tisu & Kebersihan Diri'],
+        
+        ['name' => 'Trash Bag besar', 'unit' => 'Pack', 'options' => [], 'category' => 'Kantong & Tempat Sampah'],
+        ['name' => 'Trash Bag Kecil', 'unit' => 'Pack', 'options' => [], 'category' => 'Kantong & Tempat Sampah'],
+        ['name' => 'Tempat sampah', 'unit' => 'Pcs', 'options' => [], 'category' => 'Kantong & Tempat Sampah'],
+        ['name' => 'Tempat Sampah Kecil', 'unit' => 'Pcs', 'options' => [], 'category' => 'Kantong & Tempat Sampah'],
+        ['name' => 'Tempat Sampah Sedang', 'unit' => 'Pcs', 'options' => [], 'category' => 'Kantong & Tempat Sampah'],
+        ['name' => 'Tempat Sampah Besar', 'unit' => 'Pcs', 'options' => [], 'category' => 'Kantong & Tempat Sampah'],
+        
+        ['name' => 'Alat Pel Gagang Panjang', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Gayung', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Sikat lantai Gagang Panjang', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Sikat WC', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Kanebo', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Lap Microfiber (lap meja)', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Spon Cuci Piring', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Scotch Brite (sabut besi)', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Kemoceng', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Sapu Lantai', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Sapu Halaman', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Sapu Lidi', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Sapu Temit', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        ['name' => 'Wipper kaca', 'unit' => 'Pcs', 'options' => [], 'category' => 'Alat & Perlengkapan Kebersihan'],
+        
+        ['name' => 'Kran Air', 'unit' => 'Pcs', 'options' => [], 'category' => 'Lain-lain'],
+        ['name' => 'Hanger', 'unit' => 'Pack', 'options' => [], 'category' => 'Lain-lain'],
+        ['name' => 'Pengki', 'unit' => 'Pcs', 'options' => [], 'category' => 'Lain-lain']
+    ];
+
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = AtkRequest::with('user', 'approver');
+        $query = AtkRequest::with(['user', 'approver', 'items']);
 
         if ($user->isClient()) {
             $query->where('user_id', $user->id);
         }
 
-        $requests = $query->orderBy('created_at', 'desc')->get();
+        // Apply filters if Admin/Super Admin
+        if ($user->isAdmin() || $user->isSuperAdmin()) {
+            // 1. Filter Tanggal Pengajuan
+            if ($request->filled('start_date')) {
+                $query->whereDate('tanggal_pengajuan', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('tanggal_pengajuan', '<=', $request->end_date);
+            }
+
+            // 2. Filter Tipe Permintaan
+            if ($request->filled('request_type') && $request->request_type !== 'all') {
+                $query->where('request_type', $request->request_type);
+            }
+
+            // 3. Filter Status Approval
+            if ($request->filled('status_approval') && $request->status_approval !== 'all') {
+                $query->where('status_approval', $request->status_approval);
+            }
+
+            // 4. Filter Divisi
+            if ($request->filled('divisi')) {
+                $query->where('divisi', 'like', '%' . $request->divisi . '%');
+            }
+
+            // 5. Filter Item Tertentu
+            if ($request->filled('item_name')) {
+                $query->whereHas('items', function($q) use ($request) {
+                    $q->where('item_name', 'like', '%' . $request->item_name . '%');
+                });
+            }
+        }
+
+        $requests = $query->orderBy('tanggal_pengajuan', 'desc')->get();
 
         return view('atk-requests.index', compact('requests'));
     }
@@ -88,6 +171,9 @@ class AtkRequestController extends Controller
     {
         $user = auth()->user();
         $standardItems = self::$standardItems;
+        $householdItems = self::$householdItems;
+        
+        $defaultType = request()->get('type') === 'household' ? 'Rumah Tangga' : 'ATK';
         
         // Setup default values
         $nama = $user->name;
@@ -103,12 +189,13 @@ class AtkRequestController extends Controller
             $months[$val] = $text;
         }
 
-        return view('atk-requests.create', compact('standardItems', 'nama', 'divisi', 'tanggal_pengajuan', 'months'));
+        return view('atk-requests.create', compact('standardItems', 'householdItems', 'nama', 'divisi', 'tanggal_pengajuan', 'months', 'defaultType'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
+            'request_type' => 'required|string|in:ATK,Rumah Tangga',
             'nama' => 'required|string',
             'divisi' => 'required|string',
             'periode' => 'required|string',
@@ -123,6 +210,7 @@ class AtkRequestController extends Controller
         DB::transaction(function () use ($request, $status) {
             $atk = AtkRequest::create([
                 'user_id' => auth()->id(),
+                'request_type' => $request->request_type,
                 'nama' => $request->nama,
                 'divisi' => $request->divisi,
                 'periode' => $request->periode,
@@ -166,7 +254,8 @@ class AtkRequestController extends Controller
             }
         });
 
-        $msg = ($status === 'Draft') ? 'Draft permintaan ATK berhasil disimpan.' : 'Permintaan ATK berhasil diajukan.';
+        $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';
+        $msg = ($status === 'Draft') ? "Draft permintaan {$typeName} berhasil disimpan." : "Permintaan {$typeName} berhasil diajukan.";
         return redirect()->route('atk-requests.index')->with('success', $msg);
     }
 
@@ -187,6 +276,7 @@ class AtkRequestController extends Controller
         }
 
         $standardItems = self::$standardItems;
+        $householdItems = self::$householdItems;
         
         // Generate months for period selection
         $months = [];
@@ -201,7 +291,7 @@ class AtkRequestController extends Controller
         $existingItems = $atkRequest->items->where('is_custom', false)->keyBy('item_name')->toArray();
         $customItems = $atkRequest->items->where('is_custom', true)->values()->toArray();
 
-        return view('atk-requests.edit', compact('atkRequest', 'standardItems', 'months', 'existingItems', 'customItems'));
+        return view('atk-requests.edit', compact('atkRequest', 'standardItems', 'householdItems', 'months', 'existingItems', 'customItems'));
     }
 
     public function update(Request $request, AtkRequest $atkRequest)
@@ -215,6 +305,7 @@ class AtkRequestController extends Controller
         }
 
         $request->validate([
+            'request_type' => 'required|string|in:ATK,Rumah Tangga',
             'nama' => 'required|string',
             'divisi' => 'required|string',
             'periode' => 'required|string',
@@ -228,6 +319,7 @@ class AtkRequestController extends Controller
 
         DB::transaction(function () use ($request, $atkRequest, $status) {
             $atkRequest->update([
+                'request_type' => $request->request_type,
                 'nama' => $request->nama,
                 'divisi' => $request->divisi,
                 'periode' => $request->periode,
@@ -274,7 +366,8 @@ class AtkRequestController extends Controller
             }
         });
 
-        $msg = ($status === 'Draft') ? 'Draft permintaan ATK berhasil diperbarui.' : 'Permintaan ATK berhasil diajukan.';
+        $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';
+        $msg = ($status === 'Draft') ? "Draft permintaan {$typeName} berhasil diperbarui." : "Permintaan {$typeName} berhasil diajukan.";
         return redirect()->route('atk-requests.index')->with('success', $msg);
     }
 
@@ -288,9 +381,10 @@ class AtkRequestController extends Controller
             return back()->withErrors(['error' => 'Hanya draft permintaan yang dapat dihapus.']);
         }
 
+        $typeName = ($atkRequest->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';
         $atkRequest->delete();
 
-        return redirect()->route('atk-requests.index')->with('success', 'Permintaan ATK berhasil dihapus.');
+        return redirect()->route('atk-requests.index')->with('success', "Permintaan {$typeName} berhasil dihapus.");
     }
 
     public function approve(AtkRequest $atkRequest)
@@ -305,7 +399,7 @@ class AtkRequestController extends Controller
             'approved_at' => now(),
         ]);
 
-        return back()->with('success', 'Permintaan ATK berhasil disetujui.');
+        return back()->with('success', 'Permintaan berhasil disetujui.');
     }
 
     public function reject(Request $request, AtkRequest $atkRequest)
@@ -323,7 +417,7 @@ class AtkRequestController extends Controller
             'notes' => $request->notes,
         ]);
 
-        return back()->with('success', 'Permintaan ATK telah ditolak / dikembalikan untuk revisi.');
+        return back()->with('success', 'Permintaan telah ditolak / dikembalikan untuk revisi.');
     }
 
     public function handover(Request $request, AtkRequest $atkRequest)
@@ -349,12 +443,88 @@ class AtkRequestController extends Controller
     {
         $atkRequest->load('user', 'approver', 'items');
         
-        // Map items for rendering in the 53 template
         $itemsMap = $atkRequest->items->where('is_custom', false)->keyBy('item_name')->toArray();
         $customItems = $atkRequest->items->where('is_custom', true)->values()->all();
 
         $standardItems = self::$standardItems;
+        $householdItems = self::$householdItems;
 
-        return view('print.atk', compact('atkRequest', 'standardItems', 'itemsMap', 'customItems'));
+        return view('print.atk', compact('atkRequest', 'standardItems', 'householdItems', 'itemsMap', 'customItems'));
+    }
+
+    public function exportPdf(Request $request)
+    {
+        // Only Admin and Super Admin can export PDF
+        if (!auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $query = AtkRequest::with(['items', 'user', 'approver']);
+
+        // 1. Filter Tanggal Pengajuan
+        if ($request->filled('start_date')) {
+            $query->whereDate('tanggal_pengajuan', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('tanggal_pengajuan', '<=', $request->end_date);
+        }
+
+        // 2. Filter Tipe Permintaan
+        if ($request->filled('request_type') && $request->request_type !== 'all') {
+            $query->where('request_type', $request->request_type);
+        }
+
+        // 3. Filter Status Approval
+        if ($request->filled('status_approval') && $request->status_approval !== 'all') {
+            $query->where('status_approval', $request->status_approval);
+        }
+
+        // 4. Filter Divisi
+        if ($request->filled('divisi')) {
+            $query->where('divisi', 'like', '%' . $request->divisi . '%');
+        }
+
+        // 5. Filter Item Tertentu
+        if ($request->filled('item_name')) {
+            $query->whereHas('items', function($q) use ($request) {
+                $q->where('item_name', 'like', '%' . $request->item_name . '%');
+            });
+        }
+
+        $requests = $query->orderBy('tanggal_pengajuan', 'desc')->get();
+
+        // Check the export mode: aggregated/grouped items vs detailed transaction list
+        if ($request->get('mode') === 'aggregation') {
+            $aggregatedItems = [];
+            foreach ($requests as $req) {
+                foreach ($req->items as $item) {
+                    $key = trim(strtolower($item->item_name)) . '_' . trim(strtolower($item->unit));
+                    if (!isset($aggregatedItems[$key])) {
+                        $aggregatedItems[$key] = [
+                            'name' => $item->item_name,
+                            'unit' => $item->unit,
+                            'total_qty' => 0,
+                            'request_count' => 0,
+                        ];
+                    }
+                    $aggregatedItems[$key]['total_qty'] += $item->quantity;
+                    $aggregatedItems[$key]['request_count'] += 1;
+                }
+            }
+
+            // Sort by quantity descending
+            usort($aggregatedItems, function($a, $b) {
+                return $b['total_qty'] <=> $a['total_qty'];
+            });
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.pdf-aggregation', compact('aggregatedItems', 'request'))
+                      ->setPaper('a4', 'portrait');
+            return $pdf->download('Rekap-Kebutuhan-Barang-' . now()->format('Y-m-d') . '.pdf');
+        }
+
+        // Default: Detailed list
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.pdf-detail', compact('requests', 'request'))
+                  ->setPaper('a4', 'landscape');
+        return $pdf->download('Laporan-Permintaan-Barang-' . now()->format('Y-m-d') . '.pdf');
     }
 }

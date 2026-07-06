@@ -39,7 +39,7 @@
                 <li class="nav-item">
                     <a href="{{ route('atk-requests.index') }}" class="nav-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-pencil-alt"></i>
-                        <p>Permintaan ATK</p>
+                        <p>Permintaan</p>
                     </a>
                 </li>
 
