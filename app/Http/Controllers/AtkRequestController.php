@@ -271,8 +271,8 @@ class AtkRequestController extends Controller
             abort(403);
         }
 
-        if ($atkRequest->status_approval !== 'Draft' && $atkRequest->status_approval !== 'Ditolak/Revisi') {
-            return redirect()->route('atk-requests.show', $atkRequest->id)->withErrors(['error' => 'Permintaan yang sudah dikirim tidak dapat diubah.']);
+        if (!in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan'])) {
+            return redirect()->route('atk-requests.show', $atkRequest->id)->withErrors(['error' => 'Permintaan yang sudah disetujui tidak dapat diubah.']);
         }
 
         $standardItems = self::$standardItems;
@@ -300,8 +300,8 @@ class AtkRequestController extends Controller
             abort(403);
         }
 
-        if ($atkRequest->status_approval !== 'Draft' && $atkRequest->status_approval !== 'Ditolak/Revisi') {
-            return redirect()->route('atk-requests.show', $atkRequest->id)->withErrors(['error' => 'Permintaan yang sudah dikirim tidak dapat diubah.']);
+        if (!in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan'])) {
+            return redirect()->route('atk-requests.show', $atkRequest->id)->withErrors(['error' => 'Permintaan yang sudah disetujui tidak dapat diubah.']);
         }
 
         $request->validate([
@@ -377,8 +377,8 @@ class AtkRequestController extends Controller
             abort(403);
         }
 
-        if ($atkRequest->status_approval !== 'Draft') {
-            return back()->withErrors(['error' => 'Hanya draft permintaan yang dapat dihapus.']);
+        if (!in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan'])) {
+            return back()->withErrors(['error' => 'Hanya permintaan draft, menunggu persetujuan, atau ditolak/revisi yang dapat dihapus.']);
         }
 
         $typeName = ($atkRequest->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';

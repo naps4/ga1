@@ -28,8 +28,8 @@
                     <a href="{{ route('atk-requests.print', $atkRequest->id) }}" target="_blank" class="btn btn-primary rounded-pill btn-sm shadow-sm mr-2">
                         <i class="fas fa-print"></i> Cetak Formulir
                     </a>
-                    @if(($atkRequest->status_approval === 'Draft' || $atkRequest->status_approval === 'Ditolak/Revisi') && $atkRequest->user_id === auth()->id())
-                        <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-warning rounded-pill btn-sm shadow-sm">
+                    @if(in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan']) && $atkRequest->user_id === auth()->id())
+                        <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-success rounded-pill btn-sm shadow-sm">
                             <i class="fas fa-pencil-alt"></i> Edit Permintaan
                         </a>
                     @endif

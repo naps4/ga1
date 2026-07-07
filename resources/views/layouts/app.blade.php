@@ -31,6 +31,8 @@
             --theme-orange-hover: #ea580c;
             --theme-green: #10b981;
             --theme-green-hover: #059669;
+            --theme-red: #ef4444;
+            --theme-red-hover: #dc2626;
             --theme-dark: #1f2d3d;
             --theme-gray: #64748b;
         }
@@ -60,6 +62,11 @@
         .bg-success { background-color: var(--theme-green) !important; color: var(--theme-white) !important; }
         .btn-success { background-color: var(--theme-green); border-color: var(--theme-green); color: var(--theme-white); }
         .btn-success:hover, .btn-success:active, .btn-success:focus { background-color: var(--theme-green-hover) !important; border-color: var(--theme-green-hover) !important; color: var(--theme-white) !important; }
+
+        .text-danger { color: var(--theme-red) !important; }
+        .bg-danger { background-color: var(--theme-red) !important; color: var(--theme-white) !important; }
+        .btn-danger { background-color: var(--theme-red); border-color: var(--theme-red); color: var(--theme-white); }
+        .btn-danger:hover, .btn-danger:active, .btn-danger:focus { background-color: var(--theme-red-hover) !important; border-color: var(--theme-red-hover) !important; color: var(--theme-white) !important; }
 
         .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
             background-color: var(--theme-blue);

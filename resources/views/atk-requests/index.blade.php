@@ -163,13 +163,13 @@
                                 <div class="d-flex" style="gap:.25rem;">
                                     <a href="{{ route('atk-requests.show', $req) }}" class="btn btn-sm btn-light border" style="border-radius:.45rem;" title="Detail"><i class="fas fa-eye"></i></a>
                                     
-                                    @if($req->status_approval === 'Draft' || $req->status_approval === 'Ditolak/Revisi')
-                                        <a href="{{ route('atk-requests.edit', $req) }}" class="btn btn-sm btn-warning" style="border-radius:.45rem;" title="Edit"><i class="fas fa-pencil-alt"></i></a>
+                                    @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan']))
+                                        <a href="{{ route('atk-requests.edit', $req) }}" class="btn btn-sm btn-success" style="border-radius:.45rem;" title="Edit"><i class="fas fa-pencil-alt"></i></a>
                                     @endif
 
                                     <a href="{{ route('atk-requests.print', $req) }}" target="_blank" class="btn btn-sm btn-info text-white" style="border-radius:.45rem;" title="Cetak"><i class="fas fa-print"></i></a>
                                     
-                                    @if($req->status_approval === 'Draft')
+                                    @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan']))
                                         <button class="btn btn-sm btn-danger btn-delete" style="border-radius:.45rem;"
                                             data-id="{{ $req->id }}" 
                                             data-name="{{ ($req->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($req->id, 4, '0', STR_PAD_LEFT) }}" title="Hapus">
@@ -205,8 +205,8 @@ document.querySelectorAll('.btn-delete').forEach(function(btn) {
         const id   = this.dataset.id;
         const name = this.dataset.name;
         Swal.fire({
-            title: 'Hapus Draft?',
-            html: `Draft pengajuan <b>${name}</b> akan dihapus secara permanen.`,
+            title: 'Hapus Pengajuan?',
+            html: `Pengajuan <b>${name}</b> akan dihapus secara permanen.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
