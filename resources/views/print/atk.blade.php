@@ -142,7 +142,7 @@
     <tbody>
         @php $no = 1; @endphp
         
-        <!-- Render Standard Items with Quantity > 0 -->
+        <!-- Render Standard Items with Quantity > 0 (that are not rejected) -->
         @foreach($orderedNames as $name)
             @php
                 $dbItem = $itemsMap[$name] ?? null;
@@ -199,7 +199,7 @@
             @endif
         @endforeach
         
-        <!-- Render Custom / Unlisted Items with Quantity > 0 -->
+        <!-- Render Custom / Unlisted Items (that are not rejected) -->
         @if(count($customItems) > 0)
             <tr style="background-color: #f9f9f9;">
                 <td colspan="5" style="font-weight: bold; font-size: 9.5px; color: #333; height: 22px;">
@@ -220,7 +220,7 @@
         @if($no === 1)
             <tr>
                 <td colspan="5" class="text-center text-muted" style="padding: 20px;">
-                    Tidak ada barang yang terpilih.
+                    Tidak ada barang yang disetujui untuk dicetak.
                 </td>
             </tr>
         @endif
@@ -235,22 +235,53 @@
 <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-family: Arial, sans-serif; font-size: 9.5px;">
     <tr>
         <!-- Diminta Oleh -->
-        <td style="width: 33.3%; border: 1.5px solid #000; padding: 4px; height: 65px; vertical-align: top; text-align: left;">
+        <td style="width: 25%; border: 1.5px solid #000; padding: 4px; height: 65px; vertical-align: top; text-align: left;">
             Diminta Oleh :
-            <div style="height: 30px; text-align: center; vertical-align: middle; margin-top: 5px; font-size: 8.5px; color: #555;">
-                [TANDA TANGAN]
+            <div style="height: 32px; text-align: center; vertical-align: middle; margin-top: 3px;">
+                @if($atkRequest->user && $atkRequest->user->signature)
+                    <img src="{{ $atkRequest->user->signature_url }}" alt="TTD Pemohon" style="max-height: 30px; display: block; margin: 0 auto;">
+                @else
+                    <div style="height: 25px; text-align: center; vertical-align: middle; margin-top: 5px; font-size: 8px; color: #777;">
+                        [TANDA TANGAN]
+                    </div>
+                @endif
             </div>
             <div style="border-top: 1.5px solid #000; font-size: 9px; padding-top: 2px; margin-top: 2px;">
                 Nama: {{ $atkRequest->nama }}
             </div>
         </td>
         
-        <!-- Disetujui Oleh -->
-        <td style="width: 33.3%; border: 1.5px solid #000; padding: 4px; height: 65px; vertical-align: top; text-align: left;">
-            Disetujui Oleh :
-            <div style="height: 30px; text-align: center; vertical-align: middle; margin-top: 5px; font-size: 9px; font-weight: bold; color: green;">
+        <!-- Diketahui Oleh (Manager) -->
+        <td style="width: 25%; border: 1.5px solid #000; padding: 4px; height: 65px; vertical-align: top; text-align: left;">
+            Diketahui Oleh (Manager) :
+            <div style="height: 32px; text-align: center; vertical-align: middle; margin-top: 3px;">
+                @if($atkRequest->manager_approved_by)
+                    @if($atkRequest->managerApprover && $atkRequest->managerApprover->signature)
+                        <img src="{{ $atkRequest->managerApprover->signature_url }}" alt="TTD Manager" style="max-height: 30px; display: block; margin: 0 auto;">
+                    @else
+                        <div style="border: 1px dashed #0284c7; color: #0284c7; padding: 2px; display: inline-block; font-size: 7.5px; border-radius: 3px; font-weight: bold; transform: rotate(-1deg); background-color: rgba(2, 132, 199, 0.05); font-family: monospace; line-height: 1.1; text-align: center; width: 95%;">
+                            ✓ APPROVED DIGITAL
+                        </div>
+                    @endif
+                @endif
+            </div>
+            <div style="border-top: 1.5px solid #000; font-size: 9px; padding-top: 2px; margin-top: 2px;">
+                Nama: {{ $atkRequest->managerApprover->name ?? '.......................' }}
+            </div>
+        </td>
+        
+        <!-- Disetujui Oleh (GA) -->
+        <td style="width: 25%; border: 1.5px solid #000; padding: 4px; height: 65px; vertical-align: top; text-align: left;">
+            Disetujui Oleh (GA) :
+            <div style="height: 32px; text-align: center; vertical-align: middle; margin-top: 3px;">
                 @if($atkRequest->approved_by)
-                    ✓ APPROVED DIGITAL
+                    @if($atkRequest->approver && $atkRequest->approver->signature)
+                        <img src="{{ $atkRequest->approver->signature_url }}" alt="TTD Admin GA" style="max-height: 30px; display: block; margin: 0 auto;">
+                    @else
+                        <div style="border: 1px dashed green; color: green; padding: 2px; display: inline-block; font-size: 7.5px; border-radius: 3px; font-weight: bold; transform: rotate(-1deg); background-color: rgba(0, 128, 0, 0.05); font-family: monospace; line-height: 1.1; text-align: center; width: 95%;">
+                            ✓ APPROVED DIGITAL
+                        </div>
+                    @endif
                 @endif
             </div>
             <div style="border-top: 1.5px solid #000; font-size: 9px; padding-top: 2px; margin-top: 2px;">
@@ -258,12 +289,12 @@
             </div>
         </td>
         
-        <!-- Diberikan Pada Tanggal -->
-        <td style="width: 33.3%; border: 1.5px solid #000; padding: 4px; height: 65px; vertical-align: top; text-align: left;">
-            Diberikan Pada Tanggal : {{ $atkRequest->diberikan_pada ? $atkRequest->diberikan_pada->format('d/m/Y') : '/  /' }}
+        <!-- Diberikan Pada Tanggal / Penerima -->
+        <td style="width: 25%; border: 1.5px solid #000; padding: 4px; height: 65px; vertical-align: top; text-align: left;">
+            Diterima Oleh :
             <div style="height: 30px; text-align: center; vertical-align: middle; margin-top: 5px; font-size: 8.5px; color: #555;">
                 @if($atkRequest->diberikan_pada)
-                    [DITERIMA]
+                    Tanggal: {{ $atkRequest->diberikan_pada->format('d/m/Y') }}
                 @endif
             </div>
             <div style="border-top: 1.5px solid #000; font-size: 9px; padding-top: 2px; margin-top: 2px;">

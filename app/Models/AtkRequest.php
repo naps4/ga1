@@ -27,6 +27,11 @@ class AtkRequest extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function managerApprover()
+    {
+        return $this->belongsTo(User::class, 'manager_approved_by');
+    }
+
     public function items()
     {
         return $this->hasMany(AtkRequestItem::class);

@@ -71,6 +71,14 @@ Route::get('/dashboard', function () {
         
         $viewData['pendingFpu'] = \App\Models\FpuRequest::whereIn('status_approval', ['Menunggu Verifikasi HRGA', 'Menunggu Admin GA'])->count();
         $viewData['recentWO'] = \App\Models\WorkOrder::orderBy('created_at', 'desc')->take(5)->get();
+    } elseif ($user->isManager()) {
+        $viewData['pendingManagerAtk'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')->count();
+        $viewData['totalManagerAtkApproved'] = \App\Models\AtkRequest::where('manager_approved_by', $user->id)->count();
+        $viewData['recentAtkRequests'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')
+            ->orWhere('manager_approved_by', $user->id)
+            ->orderBy('updated_at', 'desc')
+            ->take(5)
+            ->get();
     }
     
     return view('dashboard', $viewData);

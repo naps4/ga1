@@ -57,7 +57,8 @@
                             <select name="status_approval" class="form-control form-control-sm" style="border-radius: 0.5rem;">
                                 <option value="all" {{ request('status_approval') == 'all' ? 'selected' : '' }}>Semua Status</option>
                                 <option value="Draft" {{ request('status_approval') == 'Draft' ? 'selected' : '' }}>Draft</option>
-                                <option value="Menunggu Persetujuan" {{ request('status_approval') == 'Menunggu Persetujuan' ? 'selected' : '' }}>Menunggu Persetujuan</option>
+                                <option value="Menunggu Persetujuan Manager" {{ request('status_approval') == 'Menunggu Persetujuan Manager' ? 'selected' : '' }}>Review Manager</option>
+                                <option value="Menunggu Persetujuan Admin GA" {{ request('status_approval') == 'Menunggu Persetujuan Admin GA' ? 'selected' : '' }}>Review Admin GA</option>
                                 <option value="Disetujui" {{ request('status_approval') == 'Disetujui' ? 'selected' : '' }}>Disetujui</option>
                                 <option value="Ditolak/Revisi" {{ request('status_approval') == 'Ditolak/Revisi' ? 'selected' : '' }}>Ditolak/Revisi</option>
                             </select>
@@ -144,12 +145,16 @@
                             <td>
                                 @if($req->status_approval === 'Draft')
                                     <span class="badge badge-secondary">Draft</span>
-                                @elseif($req->status_approval === 'Menunggu Persetujuan')
-                                    <span class="badge badge-warning">Menunggu Persetujuan</span>
+                                @elseif($req->status_approval === 'Menunggu Persetujuan Manager')
+                                    <span class="badge badge-warning">Review Manager</span>
+                                @elseif($req->status_approval === 'Menunggu Persetujuan Admin GA')
+                                    <span class="badge badge-info">Review Admin GA</span>
                                 @elseif($req->status_approval === 'Disetujui')
                                     <span class="badge badge-success">Disetujui</span>
                                 @elseif($req->status_approval === 'Ditolak/Revisi')
                                     <span class="badge badge-danger">Ditolak/Revisi</span>
+                                @else
+                                    <span class="badge badge-warning">{{ $req->status_approval }}</span>
                                 @endif
                             </td>
                             <td>
@@ -163,13 +168,13 @@
                                 <div class="d-flex" style="gap:.25rem;">
                                     <a href="{{ route('atk-requests.show', $req) }}" class="btn btn-sm btn-light border" style="border-radius:.45rem;" title="Detail"><i class="fas fa-eye"></i></a>
                                     
-                                    @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan']))
+                                    @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']))
                                         <a href="{{ route('atk-requests.edit', $req) }}" class="btn btn-sm btn-success" style="border-radius:.45rem;" title="Edit"><i class="fas fa-pencil-alt"></i></a>
                                     @endif
 
                                     <a href="{{ route('atk-requests.print', $req) }}" target="_blank" class="btn btn-sm btn-info text-white" style="border-radius:.45rem;" title="Cetak"><i class="fas fa-print"></i></a>
                                     
-                                    @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan']))
+                                    @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']))
                                         <button class="btn btn-sm btn-danger btn-delete" style="border-radius:.45rem;"
                                             data-id="{{ $req->id }}" 
                                             data-name="{{ ($req->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($req->id, 4, '0', STR_PAD_LEFT) }}" title="Hapus">

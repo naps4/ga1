@@ -76,6 +76,26 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="signature">Tanda Tangan Digital (Gambar TTD)</label>
+                        @if(auth()->user()->signature)
+                            <div class="mb-2">
+                                <img src="{{ auth()->user()->signature_url }}" alt="Tanda Tangan Saya" style="max-height: 80px; border: 1px solid #ddd; padding: 4px; border-radius: 4px; background-color: #f8f9fa;">
+                            </div>
+                        @endif
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file" name="signature" class="custom-file-input @error('signature') is-invalid @enderror" id="signature" accept="image/*">
+                                <label class="custom-file-label" for="signature">Pilih gambar TTD...</label>
+                            </div>
+                        </div>
+                        <small id="signature-file-name" class="form-text text-info">Belum ada file dipilih.</small>
+                        <small class="form-text text-muted">Format: PNG transparan disarankan. Maksimal 2MB.</small>
+                        @error('signature')
+                            <span class="text-danger small">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
                         <label for="email">Email</label>
                         <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" 
                                value="{{ old('email', auth()->user()->email) }}" required>
@@ -203,6 +223,27 @@
 
                 if (info) {
                     info.textContent = fileName ? ('File dipilih: ' + fileName) : 'Belum ada file dipilih.';
+                }
+            });
+        }
+
+        var signatureInput = document.getElementById('signature');
+        var signatureLabel = document.querySelector('label[for="signature"].custom-file-label');
+        var signatureInfo = document.getElementById('signature-file-name');
+
+        if (signatureInput) {
+            signatureInput.addEventListener('change', function () {
+                var selectedFile = (signatureInput.files && signatureInput.files.length > 0) ? signatureInput.files[0].name : '';
+                var fallbackName = signatureInput.value ? signatureInput.value.split('\\').pop() : '';
+                var fileName = selectedFile || fallbackName;
+
+                if (signatureLabel) {
+                    signatureLabel.textContent = fileName || 'Pilih gambar TTD...';
+                    signatureLabel.classList.toggle('selected', !!fileName);
+                }
+
+                if (signatureInfo) {
+                    signatureInfo.textContent = fileName ? ('File dipilih: ' + fileName) : 'Belum ada file dipilih.';
                 }
             });
         }

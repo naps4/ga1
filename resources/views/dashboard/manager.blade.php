@@ -1,0 +1,120 @@
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="m-0 text-dark">Dashboard Operational Manager</h1>
+            <span class="badge badge-primary px-3 py-2 rounded-pill font-weight-bold">
+                <i class="fas fa-user-tie mr-1"></i> Manager
+            </span>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Quick Stats Widgets -->
+        <div class="row">
+            <!-- Pending Manager Approvals -->
+            <div class="col-lg-6 col-md-6 col-12">
+                <div class="small-box bg-warning rounded-4 shadow-sm border-0 position-relative overflow-hidden mb-4" style="transition: transform .2s;">
+                    <div class="inner p-4 text-white">
+                        <h3 style="font-size: 2.2rem; font-weight: 700;">{{ $pendingManagerAtk ?? 0 }}</h3>
+                        <p style="font-size: 1rem; opacity: 0.9;">Menunggu Persetujuan Anda</p>
+                    </div>
+                    <div class="icon" style="position: absolute; right: 15px; top: 15px; font-size: 4rem; opacity: 0.15; color: #fff;">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
+                    <a href="{{ route('atk-requests.index', ['status_approval' => 'Menunggu Persetujuan Manager']) }}" class="small-box-footer bg-dark-50 text-white py-2" style="background: rgba(0,0,0,0.1); display: block; text-align: center; text-decoration: none;">
+                        Proses Sekarang <i class="fas fa-arrow-circle-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Approved by Manager -->
+            <div class="col-lg-6 col-md-6 col-12">
+                <div class="small-box bg-success rounded-4 shadow-sm border-0 position-relative overflow-hidden mb-4" style="transition: transform .2s;">
+                    <div class="inner p-4 text-white">
+                        <h3 style="font-size: 2.2rem; font-weight: 700;">{{ $totalManagerAtkApproved ?? 0 }}</h3>
+                        <p style="font-size: 1rem; opacity: 0.9;">Telah Anda Setujui / Proses</p>
+                    </div>
+                    <div class="icon" style="position: absolute; right: 15px; top: 15px; font-size: 4rem; opacity: 0.15; color: #fff;">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <a href="{{ route('atk-requests.index') }}" class="small-box-footer bg-dark-50 text-white py-2" style="background: rgba(0,0,0,0.1); display: block; text-align: center; text-decoration: none;">
+                        Lihat Semua Riwayat <i class="fas fa-arrow-circle-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent ATK Requests Summary Card -->
+        <div class="card shadow-sm border-0 rounded-4 mt-3">
+            <div class="card-header bg-white border-bottom border-light py-3 d-flex align-items-center justify-content-between">
+                <h3 class="card-title text-primary m-0 font-weight-bold">
+                    <i class="fas fa-clipboard-list mr-1"></i> Kesimpulan Permintaan ATK
+                </h3>
+                <a href="{{ route('atk-requests.index') }}" class="btn btn-sm btn-primary rounded-pill px-3">
+                    Lihat Semua
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="bg-light text-muted">
+                            <tr>
+                                <th class="py-3 px-4" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">No. Pengajuan</th>
+                                <th class="py-3" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Pemohon</th>
+                                <th class="py-3" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Divisi</th>
+                                <th class="py-3" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Periode</th>
+                                <th class="py-3" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Status</th>
+                                <th class="py-3 px-4 text-right" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($recentAtkRequests ?? [] as $req)
+                                <tr>
+                                    <td class="py-3 px-4 font-weight-bold">
+                                        {{ (($req->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT-' : 'ATK-') . str_pad($req->id, 4, '0', STR_PAD_LEFT) }}
+                                    </td>
+                                    <td class="py-3">{{ $req->nama }}</td>
+                                    <td class="py-3"><span class="badge badge-secondary rounded-pill px-2 py-1">{{ $req->divisi }}</span></td>
+                                    <td class="py-3">{{ $req->periode }}</td>
+                                    <td class="py-3">
+                                        @if($req->status_approval === 'Draft')
+                                            <span class="badge badge-warning rounded-pill px-2 py-1">Draft</span>
+                                        @elseif($req->status_approval === 'Menunggu Persetujuan Manager')
+                                            <span class="badge badge-info rounded-pill px-2 py-1"><i class="fas fa-hourglass-half mr-1"></i> Menunggu Persetujuan Anda</span>
+                                        @elseif($req->status_approval === 'Menunggu Persetujuan Admin GA')
+                                            <span class="badge badge-primary rounded-pill px-2 py-1"><i class="fas fa-hourglass-half mr-1"></i> Menunggu GA</span>
+                                        @elseif($req->status_approval === 'Disetujui')
+                                            <span class="badge badge-success rounded-pill px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Disetujui</span>
+                                        @else
+                                            <span class="badge badge-danger rounded-pill px-2 py-1"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-4 text-right">
+                                        @if($req->status_approval === 'Menunggu Persetujuan Manager')
+                                            <a href="{{ route('atk-requests.show', $req->id) }}" class="btn btn-sm btn-warning rounded-pill px-3 shadow-xs">
+                                                <i class="fas fa-edit mr-1"></i> Tinjau
+                                            </a>
+                                        @else
+                                            <a href="{{ route('atk-requests.show', $req->id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                                <i class="fas fa-eye mr-1"></i> Detail
+                                            </a>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-5">
+                                        <i class="fas fa-folder-open fa-2x mb-3 d-block text-gray-300"></i>
+                                        Belum ada riwayat pengajuan ATK yang perlu Anda proses.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

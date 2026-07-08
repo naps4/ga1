@@ -34,6 +34,7 @@ class ProfileController extends Controller
         $user = $request->user();
         $validated = $request->validated();
         unset($validated['avatar']);
+        unset($validated['signature']);
 
         $user->fill($validated);
 
@@ -82,6 +83,55 @@ class ProfileController extends Controller
 
                 if ($path) {
                     $user->avatar = $path;
+                }
+            }
+        }
+
+        if ($request->hasFile('signature')) {
+            $file = $request->file('signature');
+
+            if ($file instanceof UploadedFile && $file->isValid()) {
+                // Delete old signature if exists
+                if ($user->signature && ! preg_match('/^[A-Za-z]:\\\\/', $user->signature) && ! Str::startsWith($user->signature, ['http://', 'https://'])) {
+                    Storage::disk('public')->delete($user->signature);
+                }
+
+                $extension = $file->guessExtension() ?: $file->getClientOriginalExtension() ?: 'png';
+                $fileName = (string) Str::uuid() . '.' . strtolower($extension);
+                $path = null;
+
+                try {
+                    Storage::disk('public')->makeDirectory('signatures');
+                    $path = Storage::disk('public')->putFileAs('signatures', $file, $fileName);
+                } catch (\Throwable $exception) {
+                    Log::warning('Signature upload via storage disk failed, trying direct move', [
+                        'user_id' => $user->id,
+                        'message' => $exception->getMessage(),
+                    ]);
+
+                    try {
+                        $targetDirectory = storage_path('app/public/signatures');
+
+                        if (! File::exists($targetDirectory)) {
+                            File::makeDirectory($targetDirectory, 0755, true);
+                        }
+
+                        $file->move($targetDirectory, $fileName);
+                        $path = 'signatures/' . $fileName;
+                    } catch (\Throwable $fallbackException) {
+                        Log::error('Signature upload failed', [
+                            'user_id' => $user->id,
+                            'message' => $fallbackException->getMessage(),
+                        ]);
+
+                        return Redirect::route('profile.edit')
+                            ->withErrors(['signature' => 'Upload tanda tangan gagal. Silakan coba lagi.'])
+                            ->withInput();
+                    }
+                }
+
+                if ($path) {
+                    $user->signature = $path;
                 }
             }
         }

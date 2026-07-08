@@ -29,6 +29,7 @@ class User extends Authenticatable
         'company',
         'bio',
         'avatar',
+        'signature',
     ];
 
     /**
@@ -111,6 +112,11 @@ class User extends Authenticatable
     public function isClient()
     {
         return $this->role === 'client';
+    }
+
+    public function isManager()
+    {
+        return $this->role === 'manager';
     }
 
     public function isDeveloper()
@@ -224,5 +230,35 @@ class User extends Authenticatable
         }
 
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random';
+    }
+
+    // Signature helper
+    public function getSignatureUrlAttribute()
+    {
+        if (! $this->signature) {
+            return null;
+        }
+
+        if (Str::startsWith($this->signature, ['http://', 'https://'])) {
+            return $this->signature;
+        }
+
+        $path = str_replace('\\', '/', $this->signature);
+        $path = ltrim($path, '/');
+
+        // Ignore invalid absolute paths
+        if (preg_match('/^[A-Za-z]:\//', $path)) {
+            return null;
+        }
+
+        if (Str::startsWith($path, 'storage/')) {
+            return asset($path);
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return asset('storage/' . $path);
+        }
+
+        return null;
     }
 }

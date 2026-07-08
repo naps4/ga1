@@ -7,11 +7,28 @@
 @endsection
 
 @section('content')
+@php
+    $user = auth()->user();
+    $isManagerApproval = ($atkRequest->status_approval === 'Menunggu Persetujuan Manager' && ($user->isManager() || $user->isAdmin() || $user->isSuperAdmin()));
+    $isAdminApproval = ($atkRequest->status_approval === 'Menunggu Persetujuan Admin GA' && ($user->isAdmin() || $user->isSuperAdmin()));
+    $isApprovalMode = $isManagerApproval || $isAdminApproval;
+    $showItemStatus = !in_array($atkRequest->status_approval, ['Draft', 'Menunggu Persetujuan Manager']);
+@endphp
+
 <div class="row">
     <div class="col-md-8">
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show rounded-pill shadow-sm mb-3">
                 {{ session('success') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show rounded-pill shadow-sm mb-3">
+                {{ session('error') }}
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -28,7 +45,7 @@
                     <a href="{{ route('atk-requests.print', $atkRequest->id) }}" target="_blank" class="btn btn-primary rounded-pill btn-sm shadow-sm mr-2">
                         <i class="fas fa-print"></i> Cetak Formulir
                     </a>
-                    @if(in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan']) && $atkRequest->user_id === auth()->id())
+                    @if(in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']) && $atkRequest->user_id === auth()->id())
                         <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-success rounded-pill btn-sm shadow-sm">
                             <i class="fas fa-pencil-alt"></i> Edit Permintaan
                         </a>
@@ -68,15 +85,28 @@
                 <hr>
 
                 <h5 class="text-primary font-weight-bold mb-3"><i class="fas fa-list-ol mr-2"></i>Daftar Barang yang Diminta</h5>
+                
+                @if($isApprovalMode)
+                <form action="{{ route('atk-requests.approve', $atkRequest->id) }}" method="POST">
+                    @csrf
+                @endif
+
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover">
                         <thead class="bg-light">
                             <tr>
                                 <th style="width: 5%;" class="text-center">No</th>
-                                <th style="width: 45%;">Nama Barang</th>
-                                <th style="width: 15%;" class="text-center">Satuan</th>
-                                <th style="width: 25%;">Spesifikasi / Keterangan</th>
-                                <th style="width: 10%;" class="text-center">Total (Qty)</th>
+                                <th>Nama Barang</th>
+                                <th style="width: 12%;" class="text-center">Satuan</th>
+                                <th style="width: 20%;">Spesifikasi</th>
+                                <th style="width: 10%;" class="text-center">Qty</th>
+                                @if($isApprovalMode)
+                                    <th style="width: 23%;" class="text-center">Tindakan</th>
+                                    <th style="width: 20%;">Catatan Item</th>
+                                @elseif($showItemStatus)
+                                    <th style="width: 15%;" class="text-center">Status</th>
+                                    <th style="width: 18%;">Catatan Item</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -92,13 +122,42 @@
                                     </td>
                                     <td class="align-middle text-muted">{{ $item->description ?? '-' }}</td>
                                     <td class="text-center align-middle font-weight-bold">{{ $item->quantity }}</td>
+                                    
+                                    @if($isApprovalMode)
+                                        <td class="text-center align-middle">
+                                            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                                <label class="btn btn-outline-success btn-xs active rounded-left">
+                                                    <input type="radio" name="items[{{ $item->id }}][status]" value="Disetujui" autocomplete="off" checked> <i class="fas fa-check"></i> Setuju
+                                                </label>
+                                                <label class="btn btn-outline-danger btn-xs">
+                                                    <input type="radio" name="items[{{ $item->id }}][status]" value="Ditolak" autocomplete="off"> <i class="fas fa-times"></i> Tolak
+                                                </label>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <input type="text" name="items[{{ $item->id }}][notes]" class="form-control form-control-sm" placeholder="Catatan..." value="{{ $item->notes }}">
+                                        </td>
+                                    @elseif($showItemStatus)
+                                        <td class="text-center align-middle">
+                                            @if($item->status_approval === 'Disetujui')
+                                                <span class="badge badge-success"><i class="fas fa-check"></i> Disetujui</span>
+                                            @elseif($item->status_approval === 'Ditolak')
+                                                <span class="badge badge-danger"><i class="fas fa-times"></i> Ditolak</span>
+                                            @else
+                                                <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> Pending</span>
+                                            @endif
+                                        </td>
+                                        <td class="align-middle text-muted small">{{ $item->notes ?? '-' }}</td>
+                                    @endif
                                 </tr>
                             @endforeach
 
                             <!-- Custom Items -->
                             @if($atkRequest->items->where('is_custom', true)->count() > 0)
                                 <tr class="bg-light">
-                                    <td colspan="5" class="font-weight-bold text-primary small py-2"><i class="fas fa-edit mr-1"></i> Barang Kustom (Tidak Terdaftar)</td>
+                                    <td colspan="{{ $isApprovalMode ? 7 : ($showItemStatus ? 7 : 5) }}" class="font-weight-bold text-primary small py-2">
+                                        <i class="fas fa-edit mr-1"></i> Barang Kustom (Tidak Terdaftar)
+                                    </td>
                                 </tr>
                                 @foreach($atkRequest->items->where('is_custom', true) as $item)
                                     <tr>
@@ -109,6 +168,33 @@
                                         </td>
                                         <td class="align-middle text-muted">{{ $item->description ?? '-' }}</td>
                                         <td class="text-center align-middle font-weight-bold">{{ $item->quantity }}</td>
+                                        
+                                        @if($isApprovalMode)
+                                            <td class="text-center align-middle">
+                                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                                    <label class="btn btn-outline-success btn-xs active rounded-left">
+                                                        <input type="radio" name="items[{{ $item->id }}][status]" value="Disetujui" autocomplete="off" checked> <i class="fas fa-check"></i> Setuju
+                                                    </label>
+                                                    <label class="btn btn-outline-danger btn-xs">
+                                                        <input type="radio" name="items[{{ $item->id }}][status]" value="Ditolak" autocomplete="off"> <i class="fas fa-times"></i> Tolak
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                <input type="text" name="items[{{ $item->id }}][notes]" class="form-control form-control-sm" placeholder="Catatan..." value="{{ $item->notes }}">
+                                            </td>
+                                        @elseif($showItemStatus)
+                                            <td class="text-center align-middle">
+                                                @if($item->status_approval === 'Disetujui')
+                                                    <span class="badge badge-success"><i class="fas fa-check"></i> Disetujui</span>
+                                                @elseif($item->status_approval === 'Ditolak')
+                                                    <span class="badge badge-danger"><i class="fas fa-times"></i> Ditolak</span>
+                                                @else
+                                                    <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> Pending</span>
+                                                @endif
+                                            </td>
+                                            <td class="align-middle text-muted small">{{ $item->notes ?? '-' }}</td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             @endif
@@ -116,11 +202,52 @@
                     </table>
                 </div>
 
-                @if($atkRequest->status_approval === 'Ditolak/Revisi' && $atkRequest->notes)
-                    <div class="alert alert-danger rounded-4 border-0 p-3 mt-4">
-                        <h6 class="font-weight-bold mb-1"><i class="fas fa-exclamation-triangle mr-1"></i> Alasan Penolakan / Revisi:</h6>
-                        <span>{{ $atkRequest->notes }}</span>
+                @if($isApprovalMode)
+                    <div class="card p-3 bg-light rounded-4 mt-3 border-0">
+                        <div class="form-group mb-3">
+                            <label for="general_notes" class="font-weight-bold">
+                                Catatan Umum {{ $isManagerApproval ? 'Manager' : 'Admin GA' }} (Opsional):
+                            </label>
+                            <textarea name="{{ $isManagerApproval ? 'manager_notes' : 'notes' }}" id="general_notes" class="form-control" rows="3" placeholder="Tulis catatan persetujuan keseluruhan di sini..."></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end" style="gap: 10px;">
+                            <button type="button" class="btn btn-outline-danger rounded-pill px-4" data-toggle="modal" data-target="#rejectModal">
+                                <i class="fas fa-times mr-1"></i> Tolak Semua
+                            </button>
+                            <button type="submit" class="btn btn-success rounded-pill px-4">
+                                <i class="fas fa-check-double mr-1"></i> Proses Persetujuan
+                            </button>
+                        </div>
                     </div>
+                </form>
+                @endif
+
+                @if($atkRequest->status_approval === 'Ditolak/Revisi')
+                    @if($atkRequest->manager_notes)
+                        <div class="alert alert-danger rounded-4 border-0 p-3 mt-4 mb-2">
+                            <h6 class="font-weight-bold mb-1"><i class="fas fa-exclamation-triangle mr-1"></i> Penolakan Manager:</h6>
+                            <span>{{ $atkRequest->manager_notes }}</span>
+                        </div>
+                    @endif
+                    @if($atkRequest->notes)
+                        <div class="alert alert-danger rounded-4 border-0 p-3 mt-2">
+                            <h6 class="font-weight-bold mb-1"><i class="fas fa-exclamation-triangle mr-1"></i> Penolakan Admin GA:</h6>
+                            <span>{{ $atkRequest->notes }}</span>
+                        </div>
+                    @endif
+                @else
+                    @if($atkRequest->manager_notes)
+                        <div class="alert alert-info rounded-4 border-0 p-3 mt-4 mb-2">
+                            <h6 class="font-weight-bold mb-1"><i class="fas fa-comment-dots mr-1"></i> Catatan Manager:</h6>
+                            <span>{{ $atkRequest->manager_notes }}</span>
+                        </div>
+                    @endif
+                    @if($atkRequest->notes)
+                        <div class="alert alert-info rounded-4 border-0 p-3 mt-2">
+                            <h6 class="font-weight-bold mb-1"><i class="fas fa-comment-dots mr-1"></i> Catatan Admin GA:</h6>
+                            <span>{{ $atkRequest->notes }}</span>
+                        </div>
+                    @endif
                 @endif
             </div>
         </div>
@@ -140,8 +267,10 @@
                     <h6 class="font-weight-bold text-muted">Status Saat Ini:</h6>
                     @if($atkRequest->status_approval === 'Draft')
                         <span class="badge badge-secondary text-lg px-4 py-2 rounded-pill">Draft</span>
-                    @elseif($atkRequest->status_approval === 'Menunggu Persetujuan')
-                        <span class="badge badge-warning text-lg px-4 py-2 rounded-pill">Menunggu Persetujuan</span>
+                    @elseif($atkRequest->status_approval === 'Menunggu Persetujuan Manager')
+                        <span class="badge badge-warning text-lg px-4 py-2 rounded-pill">Review Manager</span>
+                    @elseif($atkRequest->status_approval === 'Menunggu Persetujuan Admin GA')
+                        <span class="badge badge-info text-lg px-4 py-2 rounded-pill">Review Admin GA</span>
                     @elseif($atkRequest->status_approval === 'Disetujui')
                         <span class="badge badge-success text-lg px-4 py-2 rounded-pill">Disetujui</span>
                     @elseif($atkRequest->status_approval === 'Ditolak/Revisi')
@@ -162,40 +291,73 @@
                         </div>
                     </div>
 
-                    <!-- Stage 2: Verifikasi Admin -->
+                    <!-- Stage 2: Persetujuan Manager -->
                     @if($atkRequest->status_approval !== 'Draft')
                         <div>
-                            @if($atkRequest->approved_by)
+                            @if($atkRequest->manager_approved_by)
                                 <i class="fas fa-check bg-success"></i>
                                 <div class="timeline-item border-0 shadow-none bg-light rounded-4">
-                                    <span class="time"><i class="fas fa-clock"></i> {{ $atkRequest->approved_at->format('d/m H:i') }}</span>
-                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">Disetujui Admin</h3>
+                                    <span class="time"><i class="fas fa-clock"></i> {{ \Carbon\Carbon::parse($atkRequest->manager_approved_at)->format('d/m H:i') }}</span>
+                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">Persetujuan Manager</h3>
                                     <div class="timeline-body p-2 text-muted">
-                                        Disetujui oleh: <strong>{{ $atkRequest->approver->name }}</strong>
+                                        Disetujui oleh: <strong>{{ $atkRequest->managerApprover->name ?? '-' }}</strong>
                                     </div>
                                 </div>
-                            @elseif($atkRequest->status_approval === 'Ditolak/Revisi')
+                            @elseif($atkRequest->status_approval === 'Menunggu Persetujuan Manager')
+                                <i class="fas fa-clock bg-warning"></i>
+                                <div class="timeline-item border-0 shadow-none bg-light rounded-4">
+                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">Review Manager</h3>
+                                    <div class="timeline-body p-2 text-muted">
+                                        Menunggu persetujuan dari Operational Manager.
+                                    </div>
+                                </div>
+                            @elseif($atkRequest->status_approval === 'Ditolak/Revisi' && !$atkRequest->manager_approved_by)
                                 <i class="fas fa-times bg-danger"></i>
                                 <div class="timeline-item border-0 shadow-none bg-light rounded-4">
                                     <span class="time"><i class="fas fa-clock"></i> {{ $atkRequest->updated_at->format('d/m H:i') }}</span>
-                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">Ditolak / Perlu Revisi</h3>
+                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">Ditolak Manager</h3>
                                     <div class="timeline-body p-2 text-muted">
-                                        Catatan: {{ $atkRequest->notes }}
-                                    </div>
-                                </div>
-                            @else
-                                <i class="fas fa-clock bg-warning"></i>
-                                <div class="timeline-item border-0 shadow-none bg-light rounded-4">
-                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">Menunggu Review</h3>
-                                    <div class="timeline-body p-2 text-muted">
-                                        Menunggu verifikasi dan persetujuan dari Admin HRGA.
+                                        Catatan: {{ $atkRequest->manager_notes ?? $atkRequest->notes }}
                                     </div>
                                 </div>
                             @endif
                         </div>
                     @endif
 
-                    <!-- Stage 3: Serah Terima Barang -->
+                    <!-- Stage 3: Persetujuan Admin GA -->
+                    @if($atkRequest->status_approval !== 'Draft' && $atkRequest->status_approval !== 'Menunggu Persetujuan Manager' && ($atkRequest->manager_approved_by || $atkRequest->status_approval === 'Ditolak/Revisi'))
+                        <div>
+                            @if($atkRequest->approved_by)
+                                <i class="fas fa-check-double bg-success"></i>
+                                <div class="timeline-item border-0 shadow-none bg-light rounded-4">
+                                    <span class="time"><i class="fas fa-clock"></i> {{ $atkRequest->approved_at->format('d/m H:i') }}</span>
+                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">Persetujuan Admin GA</h3>
+                                    <div class="timeline-body p-2 text-muted">
+                                        Disetujui oleh: <strong>{{ $atkRequest->approver->name }}</strong>
+                                    </div>
+                                </div>
+                            @elseif($atkRequest->status_approval === 'Menunggu Persetujuan Admin GA')
+                                <i class="fas fa-clock bg-warning"></i>
+                                <div class="timeline-item border-0 shadow-none bg-light rounded-4">
+                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">Review Admin GA</h3>
+                                    <div class="timeline-body p-2 text-muted">
+                                        Menunggu verifikasi akhir dari Admin GA.
+                                    </div>
+                                </div>
+                            @elseif($atkRequest->status_approval === 'Ditolak/Revisi' && $atkRequest->manager_approved_by)
+                                <i class="fas fa-times bg-danger"></i>
+                                <div class="timeline-item border-0 shadow-none bg-light rounded-4">
+                                    <span class="time"><i class="fas fa-clock"></i> {{ $atkRequest->updated_at->format('d/m H:i') }}</span>
+                                    <h3 class="timeline-header border-0 font-weight-bold text-sm">Ditolak Admin GA</h3>
+                                    <div class="timeline-body p-2 text-muted">
+                                        Catatan: {{ $atkRequest->notes }}
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    <!-- Stage 4: Serah Terima Barang -->
                     @if($atkRequest->status_approval === 'Disetujui')
                         <div>
                             @if($atkRequest->diberikan_pada)
@@ -221,26 +383,17 @@
                     @endif
                 </div>
 
-                <!-- Admin Action Buttons -->
-                @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
+                @if($isApprovalMode)
                     <hr>
-                    @if($atkRequest->status_approval === 'Menunggu Persetujuan')
-                        <div class="d-flex flex-column" style="gap: 8px;">
-                            <form action="{{ route('atk-requests.approve', $atkRequest->id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="btn btn-success btn-block rounded-pill">
-                                    <i class="fas fa-check mr-1"></i> Setujui Pengajuan
-                                </button>
-                            </form>
-                            <button type="button" class="btn btn-outline-danger btn-block rounded-pill" data-toggle="modal" data-target="#rejectModal">
-                                <i class="fas fa-times mr-1"></i> Tolak / Minta Revisi
-                            </button>
-                        </div>
-                    @elseif($atkRequest->status_approval === 'Disetujui' && !$atkRequest->diberikan_pada)
-                        <button type="button" class="btn btn-primary btn-block rounded-pill" data-toggle="modal" data-target="#handoverModal">
-                            <i class="fas fa-handshake mr-1"></i> Konfirmasi Penyerahan
-                        </button>
-                    @endif
+                    <div class="alert alert-info rounded-4 border-0 p-3 mb-0 small">
+                        <h6 class="font-weight-bold mb-1"><i class="fas fa-info-circle mr-1"></i> Mode Persetujuan</h6>
+                        <span>Tentukan setuju/tolak pada setiap item barang di tabel sebelah kiri, lalu klik <strong>Proses Persetujuan</strong>.</span>
+                    </div>
+                @elseif($atkRequest->status_approval === 'Disetujui' && !$atkRequest->diberikan_pada && ($user->isAdmin() || $user->isSuperAdmin()))
+                    <hr>
+                    <button type="button" class="btn btn-primary btn-block rounded-pill shadow-sm" data-toggle="modal" data-target="#handoverModal">
+                        <i class="fas fa-handshake mr-1"></i> Konfirmasi Penyerahan
+                    </button>
                 @endif
             </div>
         </div>
@@ -254,20 +407,20 @@
             <form action="{{ route('atk-requests.reject', $atkRequest->id) }}" method="POST">
                 @csrf
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title font-weight-bold text-danger" id="rejectModalLabel"><i class="fas fa-exclamation-triangle mr-1"></i> Tolak / Minta Revisi</h5>
+                    <h5 class="modal-title font-weight-bold text-danger" id="rejectModalLabel"><i class="fas fa-exclamation-triangle mr-1"></i> Tolak Seluruh Pengajuan</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body pb-2 pt-0">
                     <div class="form-group">
-                        <label for="notes" class="font-weight-600">Alasan Penolakan atau Catatan Revisi:</label>
-                        <textarea name="notes" id="notes" class="form-control" rows="4" placeholder="Tulis alasan penolakan atau instruksi revisi barang..." required></textarea>
+                        <label for="notes" class="font-weight-600">Alasan Penolakan:</label>
+                        <textarea name="notes" id="notes" class="form-control" rows="4" placeholder="Tulis alasan penolakan seluruh barang secara lengkap..." required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-light rounded-pill px-3" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger rounded-pill px-4">Tolak Pengajuan</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">Tolak Seluruhnya</button>
                 </div>
             </form>
         </div>
@@ -286,7 +439,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body pb-2 pt-0">
                     <div class="form-group">
                         <label for="diberikan_pada" class="font-weight-600">Tanggal Penyerahan:</label>
                         <input type="date" name="diberikan_pada" id="diberikan_pada" class="form-control" value="{{ now()->format('Y-m-d') }}" required>

@@ -125,12 +125,12 @@ class AtkRequestController extends Controller
         $user = auth()->user();
         $query = AtkRequest::with(['user', 'approver', 'items']);
 
-        if ($user->isClient()) {
+        if (!$user->isManager() && !$user->isAdmin() && !$user->isSuperAdmin()) {
             $query->where('user_id', $user->id);
         }
 
-        // Apply filters if Admin/Super Admin
-        if ($user->isAdmin() || $user->isSuperAdmin()) {
+        // Apply filters if Admin/Super Admin/Manager
+        if ($user->isAdmin() || $user->isSuperAdmin() || $user->isManager()) {
             // 1. Filter Tanggal Pengajuan
             if ($request->filled('start_date')) {
                 $query->whereDate('tanggal_pengajuan', '>=', $request->start_date);
@@ -205,7 +205,7 @@ class AtkRequestController extends Controller
         ]);
 
         $action = $request->input('action', 'draft');
-        $status = ($action === 'submit') ? 'Menunggu Persetujuan' : 'Draft';
+        $status = ($action === 'submit') ? 'Menunggu Persetujuan Manager' : 'Draft';
 
         DB::transaction(function () use ($request, $status) {
             $atk = AtkRequest::create([
@@ -315,7 +315,7 @@ class AtkRequestController extends Controller
         ]);
 
         $action = $request->input('action', 'draft');
-        $status = ($action === 'submit') ? 'Menunggu Persetujuan' : 'Draft';
+        $status = ($action === 'submit') ? 'Menunggu Persetujuan Manager' : 'Draft';
 
         DB::transaction(function () use ($request, $atkRequest, $status) {
             $atkRequest->update([
@@ -387,37 +387,153 @@ class AtkRequestController extends Controller
         return redirect()->route('atk-requests.index')->with('success', "Permintaan {$typeName} berhasil dihapus.");
     }
 
-    public function approve(AtkRequest $atkRequest)
+    public function approve(Request $request, AtkRequest $atkRequest)
     {
-        if (!auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin()) {
-            abort(403);
+        $user = auth()->user();
+
+        // 1. Manager Approval Step
+        if ($atkRequest->status_approval === 'Menunggu Persetujuan Manager') {
+            if (!$user->isManager() && !$user->isAdmin() && !$user->isSuperAdmin()) {
+                abort(403, 'Aksi ini hanya untuk Operational Manager.');
+            }
+
+            $request->validate([
+                'items' => 'required|array',
+                'items.*.status' => 'required|in:Disetujui,Ditolak',
+                'items.*.notes' => 'nullable|string',
+                'manager_notes' => 'nullable|string',
+            ]);
+
+            DB::transaction(function () use ($request, $atkRequest, $user) {
+                $hasApprovedItem = false;
+                foreach ($request->items as $itemId => $itemData) {
+                    $item = AtkRequestItem::where('atk_request_id', $atkRequest->id)->findOrFail($itemId);
+                    $itemStatus = $itemData['status'];
+                    $itemNote = $itemData['notes'] ?? null;
+                    
+                    $item->update([
+                        'status_approval' => $itemStatus,
+                        'notes' => $itemNote,
+                    ]);
+
+                    if ($itemStatus === 'Disetujui') {
+                        $hasApprovedItem = true;
+                    }
+                }
+
+                // If all items are rejected, request is rejected. Else, moves to Admin GA
+                $newStatus = $hasApprovedItem ? 'Menunggu Persetujuan Admin GA' : 'Ditolak/Revisi';
+                
+                $atkRequest->update([
+                    'status_approval' => $newStatus,
+                    'manager_approved_by' => $user->id,
+                    'manager_approved_at' => now(),
+                    'manager_notes' => $request->manager_notes ?? ($hasApprovedItem ? null : 'Semua item ditolak oleh manager.'),
+                ]);
+            });
+
+            return redirect()->route('atk-requests.show', $atkRequest->id)->with('success', 'Permintaan berhasil diproses oleh Manager.');
         }
 
-        $atkRequest->update([
-            'status_approval' => 'Disetujui',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-        ]);
+        // 2. Admin GA Approval Step
+        if ($atkRequest->status_approval === 'Menunggu Persetujuan Admin GA') {
+            if (!$user->isAdmin() && !$user->isSuperAdmin()) {
+                abort(403, 'Aksi ini hanya untuk Admin GA.');
+            }
 
-        return back()->with('success', 'Permintaan berhasil disetujui.');
+            $request->validate([
+                'items' => 'required|array',
+                'items.*.status' => 'required|in:Disetujui,Ditolak',
+                'items.*.notes' => 'nullable|string',
+                'notes' => 'nullable|string',
+            ]);
+
+            DB::transaction(function () use ($request, $atkRequest, $user) {
+                $hasApprovedItem = false;
+                foreach ($request->items as $itemId => $itemData) {
+                    $item = AtkRequestItem::where('atk_request_id', $atkRequest->id)->findOrFail($itemId);
+                    $itemStatus = $itemData['status'];
+                    $itemNote = $itemData['notes'] ?? null;
+
+                    $item->update([
+                        'status_approval' => $itemStatus,
+                        'notes' => $itemNote,
+                    ]);
+
+                    if ($itemStatus === 'Disetujui') {
+                        $hasApprovedItem = true;
+                    }
+                }
+
+                $newStatus = $hasApprovedItem ? 'Disetujui' : 'Ditolak/Revisi';
+
+                $atkRequest->update([
+                    'status_approval' => $newStatus,
+                    'approved_by' => $user->id,
+                    'approved_at' => now(),
+                    'notes' => $request->notes ?? ($hasApprovedItem ? null : 'Semua item ditolak oleh Admin GA.'),
+                ]);
+            });
+
+            return redirect()->route('atk-requests.show', $atkRequest->id)->with('success', 'Permintaan berhasil diproses oleh Admin GA.');
+        }
+
+        abort(400, 'Permintaan tidak dalam status yang dapat disetujui.');
     }
 
     public function reject(Request $request, AtkRequest $atkRequest)
     {
-        if (!auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin()) {
-            abort(403);
-        }
-
+        $user = auth()->user();
+        
         $request->validate([
             'notes' => 'required|string',
         ]);
 
-        $atkRequest->update([
-            'status_approval' => 'Ditolak/Revisi',
-            'notes' => $request->notes,
-        ]);
+        if ($atkRequest->status_approval === 'Menunggu Persetujuan Manager') {
+            if (!$user->isManager() && !$user->isAdmin() && !$user->isSuperAdmin()) {
+                abort(403);
+            }
 
-        return back()->with('success', 'Permintaan telah ditolak / dikembalikan untuk revisi.');
+            DB::transaction(function() use ($atkRequest, $request, $user) {
+                $atkRequest->items()->update([
+                    'status_approval' => 'Ditolak',
+                    'notes' => 'Ditolak bersama pengajuan utama.'
+                ]);
+
+                $atkRequest->update([
+                    'status_approval' => 'Ditolak/Revisi',
+                    'manager_approved_by' => $user->id,
+                    'manager_approved_at' => now(),
+                    'manager_notes' => $request->notes,
+                ]);
+            });
+
+            return back()->with('success', 'Permintaan telah ditolak oleh Manager.');
+        }
+
+        if ($atkRequest->status_approval === 'Menunggu Persetujuan Admin GA') {
+            if (!$user->isAdmin() && !$user->isSuperAdmin()) {
+                abort(403);
+            }
+
+            DB::transaction(function() use ($atkRequest, $request, $user) {
+                $atkRequest->items()->update([
+                    'status_approval' => 'Ditolak',
+                    'notes' => 'Ditolak bersama pengajuan utama.'
+                ]);
+
+                $atkRequest->update([
+                    'status_approval' => 'Ditolak/Revisi',
+                    'approved_by' => $user->id,
+                    'approved_at' => now(),
+                    'notes' => $request->notes,
+                ]);
+            });
+
+            return back()->with('success', 'Permintaan telah ditolak oleh Admin GA.');
+        }
+
+        abort(400, 'Permintaan tidak dalam status yang dapat ditolak.');
     }
 
     public function handover(Request $request, AtkRequest $atkRequest)
@@ -441,10 +557,13 @@ class AtkRequestController extends Controller
 
     public function print(AtkRequest $atkRequest)
     {
-        $atkRequest->load('user', 'approver', 'items');
+        $atkRequest->load(['user', 'approver', 'managerApprover']);
         
-        $itemsMap = $atkRequest->items->where('is_custom', false)->keyBy('item_name')->toArray();
-        $customItems = $atkRequest->items->where('is_custom', true)->values()->all();
+        // Filter out rejected items from the print view
+        $items = $atkRequest->items()->where('status_approval', '!=', 'Ditolak')->get();
+        
+        $itemsMap = $items->where('is_custom', false)->keyBy('item_name')->toArray();
+        $customItems = $items->where('is_custom', true)->values()->all();
 
         $standardItems = self::$standardItems;
         $householdItems = self::$householdItems;
