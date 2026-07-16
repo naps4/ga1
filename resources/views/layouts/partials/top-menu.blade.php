@@ -59,6 +59,7 @@
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Work Order GA</span></a></li>
             <li><a href="{{ route('super-admin.reports') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.reports*') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i><span>Laporan GA</span></a></li>
             <li><a href="{{ route('super-admin.users.index') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><i class="fas fa-users"></i><span>Data Karyawan</span></a></li>
+            <li><a href="{{ route('super-admin.master-barang.index') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.master-barang.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i><span>Master Barang</span></a></li>
             <li><a href="{{ route('super-admin.settings') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.settings') ? 'active' : '' }}"><i class="fas fa-cog"></i><span>Pengaturan</span></a></li>
 
         @elseif(auth()->user()->canApproveProjects())

@@ -120,6 +120,26 @@ class AtkRequestController extends Controller
         ['name' => 'Pengki', 'unit' => 'Pcs', 'options' => [], 'category' => 'Lain-lain']
     ];
 
+    private function getItemsForType(string $type)
+    {
+        return \App\Models\AtkItem::whereHas('category', function($q) use ($type) {
+            $q->where('type', $type);
+        })
+        ->with('category')
+        ->orderBy('atk_category_id', 'asc')
+        ->orderBy('id', 'asc')
+        ->get()
+        ->map(function($item) {
+            return [
+                'name' => $item->name,
+                'unit' => $item->unit,
+                'options' => $item->options ?? [],
+                'category' => $item->category->name
+            ];
+        })
+        ->toArray();
+    }
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -170,8 +190,8 @@ class AtkRequestController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $standardItems = self::$standardItems;
-        $householdItems = self::$householdItems;
+        $standardItems = $this->getItemsForType('ATK');
+        $householdItems = $this->getItemsForType('Rumah Tangga');
         
         $defaultType = request()->get('type') === 'household' ? 'Rumah Tangga' : 'ATK';
         
@@ -238,9 +258,18 @@ class AtkRequestController extends Controller
 
             // Save Custom Items
             if ($request->has('custom_items')) {
-                foreach ($request->custom_items as $cItem) {
+                foreach ($request->custom_items as $index => $cItem) {
                     $qty = intval($cItem['qty'] ?? 0);
                     if (!empty($cItem['name']) && $qty > 0) {
+                        $attachmentPath = null;
+                        if ($request->hasFile("custom_items.{$index}.attachment")) {
+                            $file = $request->file("custom_items.{$index}.attachment");
+                            if ($file->isValid()) {
+                                $fileName = time() . '_' . $file->getClientOriginalName();
+                                $attachmentPath = $file->storeAs('atk-attachments', $fileName, 'public');
+                            }
+                        }
+
                         AtkRequestItem::create([
                             'atk_request_id' => $atk->id,
                             'item_name' => $cItem['name'],
@@ -248,6 +277,7 @@ class AtkRequestController extends Controller
                             'description' => $cItem['desc'] ?? null,
                             'quantity' => $qty,
                             'is_custom' => true,
+                            'attachment' => $attachmentPath,
                         ]);
                     }
                 }
@@ -275,8 +305,8 @@ class AtkRequestController extends Controller
             return redirect()->route('atk-requests.show', $atkRequest->id)->withErrors(['error' => 'Permintaan yang sudah disetujui tidak dapat diubah.']);
         }
 
-        $standardItems = self::$standardItems;
-        $householdItems = self::$householdItems;
+        $standardItems = $this->getItemsForType('ATK');
+        $householdItems = $this->getItemsForType('Rumah Tangga');
         
         // Generate months for period selection
         $months = [];
@@ -350,9 +380,18 @@ class AtkRequestController extends Controller
 
             // Save Custom Items
             if ($request->has('custom_items')) {
-                foreach ($request->custom_items as $cItem) {
+                foreach ($request->custom_items as $index => $cItem) {
                     $qty = intval($cItem['qty'] ?? 0);
                     if (!empty($cItem['name']) && $qty > 0) {
+                        $attachmentPath = $cItem['existing_attachment'] ?? null;
+                        if ($request->hasFile("custom_items.{$index}.attachment")) {
+                            $file = $request->file("custom_items.{$index}.attachment");
+                            if ($file->isValid()) {
+                                $fileName = time() . '_' . $file->getClientOriginalName();
+                                $attachmentPath = $file->storeAs('atk-attachments', $fileName, 'public');
+                            }
+                        }
+
                         AtkRequestItem::create([
                             'atk_request_id' => $atkRequest->id,
                             'item_name' => $cItem['name'],
@@ -360,6 +399,7 @@ class AtkRequestController extends Controller
                             'description' => $cItem['desc'] ?? null,
                             'quantity' => $qty,
                             'is_custom' => true,
+                            'attachment' => $attachmentPath,
                         ]);
                     }
                 }
@@ -565,8 +605,8 @@ class AtkRequestController extends Controller
         $itemsMap = $items->where('is_custom', false)->keyBy('item_name')->toArray();
         $customItems = $items->where('is_custom', true)->values()->all();
 
-        $standardItems = self::$standardItems;
-        $householdItems = self::$householdItems;
+        $standardItems = $this->getItemsForType('ATK');
+        $householdItems = $this->getItemsForType('Rumah Tangga');
 
         return view('print.atk', compact('atkRequest', 'standardItems', 'householdItems', 'itemsMap', 'customItems'));
     }

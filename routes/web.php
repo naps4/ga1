@@ -208,6 +208,12 @@ Route::middleware(['auth', 'super_admin'])->prefix('super-admin')->name('super-a
     Route::get('/reports/technical/export/pdf', [SuperAdminController::class, 'exportTechnicalReportPdf'])->name('reports.technical.export.pdf');
     Route::get('/reports/export', [SuperAdminController::class, 'exportMonthlyCumulativeReport'])->name('reports.export');
     Route::get('/reports/export/pdf', [SuperAdminController::class, 'exportWorkOrderReportPdf'])->name('reports.export.pdf');
+
+    // Master Barang / Categories & Items CRUD
+    Route::resource('master-barang', App\Http\Controllers\MasterBarangController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('master-barang/items', [App\Http\Controllers\MasterBarangController::class, 'storeItem'])->name('master-barang.items.store');
+    Route::put('master-barang/items/{item}', [App\Http\Controllers\MasterBarangController::class, 'updateItem'])->name('master-barang.items.update');
+    Route::delete('master-barang/items/{item}', [App\Http\Controllers\MasterBarangController::class, 'destroyItem'])->name('master-barang.items.destroy');
 });
 
 // Chat API Routes for Popup Widget

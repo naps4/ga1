@@ -9,9 +9,10 @@
 @section('content')
 <div class="row">
     <div class="col-12">
-        <form action="{{ route('atk-requests.update', $atkRequest->id) }}" method="POST" id="atkForm">
+        <form action="{{ route('atk-requests.update', $atkRequest->id) }}" method="POST" id="atkForm" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            <div id="hidden-attachments" class="d-none"></div>
             
             <!-- Metadata Card -->
             <div class="card shadow-sm border-0 rounded-4 mb-4">
@@ -164,9 +165,24 @@
                                     </div>
                                 </div>
                                 
-                                <div class="form-group">
-                                    <label for="custom-desc" class="font-weight-600">Keterangan Spesifikasi</label>
-                                    <input type="text" id="custom-desc" class="form-control rounded-pill" placeholder="Keterangan spesifikasi...">
+                                <div class="row">
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="custom-desc" class="font-weight-600">Keterangan Spesifikasi</label>
+                                            <input type="text" id="custom-desc" class="form-control rounded-pill" placeholder="Keterangan spesifikasi...">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label class="font-weight-600">Lampiran / File (Opsional)</label>
+                                            <div id="custom-attachment-wrapper">
+                                                <div class="custom-file">
+                                                    <input type="file" class="custom-file-input" id="custom-attachment" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                                                    <label class="custom-file-label rounded-pill" for="custom-attachment" id="custom-attachment-label">Pilih file...</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <button type="button" id="btn-add-custom" class="btn btn-warning btn-block rounded-pill mt-4 shadow-sm">
@@ -486,6 +502,23 @@
         // Add Custom Item to Summary List
         let customItemIndex = 0;
         const btnAddCustom = document.getElementById('btn-add-custom');
+        
+        function bindAttachmentChangeListener() {
+            const fileInput = document.getElementById('custom-attachment');
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    const label = document.getElementById('custom-attachment-label');
+                    if (label && e.target.files.length > 0) {
+                        label.textContent = e.target.files[0].name;
+                    } else if (label) {
+                        label.textContent = 'Pilih file...';
+                    }
+                });
+            }
+        }
+        
+        bindAttachmentChangeListener();
+
         btnAddCustom.addEventListener('click', function() {
             const name = document.getElementById('custom-name').value.trim();
             const unit = document.getElementById('custom-unit').value.trim() || 'Pcs';
@@ -496,8 +529,34 @@
                 Swal.fire('Perhatian', 'Nama barang kustom tidak boleh kosong.', 'warning');
                 return;
             }
+
+            // Handle optional file attachment
+            const fileInput = document.getElementById('custom-attachment');
+            let fileName = '';
+            const currentIndex = customItemIndex;
             
-            addCustomRow(name, unit, desc, qty);
+            if (fileInput && fileInput.files.length > 0) {
+                fileName = fileInput.files[0].name;
+                
+                // Set name and id
+                fileInput.name = `custom_items[${currentIndex}][attachment]`;
+                fileInput.id = `attachment-${currentIndex}`;
+                
+                // Move to hidden attachments container
+                document.getElementById('hidden-attachments').appendChild(fileInput);
+                
+                // Create a new file input in wrapper
+                const wrapper = document.getElementById('custom-attachment-wrapper');
+                wrapper.innerHTML = `
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="custom-attachment" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                        <label class="custom-file-label rounded-pill" for="custom-attachment" id="custom-attachment-label">Pilih file...</label>
+                    </div>
+                `;
+                bindAttachmentChangeListener();
+            }
+            
+            addCustomRow(name, unit, desc, qty, fileName, '', currentIndex);
             
             // Reset custom form
             document.getElementById('custom-name').value = '';
@@ -567,30 +626,42 @@
         }
 
         // Add Custom Row Logic
-        function addCustomRow(name, unit, desc, qty) {
+        function addCustomRow(name, unit, desc, qty, fileName = '', existingAttachment = '', index = '') {
             const tableBody = document.getElementById('summary-table-body');
             const tr = document.createElement('tr');
             tr.className = 'custom-item-row';
+            tr.dataset.index = index;
             
             let specText = desc ? desc : '-';
+            if (fileName) {
+                specText += `<br><span class="badge badge-success mt-1"><i class="fas fa-paperclip mr-1"></i> ${fileName}</span>`;
+            } else if (existingAttachment) {
+                specText += `<br><a href="/storage/${existingAttachment}" target="_blank" class="badge badge-success mt-1"><i class="fas fa-paperclip mr-1"></i> Lampiran Terunggah</a>`;
+            }
+            
+            let existingAttachmentHtml = '';
+            if (existingAttachment) {
+                existingAttachmentHtml = `<input type="hidden" name="custom_items[${index}][existing_attachment]" value="${existingAttachment}">`;
+            }
             
             tr.innerHTML = `
                 <td class="text-center align-middle row-no"></td>
                 <td class="align-middle font-weight-bold text-danger">
                     ${name}
                     <span class="badge badge-warning ml-1 small">Kustom</span>
-                    <input type="hidden" name="custom_items[${customItemIndex}][name]" value="${name}">
+                    <input type="hidden" name="custom_items[${index}][name]" value="${name}">
                 </td>
                 <td class="text-center align-middle">
                     <span class="badge badge-secondary">${unit}</span>
-                    <input type="hidden" name="custom_items[${customItemIndex}][unit]" value="${unit}">
+                    <input type="hidden" name="custom_items[${index}][unit]" value="${unit}">
                 </td>
                 <td class="align-middle">
                     <span>${specText}</span>
-                    <input type="hidden" name="custom_items[${customItemIndex}][desc]" value="${desc}">
+                    <input type="hidden" name="custom_items[${index}][desc]" value="${desc}">
+                    ${existingAttachmentHtml}
                 </td>
                 <td class="align-middle text-center">
-                    <input type="number" name="custom_items[${customItemIndex}][qty]" class="form-control form-control-sm text-center qty-input mx-auto" min="1" value="${qty}" style="width: 75px;">
+                    <input type="number" name="custom_items[${index}][qty]" class="form-control form-control-sm text-center qty-input mx-auto" min="1" value="${qty}" style="width: 75px;">
                 </td>
                 <td class="align-middle text-center">
                     <button type="button" class="btn btn-outline-danger btn-sm rounded-pill remove-row-btn"><i class="fas fa-trash"></i></button>
@@ -605,7 +676,13 @@
         // Remove row logic
         document.getElementById('summary-table-body').addEventListener('click', function(e) {
             if (e.target.closest('.remove-row-btn')) {
-                e.target.closest('tr').remove();
+                const tr = e.target.closest('tr');
+                if (tr.classList.contains('custom-item-row')) {
+                    const idx = tr.dataset.index;
+                    const attachment = document.getElementById('attachment-' + idx);
+                    if (attachment) attachment.remove();
+                }
+                tr.remove();
                 updateUIState();
             }
         });
@@ -686,8 +763,9 @@
             const unit = cItem.unit;
             const desc = cItem.description || '';
             const qty = cItem.quantity;
+            const existingAttachment = cItem.attachment || '';
             
-            addCustomRow(name, unit, desc, qty);
+            addCustomRow(name, unit, desc, qty, '', existingAttachment, customItemIndex);
         });
     });
 </script>

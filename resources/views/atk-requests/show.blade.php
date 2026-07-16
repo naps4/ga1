@@ -166,7 +166,15 @@
                                         <td class="text-center align-middle">
                                             <span class="badge badge-secondary">{{ $item->unit }}</span>
                                         </td>
-                                        <td class="align-middle text-muted">{{ $item->description ?? '-' }}</td>
+                                        <td class="align-middle text-muted">
+                                            {{ $item->description ?? '-' }}
+                                            @if($item->attachment)
+                                                <br>
+                                                <a href="{{ asset('storage/' . $item->attachment) }}" target="_blank" class="badge badge-success mt-1">
+                                                    <i class="fas fa-paperclip mr-1 text-white"></i> Lihat Lampiran
+                                                </a>
+                                            @endif
+                                        </td>
                                         <td class="text-center align-middle font-weight-bold">{{ $item->quantity }}</td>
                                         
                                         @if($isApprovalMode)

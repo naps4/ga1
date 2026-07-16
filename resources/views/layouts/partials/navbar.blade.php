@@ -40,6 +40,7 @@
                 <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><span>Work Order GA</span></a></li>
                 <li><a href="{{ route('super-admin.reports') }}" class="top-menu-link {{ request()->routeIs('super-admin.reports*') ? 'active' : '' }}"><span>Laporan GA</span></a></li>
                 <li><a href="{{ route('super-admin.users.index') }}" class="top-menu-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><span>Data Karyawan</span></a></li>
+                <li><a href="{{ route('super-admin.master-barang.index') }}" class="top-menu-link {{ request()->routeIs('super-admin.master-barang.*') ? 'active' : '' }}"><span>Master Barang</span></a></li>
                 <li><a href="{{ route('super-admin.settings') }}" class="top-menu-link {{ request()->routeIs('super-admin.settings') ? 'active' : '' }}"><span>Pengaturan</span></a></li>
 
             @elseif(auth()->user()->canApproveProjects())
