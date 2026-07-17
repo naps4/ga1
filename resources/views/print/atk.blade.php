@@ -72,7 +72,7 @@
 </style>
 
 <!-- Header Section -->
-<table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 10px;">
+<table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 10px; table-layout: fixed;">
     <tr>
         <td style="width: 50%; border: none; vertical-align: bottom; padding-bottom: 5px;">
             @php
@@ -87,10 +87,10 @@
             </div>
         </td>
         <td style="width: 50%; border: 1.5px solid #000; padding: 6px; font-family: Arial, sans-serif;">
-            <table style="width: 100%; border-collapse: collapse; border: none;">
+            <table style="width: 100%; border-collapse: collapse; border: none; table-layout: fixed;">
                 <tr style="font-size: 10px; height: 14px;">
-                    <td style="width: 50%; padding: 0; border: none;">Tanggal Pengajuan Barang</td>
-                    <td style="width: 50%; padding: 0; border: none;">: {{ $atkRequest->tanggal_pengajuan->format('d/m/Y') }}</td>
+                    <td style="width: 45%; padding: 0; border: none;">Tanggal Pengajuan Barang</td>
+                    <td style="width: 55%; padding: 0; border: none;">: {{ $atkRequest->tanggal_pengajuan->format('d/m/Y') }}</td>
                 </tr>
                 <tr style="font-size: 10px; height: 14px;">
                     <td style="padding: 0; border: none;">Nama</td>
