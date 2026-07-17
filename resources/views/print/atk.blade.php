@@ -89,7 +89,7 @@
         <td style="width: 50%; border: 1.5px solid #000; padding: 6px; font-family: Arial, sans-serif;">
             <table style="width: 100%; border-collapse: collapse; border: none;">
                 <tr style="font-size: 10px; height: 14px;">
-                    <td style="width: 50%; padding: 0; border: none;">Tanggal Pengajuan Barang (DD/MM/YY)</td>
+                    <td style="width: 50%; padding: 0; border: none;">Tanggal Pengajuan Barang</td>
                     <td style="width: 50%; padding: 0; border: none;">: {{ $atkRequest->tanggal_pengajuan->format('d/m/Y') }}</td>
                 </tr>
                 <tr style="font-size: 10px; height: 14px;">
