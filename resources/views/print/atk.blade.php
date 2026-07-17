@@ -80,7 +80,7 @@
                 $logoPath = $logo ? storage_path('app/public/' . $logo) : null;
             @endphp
             @if($logo && $logoPath && file_exists($logoPath))
-                <img src="{{ asset('storage/' . $logo) }}" style="max-height: 45px; max-width: 180px; display: block; margin-bottom: 5px;">
+                <img src="{{ asset('storage/' . $logo) }}" style="max-height: 80px; max-width: 260px; display: block; margin-bottom: 5px;">
             @endif
             <div style="font-weight: 900; font-size: 15px; color: #000; letter-spacing: 0.5px;">
                 {{ \App\Helpers\SettingsHelper::get('company_name', 'HERBATECH') }}
