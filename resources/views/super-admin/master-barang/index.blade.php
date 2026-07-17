@@ -329,6 +329,7 @@
             </div>
             <form id="editItemForm" method="POST">
                 @csrf
+                @method('PUT')
                 <div class="modal-body px-4">
                     <div class="form-group">
                         <label class="font-weight-600 text-dark">Nama Barang</label>
