@@ -89,7 +89,7 @@
                 @endphp
                 @if($logo && $logoPath && file_exists($logoPath))
                     <img src="{{ asset('storage/' . $logo) }}"
-                        style="max-height: 80px; max-width: 260px; display: block; margin-bottom: 5px;">
+                        style="max-height: 55px; max-width: 220px; display: block; margin-bottom: 5px;">
                 @else
                     <div style="font-weight: 900; font-size: 15px; color: #000; letter-spacing: 0.5px;">
                         {{ \App\Helpers\SettingsHelper::get('company_name', 'HERBATECH') }}
