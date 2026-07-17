@@ -90,10 +90,11 @@
                 @if($logo && $logoPath && file_exists($logoPath))
                     <img src="{{ asset('storage/' . $logo) }}"
                         style="max-height: 80px; max-width: 260px; display: block; margin-bottom: 5px;">
+                @else
+                    <div style="font-weight: 900; font-size: 15px; color: #000; letter-spacing: 0.5px;">
+                        {{ \App\Helpers\SettingsHelper::get('company_name', 'HERBATECH') }}
+                    </div>
                 @endif
-                <div style="font-weight: 900; font-size: 15px; color: #000; letter-spacing: 0.5px;">
-                    {{ \App\Helpers\SettingsHelper::get('company_name', 'HERBATECH') }}
-                </div>
             </td>
             <td style="width: 38%; border: 1.5px solid #000; padding: 6px; font-family: Arial, sans-serif;">
                 <table style="width: 100%; border-collapse: collapse; border: none; table-layout: fixed;">
