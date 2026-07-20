@@ -199,7 +199,7 @@
                             </div>
 
                             <!-- Upload Selfie -->
-                            <div class="form-group mb-0" id="selfieUploadGroup">
+                            <div class="form-group mb-3" id="selfieUploadGroup">
                                 <label class="font-weight-600 text-dark">Bukti Selfie Area <span class="text-danger">*Wajib</span></label>
                                 <div class="custom-file mb-2">
                                     <!-- capture="camera" instructs mobile devices to open camera directly -->
@@ -207,6 +207,16 @@
                                     <label class="custom-file-label border-light bg-light" for="selfieInput">Ambil Foto / Pilih File...</label>
                                 </div>
                                 <small class="form-text text-muted">Ambil foto selfie Anda dengan latar belakang area checkpoint untuk verifikasi kehadiran fisik.</small>
+                            </div>
+
+                            <!-- Upload Foto Temuan (Hanya muncul jika status != Aman) -->
+                            <div class="form-group mb-0 d-none" id="attachmentUploadGroup">
+                                <label class="font-weight-600 text-dark">Foto Temuan / Bukti Pendukung <span class="text-danger" id="attachmentRequiredLabel">*Wajib</span></label>
+                                <div class="custom-file mb-2">
+                                    <input type="file" name="attachment" id="attachmentInput" class="custom-file-input" accept="image/*" capture="camera">
+                                    <label class="custom-file-label border-light bg-light" for="attachmentInput">Ambil Foto Temuan...</label>
+                                </div>
+                                <small class="form-text text-muted">Ambil foto kondisi temuan (pintu terbuka, AC/lampu menyala, kerusakan, dll) sebagai bukti laporan.</small>
                             </div>
 
                         </div>
@@ -368,19 +378,56 @@
         }
     });
 
+    $('#attachmentInput').on('change', function() {
+        var fileName = $(this).val().split('\\').pop();
+        if (fileName) {
+            $(this).next('.custom-file-label').html(fileName);
+        } else {
+            $(this).next('.custom-file-label').html('Ambil Foto Temuan...');
+        }
+    });
+
+    // Toggle attachment field based on Status Area selection
+    $('input[name="status"]').on('change', function() {
+        const status = $(this).val();
+        const isEvident = $('#is_evident_report').is(':checked');
+        
+        if (status !== 'Aman') {
+            $('#attachmentUploadGroup').removeClass('d-none').hide().fadeIn(300);
+            if (!isEvident) {
+                $('#attachmentInput').attr('required', 'required');
+            } else {
+                $('#attachmentInput').removeAttr('required');
+            }
+        } else {
+            $('#attachmentUploadGroup').addClass('d-none');
+            $('#attachmentInput').removeAttr('required');
+        }
+    });
+
     // Toggle Eviden Report (Selfie not required)
     $('#is_evident_report').on('change', function() {
         const isEvident = $(this).is(':checked');
+        const status = $('input[name="status"]:checked').val();
+        
         if (isEvident) {
             $('#selfieUploadGroup').find('.text-danger').addClass('d-none');
             $('#selfieInput').removeAttr('required');
             $('#barcode_code').removeAttr('readonly');
             $('#barcode_code').attr('placeholder', 'Masukkan judul temuan atau kode area...');
+            
+            // For attachment
+            $('#attachmentInput').removeAttr('required');
         } else {
             $('#selfieUploadGroup').find('.text-danger').removeClass('d-none');
             $('#selfieInput').attr('required', 'required');
             $('#barcode_code').attr('readonly', 'readonly');
             $('#barcode_code').attr('placeholder', 'Arahkan kamera ke QR Code...');
+            
+            // For attachment
+            if (status !== 'Aman') {
+                $('#attachmentInput').attr('required', 'required');
+            }
         }
     });
 

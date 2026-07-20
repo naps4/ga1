@@ -213,6 +213,7 @@ class SecurityCheckpointController extends Controller
             'duration_minutes' => 'nullable|integer',
             'is_evident_report' => 'nullable|boolean',
             'selfie' => 'nullable|image|max:10240', // max 10MB
+            'attachment' => 'nullable|image|max:10240', // max 10MB
         ]);
 
         $isEvident = $request->boolean('is_evident_report');
@@ -229,6 +230,11 @@ class SecurityCheckpointController extends Controller
             return back()->withErrors(['selfie' => 'Bukti foto selfie di area wajib diunggah untuk monitoring area.'])->withInput();
         }
 
+        // Validasi: Attachment Wajib jika status bukan Aman (regular checkpoint)
+        if (!$isEvident && $request->status !== 'Aman' && !$request->hasFile('attachment')) {
+            return back()->withErrors(['attachment' => 'Bukti foto temuan wajib diunggah untuk status area bermasalah/temuan.'])->withInput();
+        }
+
         // Upload Selfie jika ada
         $selfiePath = null;
         if ($request->hasFile('selfie')) {
@@ -236,6 +242,16 @@ class SecurityCheckpointController extends Controller
                 $request->file('selfie'),
                 'security_selfies',
                 'sf'
+            );
+        }
+
+        // Upload Attachment jika ada
+        $attachmentPath = null;
+        if ($request->hasFile('attachment')) {
+            $attachmentPath = FileUploadHelper::upload(
+                $request->file('attachment'),
+                'security_attachments',
+                'att'
             );
         }
 
@@ -248,6 +264,7 @@ class SecurityCheckpointController extends Controller
             'status' => $request->status,
             'notes' => $request->notes,
             'selfie_path' => $selfiePath,
+            'attachment_path' => $attachmentPath,
             'is_evident_report' => $isEvident,
             'duration_minutes' => $request->duration_minutes ?? ($checkpoint ? $checkpoint->target_duration : 0),
         ]);

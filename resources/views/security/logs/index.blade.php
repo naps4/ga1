@@ -108,6 +108,7 @@
                                 <th class="py-3 text-center">Status Area</th>
                                 <th class="py-3">Laporan / Catatan Temuan</th>
                                 <th class="py-3 text-center">Bukti Selfie</th>
+                                <th class="py-3 text-center">Foto Temuan</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -167,10 +168,19 @@
                                             <span class="text-muted small">Tanpa Selfie</span>
                                         @endif
                                     </td>
+                                    <td class="text-center">
+                                        @if($log->attachment_path)
+                                            <a href="{{ asset('storage/' . $log->attachment_path) }}" target="_blank" class="btn btn-xs btn-outline-danger rounded-pill px-2">
+                                                <i class="fas fa-camera mr-1"></i> Foto Temuan
+                                            </a>
+                                        @else
+                                            <span class="text-muted small">-</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="11" class="text-center py-4 text-muted">
+                                    <td colspan="12" class="text-center py-4 text-muted">
                                         <i class="fas fa-folder-open fa-3x mb-3 text-light"></i>
                                         <p class="mb-0">Belum ada log checkpoint security untuk periode filter ini.</p>
                                     </td>

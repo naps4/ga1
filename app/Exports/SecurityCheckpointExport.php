@@ -89,6 +89,7 @@ class SecurityCheckpointExport implements FromCollection, WithHeadings, WithTitl
                 'Status' => $log->status,
                 'Laporan Temuan' => $log->notes ?? '-',
                 'Selfie Bukti' => $log->selfie_path ? asset('storage/' . $log->selfie_path) : '-',
+                'Foto Temuan' => $log->attachment_path ? asset('storage/' . $log->attachment_path) : '-',
             ]);
         }
 
@@ -125,7 +126,8 @@ class SecurityCheckpointExport implements FromCollection, WithHeadings, WithTitl
                 'Durasi',
                 'Status Area',
                 'Laporan/Temuan',
-                'Link Bukti Selfie'
+                'Link Bukti Selfie',
+                'Link Foto Temuan'
             ]
         ];
     }
@@ -133,9 +135,9 @@ class SecurityCheckpointExport implements FromCollection, WithHeadings, WithTitl
     public function styles(Worksheet $sheet): array
     {
         // Styling headers
-        $sheet->mergeCells('A1:L1');
-        $sheet->mergeCells('A2:L2');
-        $sheet->mergeCells('A3:L3');
+        $sheet->mergeCells('A1:M1');
+        $sheet->mergeCells('A2:M2');
+        $sheet->mergeCells('A3:M3');
 
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('A2:A3')->getFont()->setItalic(true)->setSize(10);

@@ -17,6 +17,7 @@ class SecurityCheckpointLog extends Model
         'status',
         'notes',
         'selfie_path',
+        'attachment_path',
         'is_evident_report',
         'duration_minutes',
     ];
