@@ -44,7 +44,11 @@
                 <div>
                     @php
                         $hasApprovedItems = $atkRequest->items->where('status_approval', 'Disetujui')->count() > 0;
-                        $hasReviewedItems = $atkRequest->items->whereIn('status_approval', ['Disetujui', 'Ditolak'])->count() > 0;
+                        $hasRejectedItems = $atkRequest->items->where('status_approval', 'Ditolak')->count() > 0;
+                        $isOwner = ($atkRequest->user_id === auth()->id());
+                        $canRevise = $isOwner && (
+                            in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager', 'Menunggu Persetujuan Admin GA'])
+                        );
                     @endphp
 
                     @if($hasApprovedItems)
@@ -57,15 +61,9 @@
                         </button>
                     @endif
 
-                    @if(in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']) && $atkRequest->user_id === auth()->id() && !$hasReviewedItems)
-                        <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-success rounded-pill btn-sm shadow-sm">
-                            <i class="fas fa-pencil-alt"></i> Edit Permintaan
-                        </a>
-                    @endif
-
-                    @if($atkRequest->status_approval === 'Ditolak/Revisi' && $atkRequest->user_id === auth()->id())
-                        <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-warning rounded-pill btn-sm shadow-sm">
-                            <i class="fas fa-redo-alt"></i> Revisi & Ajukan Ulang
+                    @if($canRevise)
+                        <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-warning text-dark rounded-pill btn-sm shadow-sm font-weight-bold">
+                            <i class="fas fa-edit mr-1"></i> Revisi Permintaan
                         </a>
                     @endif
                 </div>

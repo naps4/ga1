@@ -306,17 +306,8 @@ class AtkRequestController extends Controller
             abort(403);
         }
 
-        if (!in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager'])) {
-            return redirect()->route('atk-requests.show', $atkRequest->id)->with('error', 'Permintaan yang sudah disetujui tidak dapat diubah.');
-        }
-
-        // Jika status Ditolak/Revisi, izinkan edit meskipun item sudah pernah di-review
-        // karena tujuannya memang untuk merevisi sebelum diajukan ulang.
-        if ($atkRequest->status_approval !== 'Ditolak/Revisi') {
-            $hasReviewedItems = $atkRequest->items()->whereIn('status_approval', ['Disetujui', 'Ditolak'])->exists();
-            if ($hasReviewedItems) {
-                return redirect()->route('atk-requests.show', $atkRequest->id)->with('error', 'Permintaan tidak dapat diedit karena sebagian item telah di-review.');
-            }
+        if (!in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager', 'Menunggu Persetujuan Admin GA'])) {
+            return redirect()->route('atk-requests.show', $atkRequest->id)->with('error', 'Permintaan yang sudah disetujui secara penuh tidak dapat diubah.');
         }
 
         $standardItems = $this->getItemsForType('ATK');
@@ -335,9 +326,7 @@ class AtkRequestController extends Controller
         $existingItems = $atkRequest->items->where('is_custom', false)->keyBy('item_name')->toArray();
         $customItems = $atkRequest->items->where('is_custom', true)->values()->toArray();
 
-        $isResubmit = ($atkRequest->status_approval === 'Ditolak/Revisi');
-
-        return view('atk-requests.edit', compact('atkRequest', 'standardItems', 'householdItems', 'months', 'existingItems', 'customItems', 'isResubmit'));
+        return view('atk-requests.edit', compact('atkRequest', 'standardItems', 'householdItems', 'months', 'existingItems', 'customItems'));
     }
 
     public function update(Request $request, AtkRequest $atkRequest)
@@ -346,8 +335,8 @@ class AtkRequestController extends Controller
             abort(403);
         }
 
-        if (!in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan'])) {
-            return redirect()->route('atk-requests.show', $atkRequest->id)->withErrors(['error' => 'Permintaan yang sudah disetujui tidak dapat diubah.']);
+        if (!in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager', 'Menunggu Persetujuan Admin GA'])) {
+            return redirect()->route('atk-requests.show', $atkRequest->id)->withErrors(['error' => 'Permintaan yang sudah disetujui secara penuh tidak dapat diubah.']);
         }
 
         $request->validate([

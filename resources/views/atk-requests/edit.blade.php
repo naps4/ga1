@@ -22,10 +22,26 @@
                     </h3>
                 </div>
                 <div class="card-body">
-                    @if($atkRequest->status_approval === 'Ditolak/Revisi' && $atkRequest->notes)
-                        <div class="alert alert-danger rounded-4 border-0 p-3 mb-3 shadow-sm">
-                            <h6 class="font-weight-bold mb-1"><i class="fas fa-times-circle mr-1"></i> Catatan Penolakan/Revisi:</h6>
-                            <span>{{ $atkRequest->notes }}</span>
+                    @if($atkRequest->manager_notes || $atkRequest->notes || $atkRequest->items->where('status_approval', 'Ditolak')->count() > 0)
+                        <div class="alert alert-warning rounded-4 border-0 p-3 mb-4 shadow-sm" style="background-color: #fffbeb; border-left: 4px solid #f59e0b !important;">
+                            <h6 class="font-weight-bold mb-2" style="color: #d97706 !important;">
+                                <i class="fas fa-exclamation-triangle mr-1"></i> Catatan Evaluasi &amp; Revisi Barang:
+                            </h6>
+                            @if($atkRequest->manager_notes)
+                                <div class="mb-1 text-dark"><strong>Catatan Manager:</strong> {{ $atkRequest->manager_notes }}</div>
+                            @endif
+                            @if($atkRequest->notes)
+                                <div class="mb-1 text-dark"><strong>Catatan Admin GA:</strong> {{ $atkRequest->notes }}</div>
+                            @endif
+                            @foreach($atkRequest->items->where('status_approval', 'Ditolak') as $rejItem)
+                                <div class="text-sm text-dark mt-1">
+                                    <i class="fas fa-arrow-right text-danger mr-1"></i> <strong>{{ $rejItem->item_name }}</strong>: 
+                                    <span class="badge badge-danger">Ditolak</span> 
+                                    @if($rejItem->notes)
+                                        <span class="font-italic text-muted">({{ $rejItem->notes }})</span>
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
                     @endif
 

@@ -168,13 +168,25 @@
                                 <div class="d-flex" style="gap:.25rem;">
                                     <a href="{{ route('atk-requests.show', $req) }}" class="btn btn-sm btn-light border" style="border-radius:.45rem;" title="Detail"><i class="fas fa-eye"></i></a>
                                     
-                                    @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']))
-                                        <a href="{{ route('atk-requests.edit', $req) }}" class="btn btn-sm btn-success" style="border-radius:.45rem;" title="Edit"><i class="fas fa-pencil-alt"></i></a>
+                                    @php
+                                        $isOwner = ($req->user_id === auth()->id());
+                                        $hasRejectedItems = $req->items->where('status_approval', 'Ditolak')->count() > 0;
+                                        $canEdit = $isOwner && in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager', 'Menunggu Persetujuan Admin GA']);
+                                    @endphp
+
+                                    @if($canEdit)
+                                        @if($req->status_approval === 'Ditolak/Revisi' || $hasRejectedItems)
+                                            <a href="{{ route('atk-requests.edit', $req) }}" class="btn btn-sm btn-warning text-dark font-weight-bold" style="border-radius:.45rem;" title="Revisi Permintaan">
+                                                <i class="fas fa-edit mr-1"></i> Revisi
+                                            </a>
+                                        @else
+                                            <a href="{{ route('atk-requests.edit', $req) }}" class="btn btn-sm btn-success" style="border-radius:.45rem;" title="Edit"><i class="fas fa-pencil-alt"></i></a>
+                                        @endif
                                     @endif
 
                                     <a href="{{ route('atk-requests.print', $req) }}" target="_blank" class="btn btn-sm btn-info text-white" style="border-radius:.45rem;" title="Cetak"><i class="fas fa-print"></i></a>
                                     
-                                    @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']))
+                                    @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']) && $isOwner)
                                         <button class="btn btn-sm btn-danger btn-delete" style="border-radius:.45rem;"
                                             data-id="{{ $req->id }}" 
                                             data-name="{{ ($req->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($req->id, 4, '0', STR_PAD_LEFT) }}" title="Hapus">
