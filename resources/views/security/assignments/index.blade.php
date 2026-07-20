@@ -5,9 +5,14 @@
     <div class="container-fluid">
         <div class="page-title-wrap">
             <h1 class="m-0 text-dark">Penjadwalan & Penugasan Security</h1>
-            <button class="btn btn-primary rounded-pill shadow-sm" data-toggle="modal" data-target="#addAssignmentModal">
-                <i class="fas fa-calendar-plus mr-1"></i> Buat Jadwal Baru
-            </button>
+            <div class="d-flex align-items-center" style="gap: .5rem;">
+                <button class="btn btn-outline-success rounded-pill shadow-sm" data-toggle="modal" data-target="#importAssignmentsModal">
+                    <i class="fas fa-file-import mr-1"></i> Import Excel
+                </button>
+                <button class="btn btn-primary rounded-pill shadow-sm" data-toggle="modal" data-target="#addAssignmentModal">
+                    <i class="fas fa-calendar-plus mr-1"></i> Buat Jadwal Baru
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -240,8 +245,57 @@
                         <i class="fas fa-save mr-1"></i> Simpan Penugasan
                     </button>
                 </div>
+@endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    $('#assignmentExcelInput').on('change', function() {
+        var fileName = $(this).val().split('\\').pop();
+        $(this).next('.custom-file-label').html(fileName || 'Pilih file...');
+    });
+});
+</script>
+@endpush
+
+<!-- Import Assignments Modal -->
+<div class="modal fade" id="importAssignmentsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 bg-light">
+                <h5 class="modal-title font-weight-bold text-dark"><i class="fas fa-file-import text-success mr-1"></i> Import Penjadwalan via Excel / CSV</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('security.assignments.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body p-4">
+                    <div class="mb-3 p-3 bg-light rounded border">
+                        <h6 class="font-weight-bold text-dark small mb-1">Format Template:</h6>
+                        <p class="small text-muted mb-2">Pastikan file memiliki kolom dengan nama header berikut:</p>
+                        <code class="d-block bg-white p-2 rounded border font-weight-bold text-dark mb-3 text-center" style="font-size: .85rem; overflow-x: auto; white-space: nowrap;">
+                            email_petugas | nama_petugas | nama_shift | penempatan_area | tanggal_tugas | catatan
+                        </code>
+                        <a href="data:text/csv;charset=utf-8,email_petugas,nama_petugas,nama_shift,penempatan_area,tanggal_tugas,catatan%0Asecurity@ga-system.com,Satpam%20A,Shift%201%20-%20Pagi,Plant%20A,2026-07-20,Patroli%20rutin" download="template_penjadwalan_security.csv" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                            <i class="fas fa-file-download mr-1"></i> Unduh Template CSV
+                        </a>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="font-weight-600 text-dark">Pilih File Excel / CSV <span class="text-danger">*</span></label>
+                        <div class="custom-file">
+                            <input type="file" name="file" id="assignmentExcelInput" class="custom-file-input" accept=".xlsx,.xls,.csv" required>
+                            <label class="custom-file-label border-light bg-light" for="assignmentExcelInput">Pilih file...</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-4">
+                        <i class="fas fa-upload mr-1"></i> Unggah & Import
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 </div>
-@endsection

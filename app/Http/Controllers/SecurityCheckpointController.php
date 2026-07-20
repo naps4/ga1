@@ -12,6 +12,8 @@ use App\Exports\SecurityCheckpointExport;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\SecurityShiftsImport;
+use App\Imports\SecurityAssignmentsImport;
 
 class SecurityCheckpointController extends Controller
 {
@@ -471,5 +473,39 @@ class SecurityCheckpointController extends Controller
     {
         $assignment->delete();
         return back()->with('success', 'Jadwal penugasan security berhasil dihapus.');
+    }
+
+    /**
+     * Import Shift dari Excel
+     */
+    public function importShifts(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            Excel::import(new SecurityShiftsImport, $request->file('file'));
+            return back()->with('success', 'Data Shift berhasil di-import.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['file' => 'Gagal mengimpor file: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Import Penjadwalan dari Excel
+     */
+    public function importAssignments(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            Excel::import(new SecurityAssignmentsImport, $request->file('file'));
+            return back()->with('success', 'Data Penjadwalan berhasil di-import.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['file' => 'Gagal mengimpor file: ' . $e->getMessage()]);
+        }
     }
 }

@@ -185,11 +185,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/shifts', [\App\Http\Controllers\SecurityCheckpointController::class, 'storeShift'])->name('shifts.store');
         Route::put('/shifts/{shift}', [\App\Http\Controllers\SecurityCheckpointController::class, 'updateShift'])->name('shifts.update');
         Route::delete('/shifts/{shift}', [\App\Http\Controllers\SecurityCheckpointController::class, 'destroyShift'])->name('shifts.destroy');
+        Route::post('/shifts/import', [\App\Http\Controllers\SecurityCheckpointController::class, 'importShifts'])->name('shifts.import');
 
         // Rute CRUD Assignments (Penugasan)
         Route::get('/assignments', [\App\Http\Controllers\SecurityCheckpointController::class, 'assignmentsIndex'])->name('assignments.index');
         Route::post('/assignments', [\App\Http\Controllers\SecurityCheckpointController::class, 'storeAssignment'])->name('assignments.store');
         Route::delete('/assignments/{assignment}', [\App\Http\Controllers\SecurityCheckpointController::class, 'destroyAssignment'])->name('assignments.destroy');
+        Route::post('/assignments/import', [\App\Http\Controllers\SecurityCheckpointController::class, 'importAssignments'])->name('assignments.import');
 
         Route::get('/export', [\App\Http\Controllers\SecurityCheckpointController::class, 'exportExcel'])->name('export');
     });
