@@ -49,13 +49,15 @@
                             </button>
                         </div>
                     </div>
-                    <div class="card-body p-0 bg-dark position-relative" style="min-height: 220px; display: flex; align-items: center; justify-content: center;">
+                    <div class="card-body p-0 bg-dark position-relative"
+                         style="min-height: 220px; display: flex; align-items: center; justify-content: center;">
                         <!-- HTML5 QR Scanner target container -->
                         <div id="reader" style="width: 100%; max-width: 500px; margin: 0 auto; background: #1f2d3d;"></div>
 
                         {{-- Placeholder saat scan berhasil (kamera mati, siap scan berikutnya) --}}
-                        <div id="scannerPlaceholder" class="text-center text-white-50 p-4 d-none">
-                            <div id="scanSuccessBadge" class="d-none mb-3">
+                        <div id="scannerPlaceholder" class="d-none"
+                             style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(15,23,42,0.92); z-index:10;">
+                            <div id="scanSuccessBadge" class="d-none mb-3 text-center">
                                 <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center" style="width:56px;height:56px">
                                     <i class="fas fa-check fa-lg text-white"></i>
                                 </div>
@@ -416,12 +418,12 @@
     function stopScanner(showSuccessState = true) {
         if (html5QrScanner) {
             html5QrScanner.stop().then(() => {
-                // Tampilkan placeholder
-                $('#scannerPlaceholder').removeClass('d-none');
+                // Tampilkan placeholder (position:absolute flex overlay)
+                $('#scannerPlaceholder').css('display', 'flex');
                 if (showSuccessState) {
-                    $('#scanSuccessBadge').removeClass('d-none');
+                    $('#scanSuccessBadge').css('display', 'block');
                 } else {
-                    $('#scanSuccessBadge').addClass('d-none');
+                    $('#scanSuccessBadge').hide();
                 }
                 $('#toggleScannerBtn')
                     .html('<i class="fas fa-play mr-1"></i> Aktifkan Kamera')
@@ -433,7 +435,7 @@
             });
         } else {
             // Scanner belum dimulai
-            $('#scannerPlaceholder').addClass('d-none');
+            $('#scannerPlaceholder').hide();
         }
     }
 
