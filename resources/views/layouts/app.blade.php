@@ -158,15 +158,9 @@
 
         .top-menu-scroll {
             position: relative;
-            max-width: 100%;
-            overflow-x: auto;
-            overflow-y: visible;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        .top-menu-scroll::-webkit-scrollbar {
-            display: none;
+            min-width: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
         }
 
         .top-menu-scroll::before,
@@ -175,11 +169,11 @@
             position: absolute;
             top: 0;
             bottom: 0;
-            width: 22px;
+            width: 24px;
             pointer-events: none;
             opacity: 0;
             transition: opacity .2s ease;
-            z-index: 2;
+            z-index: 5;
         }
 
         .top-menu-scroll::before {
@@ -190,6 +184,14 @@
         .top-menu-scroll::after {
             right: 0;
             background: linear-gradient(to left, #fff, rgba(255,255,255,0));
+        }
+
+        body.dark-mode .top-menu-scroll::before {
+            background: linear-gradient(to right, #343a40, rgba(52, 58, 64, 0));
+        }
+
+        body.dark-mode .top-menu-scroll::after {
+            background: linear-gradient(to left, #343a40, rgba(52, 58, 64, 0));
         }
 
         .top-menu-scroll.has-left::before {
@@ -203,19 +205,33 @@
         .top-menu-list {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.85rem;
             overflow-x: auto;
-            overflow-y: visible;
+            overflow-y: hidden;
             white-space: nowrap;
-            padding: .15rem 0 0;
+            padding: .15rem 0 .35rem;
             margin: 0;
             list-style: none;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+            -webkit-overflow-scrolling: touch;
         }
 
         .top-menu-list::-webkit-scrollbar {
-            display: none;
+            height: 3px;
+        }
+
+        .top-menu-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .top-menu-list::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.35);
+            border-radius: 4px;
+        }
+
+        .top-menu-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.7);
         }
 
         @media (max-width: 1366px) {
@@ -223,7 +239,7 @@
                 gap: 0.4rem;
             }
             .top-menu-link {
-                padding: .5rem .4rem !important;
+                padding: .45rem .4rem !important;
                 font-size: .82rem !important;
             }
         }
@@ -1361,6 +1377,14 @@
             if (!scrollWrap || !menuList) {
                 return;
             }
+
+            // Mouse wheel horizontal scrolling
+            scrollWrap.addEventListener('wheel', function (e) {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    menuList.scrollLeft += e.deltaY * 0.8;
+                }
+            }, { passive: false });
 
             function updateTopMenuFade() {
                 const maxScrollLeft = menuList.scrollWidth - menuList.clientWidth;

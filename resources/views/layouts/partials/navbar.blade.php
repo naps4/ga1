@@ -104,7 +104,7 @@
     </div>
 
     <!-- Right navbar links -->
-    <ul class="navbar-nav ml-auto">
+    <ul class="navbar-nav ml-auto flex-shrink-0 align-items-center">
         {{-- Tombol Scan cepat untuk Security Guard (mobile only) --}}
         @if(auth()->user()->role === 'security')
         <li class="nav-item d-flex d-md-none align-items-center mr-1">
@@ -153,12 +153,12 @@
 
         <!-- User Dropdown Menu -->
         <li class="nav-item dropdown">
-            <a class="nav-link text-muted" data-toggle="dropdown" href="#">
-                <span class="d-none d-md-inline user-meta">
-                    <span class="user-meta-name">{{ auth()->user()->name }}</span>
-                    <span class="user-meta-role">{{ ucfirst(str_replace('_', ' ', auth()->user()->role)) }}</span>
+            <a class="nav-link text-muted d-flex align-items-center px-2 py-0" data-toggle="dropdown" href="#">
+                <span class="d-none d-lg-inline-block user-meta text-right mr-2" style="white-space: nowrap; line-height: 1.2;">
+                    <span class="user-meta-name d-block text-truncate" style="max-width: 130px;">{{ auth()->user()->name }}</span>
+                    <span class="user-meta-role d-block text-truncate" style="max-width: 130px;">{{ ucfirst(str_replace('_', ' ', auth()->user()->role)) }}</span>
                 </span>
-                <img src="{{ auth()->user()->avatar_url }}" alt="User" class="user-avatar-pill">
+                <img src="{{ auth()->user()->avatar_url }}" alt="User" class="user-avatar-pill flex-shrink-0">
             </a>
             <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right shadow-sm border-0 mt-2" style="border-radius: 1rem; overflow: hidden;">
                 <span class="dropdown-item dropdown-header bg-light">
