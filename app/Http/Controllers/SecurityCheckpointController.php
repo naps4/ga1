@@ -37,10 +37,11 @@ class SecurityCheckpointController extends Controller
             abort(403, 'Anda tidak memiliki hak akses untuk halaman ini.');
         }
 
-        $checkpoints = SecurityCheckpoint::orderBy('plant')->orderBy('area_name')->get();
-        $existingPlants = SecurityCheckpoint::pluck('plant')->filter()->unique()->values();
+        $checkpoints = SecurityCheckpoint::orderBy('plant')->orderBy('sub_area')->orderBy('area_name')->get();
+        $existingPlants   = SecurityCheckpoint::pluck('plant')->filter()->unique()->values();
+        $existingSubAreas = SecurityCheckpoint::pluck('sub_area')->filter()->unique()->values();
 
-        return view('security.checkpoints.index', compact('checkpoints', 'existingPlants'));
+        return view('security.checkpoints.index', compact('checkpoints', 'existingPlants', 'existingSubAreas'));
     }
 
     /**
@@ -93,8 +94,9 @@ class SecurityCheckpointController extends Controller
     public function storeCheckpoint(Request $request)
     {
         $request->validate([
-            'plant' => 'required|string|max:100',
-            'area_name' => 'required|string|max:100',
+            'plant'           => 'required|string|max:100',
+            'sub_area'        => 'nullable|string|max:100',
+            'area_name'       => 'required|string|max:100',
             'target_duration' => 'required|integer|min:1|max:120',
         ]);
 
@@ -118,9 +120,10 @@ class SecurityCheckpointController extends Controller
         }
 
         SecurityCheckpoint::create([
-            'plant' => $request->plant,
-            'area_name' => $request->area_name,
-            'code' => $code,
+            'plant'           => $request->plant,
+            'sub_area'        => $request->sub_area ?: null,
+            'area_name'       => $request->area_name,
+            'code'            => $code,
             'target_duration' => $request->target_duration,
         ]);
 
@@ -251,8 +254,9 @@ class SecurityCheckpointController extends Controller
     public function updateCheckpoint(Request $request, SecurityCheckpoint $checkpoint)
     {
         $request->validate([
-            'plant' => 'required|string|max:100',
-            'area_name' => 'required|string|max:100',
+            'plant'           => 'required|string|max:100',
+            'sub_area'        => 'nullable|string|max:100',
+            'area_name'       => 'required|string|max:100',
             'target_duration' => 'required|integer|min:1|max:120',
         ]);
 
@@ -280,9 +284,10 @@ class SecurityCheckpointController extends Controller
         }
 
         $checkpoint->update([
-            'plant' => $request->plant,
-            'area_name' => $request->area_name,
-            'code' => $code,
+            'plant'           => $request->plant,
+            'sub_area'        => $request->sub_area ?: null,
+            'area_name'       => $request->area_name,
+            'code'            => $code,
             'target_duration' => $request->target_duration,
         ]);
 

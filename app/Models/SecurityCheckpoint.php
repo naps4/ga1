@@ -11,6 +11,7 @@ class SecurityCheckpoint extends Model
 
     protected $fillable = [
         'plant',
+        'sub_area',
         'area_name',
         'code',
         'target_duration',
