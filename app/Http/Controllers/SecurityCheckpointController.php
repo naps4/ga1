@@ -55,7 +55,7 @@ class SecurityCheckpointController extends Controller
             return redirect()->route('security.scan');
         }
 
-        if (!$user->hasRole(['admin', 'super_admin'])) {
+        if (!$user->hasRole(['admin', 'super_admin', 'manager'])) {
             abort(403, 'Anda tidak memiliki hak akses untuk halaman ini.');
         }
 
@@ -65,11 +65,22 @@ class SecurityCheckpointController extends Controller
         // Query Logs
         $logsQuery = SecurityCheckpointLog::with('user', 'checkpoint');
 
-        if ($request->filled('date_from')) {
-            $logsQuery->whereDate('checked_at', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $logsQuery->whereDate('checked_at', '<=', $request->date_to);
+        $timeframe = $request->input('timeframe', 'custom');
+
+        if ($timeframe === 'today') {
+            $logsQuery->whereDate('checked_at', Carbon::today());
+        } elseif ($timeframe === 'this_week') {
+            $logsQuery->whereBetween('checked_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+        } elseif ($timeframe === 'this_month') {
+            $logsQuery->whereMonth('checked_at', Carbon::now()->month)
+                      ->whereYear('checked_at', Carbon::now()->year);
+        } else {
+            if ($request->filled('date_from')) {
+                $logsQuery->whereDate('checked_at', '>=', $request->date_from);
+            }
+            if ($request->filled('date_to')) {
+                $logsQuery->whereDate('checked_at', '<=', $request->date_to);
+            }
         }
         if ($request->filled('plant')) {
             $logsQuery->whereHas('checkpoint', function($q) use ($request) {
@@ -249,7 +260,12 @@ class SecurityCheckpointController extends Controller
      */
     public function exportExcel(Request $request)
     {
-        $filters = $request->only(['date_from', 'date_to', 'plant', 'shift', 'status']);
+        $user = auth()->user();
+        if (!$user->hasRole(['admin', 'super_admin', 'manager'])) {
+            abort(403, 'Anda tidak memiliki hak akses untuk halaman ini.');
+        }
+
+        $filters = $request->only(['date_from', 'date_to', 'plant', 'shift', 'status', 'timeframe']);
         $filename = 'rekap_security_checkpoint_' . now()->format('Ymd_His') . '.xlsx';
         
         return Excel::download(new SecurityCheckpointExport($filters), $filename);

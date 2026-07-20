@@ -76,6 +76,16 @@
                 <li><a href="{{ route('chat.index') }}" class="top-menu-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><span>Chat</span></a></li>
                 <li><a href="{{ route('super-admin.users.index') }}" class="top-menu-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><span>Data Karyawan</span></a></li>
 
+            @elseif(auth()->user()->isManager())
+                <li class="dropdown">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('security.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Security Checkpoint</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('security.logs.index') }}"><i class="fas fa-file-invoice-dollar mr-2 text-info"></i> Laporan & Rekap</a>
+                    </div>
+                </li>
+
             @elseif(auth()->user()->isDeveloper())
                 <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><span>Tugas Teknisi (WO)</span></a></li>
                 <li><a href="{{ route('chat.index') }}" class="top-menu-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><span>Chat</span></a></li>

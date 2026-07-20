@@ -41,12 +41,21 @@
                 <form action="{{ route('security.logs.index') }}" method="GET">
                     <div class="row align-items-end">
                         <div class="col-md-2 col-sm-6 mb-2 mb-md-0">
-                            <label class="small font-weight-bold text-muted mb-1">Dari Tanggal</label>
-                            <input type="date" name="date_from" class="form-control border-light" value="{{ request('date_from') }}">
+                            <label class="small font-weight-bold text-muted mb-1">Jangka Waktu</label>
+                            <select name="timeframe" id="timeframeSelect" class="form-control border-light">
+                                <option value="custom" {{ request('timeframe') === 'custom' || !request('timeframe') ? 'selected' : '' }}>Kustom Tanggal</option>
+                                <option value="today" {{ request('timeframe') === 'today' ? 'selected' : '' }}>Hari Ini</option>
+                                <option value="this_week" {{ request('timeframe') === 'this_week' ? 'selected' : '' }}>Minggu Ini</option>
+                                <option value="this_month" {{ request('timeframe') === 'this_month' ? 'selected' : '' }}>Bulan Ini</option>
+                            </select>
                         </div>
-                        <div class="col-md-2 col-sm-6 mb-2 mb-md-0">
+                        <div class="col-md-2 col-sm-6 mb-2 mb-md-0 date-range-group">
+                            <label class="small font-weight-bold text-muted mb-1">Dari Tanggal</label>
+                            <input type="date" name="date_from" id="date_from" class="form-control border-light" value="{{ request('date_from') }}">
+                        </div>
+                        <div class="col-md-2 col-sm-6 mb-2 mb-md-0 date-range-group">
                             <label class="small font-weight-bold text-muted mb-1">Sampai Tanggal</label>
-                            <input type="date" name="date_to" class="form-control border-light" value="{{ request('date_to') }}">
+                            <input type="date" name="date_to" id="date_to" class="form-control border-light" value="{{ request('date_to') }}">
                         </div>
                         <div class="col-md-2 col-sm-4 mb-2 mb-md-0">
                             <label class="small font-weight-bold text-muted mb-1">Plant</label>
@@ -55,15 +64,6 @@
                                 @foreach($existingPlants as $p)
                                     <option value="{{ $p }}" {{ request('plant') === $p ? 'selected' : '' }}>{{ $p }}</option>
                                 @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2 col-sm-4 mb-2 mb-md-0">
-                            <label class="small font-weight-bold text-muted mb-1">Shift</label>
-                            <select name="shift" class="form-control border-light">
-                                <option value="">Semua Shift</option>
-                                <option value="Shift 1 - Pagi" {{ request('shift') === 'Shift 1 - Pagi' ? 'selected' : '' }}>Shift 1 - Pagi</option>
-                                <option value="Shift 2 - Sore" {{ request('shift') === 'Shift 2 - Sore' ? 'selected' : '' }}>Shift 2 - Sore</option>
-                                <option value="Shift 3 - Malam" {{ request('shift') === 'Shift 3 - Malam' ? 'selected' : '' }}>Shift 3 - Malam</option>
                             </select>
                         </div>
                         <div class="col-md-2 col-sm-4 mb-2 mb-md-0">
@@ -191,3 +191,22 @@
     </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    function toggleDateRange() {
+        const val = $('#timeframeSelect').val();
+        if (val === 'custom') {
+            $('.date-range-group').css('opacity', '1');
+            $('#date_from, #date_to').removeAttr('disabled');
+        } else {
+            $('.date-range-group').css('opacity', '0.4');
+            $('#date_from, #date_to').attr('disabled', 'disabled');
+        }
+    }
+    $('#timeframeSelect').on('change', toggleDateRange);
+    toggleDateRange(); // run on load
+});
+</script>
+@endpush

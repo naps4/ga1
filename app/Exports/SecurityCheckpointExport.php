@@ -21,6 +21,7 @@ class SecurityCheckpointExport implements FromCollection, WithHeadings, WithTitl
     protected $plant;
     protected $shift;
     protected $status;
+    protected $timeframe;
 
     public function __construct($filters = [])
     {
@@ -29,6 +30,7 @@ class SecurityCheckpointExport implements FromCollection, WithHeadings, WithTitl
         $this->plant = $filters['plant'] ?? null;
         $this->shift = $filters['shift'] ?? null;
         $this->status = $filters['status'] ?? null;
+        $this->timeframe = $filters['timeframe'] ?? null;
     }
 
     public function title(): string
@@ -40,12 +42,22 @@ class SecurityCheckpointExport implements FromCollection, WithHeadings, WithTitl
     {
         $query = SecurityCheckpointLog::with('user', 'checkpoint');
 
-        if ($this->dateFrom) {
-            $query->whereDate('checked_at', '>=', $this->dateFrom);
+        if ($this->timeframe === 'today') {
+            $query->whereDate('checked_at', Carbon::today());
+        } elseif ($this->timeframe === 'this_week') {
+            $query->whereBetween('checked_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+        } elseif ($this->timeframe === 'this_month') {
+            $query->whereMonth('checked_at', Carbon::now()->month)
+                  ->whereYear('checked_at', Carbon::now()->year);
+        } else {
+            if ($this->dateFrom) {
+                $query->whereDate('checked_at', '>=', $this->dateFrom);
+            }
+            if ($this->dateTo) {
+                $query->whereDate('checked_at', '<=', $this->dateTo);
+            }
         }
-        if ($this->dateTo) {
-            $query->whereDate('checked_at', '<=', $this->dateTo);
-        }
+
         if ($this->plant) {
             $query->whereHas('checkpoint', function($q) {
                 $q->where('plant', $this->plant);
@@ -85,9 +97,20 @@ class SecurityCheckpointExport implements FromCollection, WithHeadings, WithTitl
 
     public function headings(): array
     {
+        $periode = 'Semua';
+        if ($this->timeframe === 'today') {
+            $periode = 'Hari Ini (' . Carbon::today()->format('d M Y') . ')';
+        } elseif ($this->timeframe === 'this_week') {
+            $periode = 'Minggu Ini (' . Carbon::now()->startOfWeek()->format('d M Y') . ' s/d ' . Carbon::now()->endOfWeek()->format('d M Y') . ')';
+        } elseif ($this->timeframe === 'this_month') {
+            $periode = 'Bulan Ini (' . Carbon::now()->format('F Y') . ')';
+        } else {
+            $periode = ($this->dateFrom ?? 'Semua') . ' s/d ' . ($this->dateTo ?? 'Semua');
+        }
+
         return [
             ['REKAPITULASI MONITORING CHECK POINT SECURITY (FPU GA)'],
-            ['Periode: ' . ($this->dateFrom ?? 'Semua') . ' s/d ' . ($this->dateTo ?? 'Semua')],
+            ['Periode: ' . $periode],
             ['Tanggal Ekspor: ' . now()->format('d M Y H:i:s')],
             [],
             [

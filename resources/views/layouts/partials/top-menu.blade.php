@@ -73,6 +73,9 @@
             <li><a href="{{ route('chat.index') }}" class="mobile-drawer-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><i class="fas fa-comments"></i><span>Chat</span></a></li>
             <li><a href="{{ route('super-admin.users.index') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><i class="fas fa-users"></i><span>Data Karyawan</span></a></li>
 
+        @elseif(auth()->user()->isManager())
+            <li><a href="{{ route('security.logs.index') }}" class="mobile-drawer-link {{ request()->routeIs('security.logs.index') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i><span>Laporan & Rekap Security</span></a></li>
+
         @elseif(auth()->user()->isDeveloper())
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Tugas Teknisi (WO)</span></a></li>
             <li><a href="{{ route('chat.index') }}" class="mobile-drawer-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><i class="fas fa-comments"></i><span>Chat</span></a></li>
