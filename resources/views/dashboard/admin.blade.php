@@ -135,6 +135,83 @@
                     </table>
                 </div>
             </div>
+        <!-- Security Shift & Penugasan Hari Ini -->
+        <div class="card shadow-sm border-0 rounded-4 mt-4">
+            <div class="card-header bg-white border-bottom border-light py-3 d-flex align-items-center justify-content-between">
+                <h3 class="card-title text-info m-0 font-weight-bold">
+                    <i class="fas fa-calendar-check mr-1"></i> Jadwal Shift & Penugasan Security Hari Ini
+                </h3>
+                <a href="{{ route('security.assignments.index') }}" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                    Kelola Penjadwalan
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0 align-middle" style="font-size: .88rem;">
+                        <thead class="bg-light text-muted">
+                            <tr>
+                                <th class="py-3 px-4">Petugas Security</th>
+                                <th class="py-3 text-center">Tipe Tugas</th>
+                                <th class="py-3 text-center">Shift</th>
+                                <th class="py-3 text-center">Jam Tugas</th>
+                                <th class="py-3">Penempatan Area</th>
+                                <th class="py-3">Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($todayAssignments ?? [] as $assignment)
+                                <tr>
+                                    <td class="py-3 px-4">
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ $assignment->user->avatar_url }}" alt="avatar" class="rounded-circle mr-2" style="width: 28px; height: 28px; object-fit: cover;">
+                                            <strong>{{ $assignment->user->name ?? '-' }}</strong>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        @if($assignment->assigned_date)
+                                            <span class="badge badge-light border text-muted">Harian ({{ $assignment->assigned_date->format('d M Y') }})</span>
+                                        @else
+                                            <span class="badge badge-success-light text-success font-weight-bold" style="background: rgba(16, 185, 129, 0.1);">Permanen / Default</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        @if($assignment->shift)
+                                            <span class="badge badge-primary px-2.5 py-1 rounded">{{ $assignment->shift->name }}</span>
+                                        @else
+                                            <span class="text-muted small">Fleksibel</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 text-center text-muted small">
+                                        @if($assignment->shift)
+                                            {{ \Carbon\Carbon::parse($assignment->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($assignment->shift->end_time)->format('H:i') }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td class="py-3">
+                                        @if($assignment->plant)
+                                            <span class="badge badge-info rounded-pill px-2.5 py-1">
+                                                <i class="fas fa-industry mr-1"></i>{{ $assignment->plant }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted small">Semua Area</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 text-muted">{{ $assignment->notes ?? '-' }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="fas fa-calendar-times fa-2x mb-2 text-light"></i>
+                                        <p class="mb-0">Belum ada jadwal penugasan security hari ini.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+
     </div>
 </section>

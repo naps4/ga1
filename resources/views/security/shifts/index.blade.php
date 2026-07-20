@@ -240,8 +240,8 @@
                         <code class="d-block bg-white p-2 rounded border font-weight-bold text-dark mb-3 text-center" style="font-size: .85rem;">
                             nama_shift | jam_mulai | jam_selesai
                         </code>
-                        <a href="data:text/csv;charset=utf-8,nama_shift,jam_mulai,jam_selesai%0AShift%201%20-%20Pagi,07:00,15:00%0AShift%202%20-%20Sore,15:00,23:00" download="template_shift_security.csv" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
-                            <i class="fas fa-file-download mr-1"></i> Unduh Template CSV
+                        <a href="{{ route('security.shifts.template') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                            <i class="fas fa-file-excel mr-1"></i> Unduh Template Excel (.xlsx)
                         </a>
                     </div>
                     <div class="form-group mb-0">

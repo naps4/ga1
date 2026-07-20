@@ -81,6 +81,18 @@ Route::get('/dashboard', function () {
         $viewData['anomaliesToday'] = \App\Models\SecurityCheckpointLog::whereDate('checked_at', \Carbon\Carbon::today())
             ->where('status', '!=', 'Aman')
             ->count();
+
+        // Jadwal Shift Security Hari Ini
+        $specificToday = \App\Models\SecurityAssignment::with('user', 'shift')
+            ->whereDate('assigned_date', \Carbon\Carbon::today())
+            ->get();
+        $excludedUserIds = $specificToday->pluck('user_id')->toArray();
+        $permanentToday = \App\Models\SecurityAssignment::with('user', 'shift')
+            ->whereNull('assigned_date')
+            ->whereNotIn('user_id', $excludedUserIds)
+            ->get();
+        $viewData['todayAssignments'] = $specificToday->merge($permanentToday);
+
     } elseif ($user->isManager()) {
         $viewData['pendingManagerAtk'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')->count();
         $viewData['totalManagerAtkApproved'] = \App\Models\AtkRequest::where('manager_approved_by', $user->id)->count();
@@ -89,6 +101,28 @@ Route::get('/dashboard', function () {
             ->orderBy('updated_at', 'desc')
             ->take(5)
             ->get();
+
+        // Security Checkpoint Stats untuk Manager
+        $viewData['totalAreas'] = \App\Models\SecurityCheckpoint::count();
+        $viewData['checkedToday'] = \App\Models\SecurityCheckpointLog::whereDate('checked_at', \Carbon\Carbon::today())
+            ->where('is_evident_report', false)
+            ->distinct('checkpoint_id')
+            ->count();
+        $viewData['anomaliesToday'] = \App\Models\SecurityCheckpointLog::whereDate('checked_at', \Carbon\Carbon::today())
+            ->where('status', '!=', 'Aman')
+            ->count();
+
+        // Jadwal Shift Security Hari Ini
+        $specificToday = \App\Models\SecurityAssignment::with('user', 'shift')
+            ->whereDate('assigned_date', \Carbon\Carbon::today())
+            ->get();
+        $excludedUserIds = $specificToday->pluck('user_id')->toArray();
+        $permanentToday = \App\Models\SecurityAssignment::with('user', 'shift')
+            ->whereNull('assigned_date')
+            ->whereNotIn('user_id', $excludedUserIds)
+            ->get();
+        $viewData['todayAssignments'] = $specificToday->merge($permanentToday);
+
     } elseif ($user->role === 'security') {
         // Security Guard langsung diarahkan ke halaman scan
         return redirect()->route('security.scan');
@@ -186,12 +220,14 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/shifts/{shift}', [\App\Http\Controllers\SecurityCheckpointController::class, 'updateShift'])->name('shifts.update');
         Route::delete('/shifts/{shift}', [\App\Http\Controllers\SecurityCheckpointController::class, 'destroyShift'])->name('shifts.destroy');
         Route::post('/shifts/import', [\App\Http\Controllers\SecurityCheckpointController::class, 'importShifts'])->name('shifts.import');
+        Route::get('/shifts/template', [\App\Http\Controllers\SecurityCheckpointController::class, 'downloadShiftTemplate'])->name('shifts.template');
 
         // Rute CRUD Assignments (Penugasan)
         Route::get('/assignments', [\App\Http\Controllers\SecurityCheckpointController::class, 'assignmentsIndex'])->name('assignments.index');
         Route::post('/assignments', [\App\Http\Controllers\SecurityCheckpointController::class, 'storeAssignment'])->name('assignments.store');
         Route::delete('/assignments/{assignment}', [\App\Http\Controllers\SecurityCheckpointController::class, 'destroyAssignment'])->name('assignments.destroy');
         Route::post('/assignments/import', [\App\Http\Controllers\SecurityCheckpointController::class, 'importAssignments'])->name('assignments.import');
+        Route::get('/assignments/template', [\App\Http\Controllers\SecurityCheckpointController::class, 'downloadAssignmentTemplate'])->name('assignments.template');
 
         Route::get('/export', [\App\Http\Controllers\SecurityCheckpointController::class, 'exportExcel'])->name('export');
     });

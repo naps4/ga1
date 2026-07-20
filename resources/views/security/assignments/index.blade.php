@@ -277,8 +277,8 @@ $(document).ready(function() {
                         <code class="d-block bg-white p-2 rounded border font-weight-bold text-dark mb-3 text-center" style="font-size: .85rem; overflow-x: auto; white-space: nowrap;">
                             email_petugas | nama_petugas | nama_shift | penempatan_area | tanggal_tugas | catatan
                         </code>
-                        <a href="data:text/csv;charset=utf-8,email_petugas,nama_petugas,nama_shift,penempatan_area,tanggal_tugas,catatan%0Asecurity@ga-system.com,Satpam%20A,Shift%201%20-%20Pagi,Plant%20A,2026-07-20,Patroli%20rutin" download="template_penjadwalan_security.csv" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
-                            <i class="fas fa-file-download mr-1"></i> Unduh Template CSV
+                        <a href="{{ route('security.assignments.template') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                            <i class="fas fa-file-excel mr-1"></i> Unduh Template Excel (.xlsx)
                         </a>
                     </div>
                     <div class="form-group mb-0">

@@ -14,6 +14,8 @@ use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\SecurityShiftsImport;
 use App\Imports\SecurityAssignmentsImport;
+use App\Exports\SecurityShiftsTemplateExport;
+use App\Exports\SecurityAssignmentsTemplateExport;
 
 class SecurityCheckpointController extends Controller
 {
@@ -507,5 +509,21 @@ class SecurityCheckpointController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['file' => 'Gagal mengimpor file: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Download Excel Template untuk Shift
+     */
+    public function downloadShiftTemplate()
+    {
+        return Excel::download(new SecurityShiftsTemplateExport, 'template_shift_security.xlsx');
+    }
+
+    /**
+     * Download Excel Template untuk Penjadwalan
+     */
+    public function downloadAssignmentTemplate()
+    {
+        return Excel::download(new SecurityAssignmentsTemplateExport, 'template_penjadwalan_security.xlsx');
     }
 }
