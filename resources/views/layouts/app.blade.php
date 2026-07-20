@@ -160,7 +160,7 @@
             position: relative;
             min-width: 0;
             flex: 1 1 auto;
-            overflow: hidden;
+            overflow: visible !important;
         }
 
         .top-menu-scroll::before,
@@ -207,7 +207,7 @@
             align-items: center;
             gap: 0.85rem;
             overflow-x: auto;
-            overflow-y: hidden;
+            overflow-y: visible !important;
             white-space: nowrap;
             padding: .15rem 0 .35rem;
             margin: 0;
@@ -215,6 +215,20 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
             -webkit-overflow-scrolling: touch;
+        }
+
+        .top-menu-list > li.dropdown {
+            position: relative;
+        }
+
+        .top-menu-list .dropdown-menu {
+            position: absolute !important;
+            top: 100% !important;
+            left: 0 !important;
+            right: auto !important;
+            transform: none !important;
+            margin-top: 0.35rem !important;
+            z-index: 1050 !important;
         }
 
         .top-menu-list::-webkit-scrollbar {
@@ -1402,40 +1416,6 @@
             menuList.addEventListener('scroll', updateTopMenuFade, { passive: true });
             window.addEventListener('resize', updateTopMenuFade);
             updateTopMenuFade();
-        });
-    </script>
-
-    <!-- Fix dropdown menu clipping for top menu navbar -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            if (window.jQuery) {
-                window.jQuery(document).on('show.bs.dropdown', '.top-menu-list .dropdown', function () {
-                    var $dropdown = window.jQuery(this);
-                    var $menu = $dropdown.find('.dropdown-menu');
-                    var $toggle = $dropdown.find('.dropdown-toggle');
-                    
-                    setTimeout(function() {
-                        var offset = $toggle.offset();
-                        $menu.css({
-                            'position': 'fixed',
-                            'top': (offset.top + $toggle.outerHeight() + 4 - window.jQuery(window).scrollTop()) + 'px',
-                            'left': (offset.left) + 'px',
-                            'z-index': 1060
-                        });
-                    }, 0);
-                });
-
-                window.jQuery('.top-menu-list').on('scroll', function() {
-                    window.jQuery('.top-menu-list .dropdown.show .dropdown-menu').each(function() {
-                        var $dropdown = window.jQuery(this).closest('.dropdown');
-                        var $toggle = $dropdown.find('.dropdown-toggle');
-                        var offset = $toggle.offset();
-                        window.jQuery(this).css({
-                            'left': (offset.left) + 'px'
-                        });
-                    });
-                });
-            }
         });
     </script>
 

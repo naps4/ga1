@@ -44,7 +44,7 @@
 
             @if(auth()->user()->isSuperAdmin())
                 <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><span>Work Order GA</span></a></li>
-                <li class="dropdown">
+                <li class="dropdown position-relative">
                     <a class="top-menu-link dropdown-toggle {{ request()->routeIs('security.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                         <span>Security Checkpoint</span>
                     </a>
@@ -62,7 +62,7 @@
 
             @elseif(auth()->user()->canApproveProjects())
                 <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><span>Work Order GA</span></a></li>
-                <li class="dropdown">
+                <li class="dropdown position-relative">
                     <a class="top-menu-link dropdown-toggle {{ request()->routeIs('security.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                         <span>Security Checkpoint</span>
                     </a>
@@ -77,7 +77,7 @@
                 <li><a href="{{ route('super-admin.users.index') }}" class="top-menu-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><span>Data Karyawan</span></a></li>
 
             @elseif(auth()->user()->isManager())
-                <li class="dropdown">
+                <li class="dropdown position-relative">
                     <a class="top-menu-link dropdown-toggle {{ request()->routeIs('security.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                         <span>Security Checkpoint</span>
                     </a>
