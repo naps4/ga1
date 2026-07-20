@@ -158,6 +158,15 @@
 
         .top-menu-scroll {
             position: relative;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: visible;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .top-menu-scroll::-webkit-scrollbar {
+            display: none;
         }
 
         .top-menu-scroll::before,
@@ -194,22 +203,28 @@
         .top-menu-list {
             display: flex;
             align-items: center;
-            gap: 1.4rem;
+            gap: 1rem;
             overflow-x: auto;
+            overflow-y: visible;
             white-space: nowrap;
             padding: .15rem 0 0;
             margin: 0;
             list-style: none;
-            scrollbar-width: thin;
-            scroll-snap-type: x proximity;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
 
-        @media (min-width: 768px) {
-            .top-menu-scroll {
-                overflow: visible !important;
-            }
+        .top-menu-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        @media (max-width: 1366px) {
             .top-menu-list {
-                overflow: visible !important;
+                gap: 0.4rem;
+            }
+            .top-menu-link {
+                padding: .5rem .4rem !important;
+                font-size: .82rem !important;
             }
         }
 
