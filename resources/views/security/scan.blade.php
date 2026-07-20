@@ -116,23 +116,17 @@
                                 <label class="font-weight-600 text-dark">Kode Area Checkpoint</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text border-light bg-light"><i class="fas fa-key text-muted"></i></span>
+                                        <span class="input-group-text border-light bg-light"><i class="fas fa-qrcode text-muted"></i></span>
                                     </div>
-                                    <input type="text" name="barcode_code" id="barcode_code" class="form-control border-light bg-light" placeholder="Scan barcode atau masukkan kode manual..." required readonly>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" id="manualSelectBtn" style="border-color: #f1f5f9; background-color: #f1f5f9;">
-                                            Pilih Area <i class="fas fa-chevron-down ml-1"></i>
-                                        </button>
-                                    </div>
+                                    <input type="text" name="barcode_code" id="barcode_code"
+                                           class="form-control border-light bg-light font-weight-bold"
+                                           placeholder="Arahkan kamera ke QR Code..."
+                                           required readonly>
                                 </div>
-                                <div class="mt-2 d-none" id="manualAreaContainer">
-                                    <select id="areaDropdown" class="form-control border-light bg-light">
-                                        <option value="">-- Pilih Area Secara Manual --</option>
-                                        @foreach($checkpoints as $cp)
-                                            <option value="{{ $cp->code }}">{{ $cp->plant }} - {{ $cp->area_name }} ({{ $cp->code }})</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                <small class="form-text text-muted mt-1">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Kode terisi otomatis setelah QR Code berhasil dipindai.
+                                </small>
                             </div>
 
                             <!-- Shift -->
@@ -338,21 +332,6 @@
         document.getElementById('durationMinutes').value = Math.max(1, minutes);
     }
 
-    // Toggle Manual Dropdown Selection
-    $('#manualSelectBtn').on('click', function() {
-        $('#manualAreaContainer').toggleClass('d-none');
-    });
-
-    $('#areaDropdown').on('change', function() {
-        const val = $(this).val();
-        if (val) {
-            const label = $(this).find('option:selected').text();
-            $('#barcode_code').val(val);
-            $('#manualAreaContainer').addClass('d-none');
-            startTime = Date.now();
-            showLaporanForm(label); // Tampilkan form dengan nama area terpilih
-        }
-    });
 
     // Tampilkan form laporan setelah area dipilih / dipindai
     function showLaporanForm(areaLabel) {
