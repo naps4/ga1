@@ -238,19 +238,22 @@
                 </div>
 
                 @if($isApprovalMode)
-                    <div class="card p-3 bg-light rounded-4 mt-3 border-0">
+                    <div class="card p-4 bg-light rounded-4 mt-4 border-0 shadow-sm">
                         <div class="form-group mb-3">
-                            <label for="general_notes" class="font-weight-bold">
+                            <label for="general_notes" class="font-weight-bold text-dark">
                                 Catatan Umum {{ $isManagerApproval ? 'Manager' : 'Admin GA' }} (Opsional):
                             </label>
-                            <textarea name="{{ $isManagerApproval ? 'manager_notes' : 'notes' }}" id="general_notes" class="form-control" rows="3" placeholder="Tulis catatan persetujuan keseluruhan di sini..."></textarea>
+                            <textarea name="{{ $isManagerApproval ? 'manager_notes' : 'notes' }}" id="general_notes" class="form-control rounded-3" rows="3" placeholder="Tulis catatan persetujuan keseluruhan di sini..."></textarea>
                         </div>
-                        <div class="d-flex justify-content-end" style="gap: 10px;">
+                        <div class="d-flex justify-content-end align-items-center" style="gap: 12px;">
                             <button type="button" class="btn btn-outline-danger rounded-pill px-4" data-toggle="modal" data-target="#rejectModal">
                                 <i class="fas fa-times mr-1"></i> Tolak Semua
                             </button>
-                            <button type="submit" class="btn btn-success rounded-pill px-4">
-                                <i class="fas fa-check-double mr-1"></i> Proses Persetujuan
+                            <button type="button" class="btn btn-outline-success rounded-pill px-4" onclick="approveAllItems()">
+                                <i class="fas fa-check-double mr-1"></i> Setuju Semua
+                            </button>
+                            <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm">
+                                <i class="fas fa-check-circle mr-1"></i> Proses Persetujuan
                             </button>
                         </div>
                     </div>
@@ -638,6 +641,27 @@
                         icon: 'success',
                         title: response.message
                     });
+                }
+            }
+        });
+    }
+
+    function approveAllItems() {
+        $('.btn-group-toggle').each(function() {
+            var $group = $(this);
+            var $setujuLabel = $group.find('label.btn-outline-success');
+            if ($setujuLabel.length) {
+                $group.find('.btn').removeClass('active');
+                $setujuLabel.addClass('active');
+                $group.find('input[type="radio"]').prop('checked', false);
+                $setujuLabel.find('input[type="radio"]').prop('checked', true);
+                
+                var inputName = $setujuLabel.find('input[type="radio"]').attr('name');
+                if (inputName) {
+                    var match = inputName.match(/\d+/);
+                    if (match) {
+                        submitSingleItemApproval(match[0], 'Disetujui', $setujuLabel[0]);
+                    }
                 }
             }
         });
