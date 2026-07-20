@@ -38,29 +38,31 @@
             <div class="col-lg-7 mb-4">
                 <!-- Scanner Card -->
                 <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
-                    <div class="card-header bg-white border-bottom border-light pt-3">
+                    <div class="card-header bg-white border-bottom border-light py-2 px-3">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="card-title font-weight-bold mb-0 text-dark">
+                            <h6 class="font-weight-bold mb-0 text-dark" style="font-size:.9rem;">
                                 <i class="fas fa-camera text-primary mr-1"></i> Pemindai Barcode / QR Code
-                            </h5>
-                            <button class="btn btn-sm btn-danger rounded-pill px-3" id="toggleScannerBtn">
+                            </h6>
+                            <button class="btn btn-sm rounded-pill px-3 py-1" id="toggleScannerBtn"
+                                    style="font-size:.78rem; background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">
                                 <i class="fas fa-stop mr-1"></i> Matikan Kamera
                             </button>
                         </div>
                     </div>
-                    <div class="card-body p-0 bg-dark position-relative" style="min-height: 250px; display: flex; align-items: center; justify-content: center;">
+                    <div class="card-body p-0 bg-dark position-relative" style="min-height: 220px; display: flex; align-items: center; justify-content: center;">
                         <!-- HTML5 QR Scanner target container -->
                         <div id="reader" style="width: 100%; max-width: 500px; margin: 0 auto; background: #1f2d3d;"></div>
 
                         {{-- Placeholder saat scan berhasil (kamera mati, siap scan berikutnya) --}}
                         <div id="scannerPlaceholder" class="text-center text-white-50 p-4 d-none">
                             <div id="scanSuccessBadge" class="d-none mb-3">
-                                <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center" style="width:64px;height:64px">
-                                    <i class="fas fa-check fa-2x text-white"></i>
+                                <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center" style="width:56px;height:56px">
+                                    <i class="fas fa-check fa-lg text-white"></i>
                                 </div>
-                                <p class="text-success font-weight-bold mt-2 mb-0" id="scannedCodeLabel"></p>
+                                <p class="text-success font-weight-bold mt-2 mb-0 small" id="scannedCodeLabel"></p>
                             </div>
-                            <button type="button" class="btn btn-primary rounded-pill px-4 py-2" id="nextScanBtn">
+                            <button type="button" class="btn btn-primary rounded-pill px-4 py-2" id="nextScanBtn"
+                                    style="font-size:.85rem;">
                                 <i class="fas fa-camera mr-1"></i> Scan Area Berikutnya
                             </button>
                         </div>
@@ -68,13 +70,14 @@
                 </div>
 
                 {{-- Placeholder 'belum scan' - tampil sebelum pemindaian --}}
-                <div id="waitingScanCard" class="card shadow-sm border-0 rounded-4 mb-4" style="border: 2px dashed rgba(99,102,241,0.3) !important; background: rgba(99,102,241,0.04);">
+                <div id="waitingScanCard" class="card shadow-sm border-0 rounded-4 mb-4"
+                     style="border: 2px dashed rgba(99,102,241,0.3) !important; background: rgba(99,102,241,0.04);">
                     <div class="card-body p-4 text-center">
                         <div class="mb-3">
                             <i class="fas fa-qrcode fa-4x" style="color: rgba(99,102,241,0.35);"></i>
                         </div>
-                        <h6 class="font-weight-bold text-muted mb-1">Belum ada area yang dipilih</h6>
-                        <p class="text-muted small mb-0">Arahkan kamera ke QR Code area checkpoint, atau pilih area secara manual menggunakan tombol <strong>Pilih Area</strong> di atas.</p>
+                        <h6 class="font-weight-bold text-muted mb-1">Belum ada area yang dipindai</h6>
+                        <p class="text-muted small mb-0">Arahkan kamera ke QR Code area checkpoint untuk mencatat laporan patroli.</p>
                     </div>
                 </div>
 
@@ -368,7 +371,7 @@
             $('#selfieUploadGroup').find('.text-danger').removeClass('d-none');
             $('#selfieInput').attr('required', 'required');
             $('#barcode_code').attr('readonly', 'readonly');
-            $('#barcode_code').attr('placeholder', 'Scan barcode atau masukkan kode manual...');
+            $('#barcode_code').attr('placeholder', 'Arahkan kamera ke QR Code...');
         }
     });
 
@@ -390,8 +393,7 @@
         $('#scannerPlaceholder').addClass('d-none');
         $('#toggleScannerBtn')
             .html('<i class="fas fa-stop mr-1"></i> Matikan Kamera')
-            .removeClass('btn-outline-primary')
-            .addClass('btn-danger');
+            .css({ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' });
         isScannerRunning = true;
 
         html5QrScanner = new Html5Qrcode("reader");
@@ -423,8 +425,7 @@
                 }
                 $('#toggleScannerBtn')
                     .html('<i class="fas fa-play mr-1"></i> Aktifkan Kamera')
-                    .removeClass('btn-danger')
-                    .addClass('btn-outline-primary');
+                    .css({ background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' });
                 isScannerRunning = false;
                 $('#reader').empty();
             }).catch(err => {
