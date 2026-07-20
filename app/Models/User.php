@@ -124,6 +124,11 @@ class User extends Authenticatable
         return $this->role === 'developer';
     }
 
+    public function isSecurity()
+    {
+        return $this->role === 'security';
+    }
+
     public function isAdmin()
     {
         return $this->role === 'admin';
@@ -260,5 +265,10 @@ class User extends Authenticatable
         }
 
         return null;
+    }
+
+    public function securityAssignments()
+    {
+        return $this->hasMany(SecurityAssignment::class);
     }
 }

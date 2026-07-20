@@ -22,7 +22,7 @@
 
 
     {{-- Desktop horizontal list --}}
-    <div class="top-menu-scroll d-none d-md-flex flex-grow-1 ml-4 mr-auto" style="overflow-x: auto;">
+    <div class="top-menu-scroll d-none d-md-flex flex-grow-1 ml-4 mr-auto">
         <ul class="top-menu-list" style="margin-bottom: 0; padding-top: 0; align-items: center;">
             <li>
                 <a href="{{ route('dashboard') }}" class="top-menu-link {{ request()->routeIs('dashboard') || request()->routeIs('super-admin.dashboard') ? 'active' : '' }}">
@@ -38,6 +38,17 @@
 
             @if(auth()->user()->isSuperAdmin())
                 <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><span>Work Order GA</span></a></li>
+                <li class="dropdown">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('security.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Security Checkpoint</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('security.logs.index') }}"><i class="fas fa-file-invoice-dollar mr-2 text-info"></i> Laporan & Rekap</a>
+                        <a class="dropdown-item py-2" href="{{ route('security.checkpoints.index') }}"><i class="fas fa-map-marker-alt mr-2 text-primary"></i> Master Area</a>
+                        <a class="dropdown-item py-2" href="{{ route('security.shifts.index') }}"><i class="fas fa-clock mr-2 text-success"></i> Master Shift Kerja</a>
+                        <a class="dropdown-item py-2" href="{{ route('security.assignments.index') }}"><i class="fas fa-calendar-alt mr-2 text-warning"></i> Penjadwalan Security</a>
+                    </div>
+                </li>
                 <li><a href="{{ route('super-admin.reports') }}" class="top-menu-link {{ request()->routeIs('super-admin.reports*') ? 'active' : '' }}"><span>Laporan GA</span></a></li>
                 <li><a href="{{ route('super-admin.users.index') }}" class="top-menu-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><span>Data Karyawan</span></a></li>
                 <li><a href="{{ route('super-admin.master-barang.index') }}" class="top-menu-link {{ request()->routeIs('super-admin.master-barang.*') ? 'active' : '' }}"><span>Master Barang</span></a></li>
@@ -45,12 +56,26 @@
 
             @elseif(auth()->user()->canApproveProjects())
                 <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><span>Work Order GA</span></a></li>
+                <li class="dropdown">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('security.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Security Checkpoint</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('security.logs.index') }}"><i class="fas fa-file-invoice-dollar mr-2 text-info"></i> Laporan & Rekap</a>
+                        <a class="dropdown-item py-2" href="{{ route('security.checkpoints.index') }}"><i class="fas fa-map-marker-alt mr-2 text-primary"></i> Master Area</a>
+                        <a class="dropdown-item py-2" href="{{ route('security.shifts.index') }}"><i class="fas fa-clock mr-2 text-success"></i> Master Shift Kerja</a>
+                        <a class="dropdown-item py-2" href="{{ route('security.assignments.index') }}"><i class="fas fa-calendar-alt mr-2 text-warning"></i> Penjadwalan Security</a>
+                    </div>
+                </li>
                 <li><a href="{{ route('chat.index') }}" class="top-menu-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><span>Chat</span></a></li>
                 <li><a href="{{ route('super-admin.users.index') }}" class="top-menu-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><span>Data Karyawan</span></a></li>
 
             @elseif(auth()->user()->isDeveloper())
                 <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><span>Tugas Teknisi (WO)</span></a></li>
                 <li><a href="{{ route('chat.index') }}" class="top-menu-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><span>Chat</span></a></li>
+
+            @elseif(auth()->user()->role === 'security')
+                <li><a href="{{ route('security.scan') }}" class="top-menu-link {{ request()->routeIs('security.scan') ? 'active' : '' }}"><span>Scan Checkpoint</span></a></li>
 
             @elseif(auth()->user()->isClient())
                 <li><a href="{{ route('work-orders.create') }}" class="top-menu-link {{ request()->routeIs('work-orders.create') ? 'active' : '' }}"><span>Buat Pengajuan</span></a></li>

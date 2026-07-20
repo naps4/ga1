@@ -49,6 +49,7 @@
                                     <option value="client" {{ old('role', $user->role) == 'client' ? 'selected' : '' }}>Klien</option>
                                     <option value="manager" {{ old('role', $user->role) == 'manager' ? 'selected' : '' }}>Operational Manager</option>
                                     <option value="developer" {{ old('role', $user->role) == 'developer' ? 'selected' : '' }}>Teknisi</option>
+                                    <option value="security" {{ old('role', $user->role) == 'security' ? 'selected' : '' }}>Security / Guard</option>
                                     <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
                                     <option value="super_admin" {{ old('role', $user->role) == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                                 </select>

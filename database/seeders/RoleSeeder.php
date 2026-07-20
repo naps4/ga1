@@ -101,5 +101,17 @@ class RoleSeeder extends Seeder
             'company' => 'Management',
             'bio' => 'Direktur Utama',
         ]);
+
+        // Create Security Guard
+        User::create([
+            'name' => 'Slamet Security',
+            'email' => 'security@ga-system.com',
+            'password' => Hash::make('password'),
+            'role' => 'security',
+            'status' => 'active',
+            'phone' => '+62812345686',
+            'company' => 'Security Dept',
+            'bio' => 'Petugas Keamanan (Security Guard)',
+        ]);
     }
 }

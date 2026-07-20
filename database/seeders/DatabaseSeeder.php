@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             ProjectStageSeeder::class,
+            SecurityCheckpointSeeder::class,
+            SecurityShiftSeeder::class,
         ]);
     }
 }

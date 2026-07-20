@@ -290,7 +290,6 @@ class SuperAdminController extends Controller
         $settings['notification_window_days'] = (int) $validated['notification_window_days'];
         $settings['maintenance_mode'] = (bool) ($request->boolean('maintenance_mode'));
         
-        // Company Details
         $settings['company_name'] = $validated['company_name'];
         $settings['company_address'] = $validated['company_address'];
         $settings['company_phone'] = $validated['company_phone'];

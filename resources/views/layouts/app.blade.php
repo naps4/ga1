@@ -204,6 +204,15 @@
             scroll-snap-type: x proximity;
         }
 
+        @media (min-width: 768px) {
+            .top-menu-scroll {
+                overflow: visible !important;
+            }
+            .top-menu-list {
+                overflow: visible !important;
+            }
+        }
+
         .top-menu-list > li {
             display: inline-flex;
             align-items: center;

@@ -57,7 +57,49 @@
             </div>
         </div>
 
-        <div class="card shadow-sm border-0 rounded-4 mt-3">
+        <!-- Security Checkpoint Summary Row -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm border-0 rounded-4 bg-white mb-0 h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between p-4">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-primary-light text-primary d-flex align-items-center justify-content-center mr-3" style="width: 54px; height: 54px; background-color: rgba(37, 99, 235, 0.1);">
+                                <i class="fas fa-shield-alt fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1 small font-weight-bold">Patroli Security Hari Ini</h6>
+                                <h4 class="mb-0 font-weight-bold text-dark">{{ $checkedToday ?? 0 }} / {{ $totalAreas ?? 0 }} Area Terpantau</h4>
+                            </div>
+                        </div>
+                        <a href="{{ route('security.checkpoints.index') }}" class="btn btn-sm btn-primary rounded-pill px-3">
+                            Detail <i class="fas fa-chevron-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm border-0 rounded-4 bg-white mb-0 h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between p-4">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center mr-3 {{ ($anomaliesToday ?? 0) > 0 ? 'bg-danger-light text-danger' : 'bg-success-light text-success' }}" style="width: 54px; height: 54px; background-color: {{ ($anomaliesToday ?? 0) > 0 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)' }};">
+                                <i class="fas {{ ($anomaliesToday ?? 0) > 0 ? 'fa-exclamation-triangle' : 'fa-check-circle' }} fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1 small font-weight-bold">Temuan / Anomali Keamanan</h6>
+                                <h4 class="mb-0 font-weight-bold {{ ($anomaliesToday ?? 0) > 0 ? 'text-danger' : 'text-success' }}">
+                                    {{ $anomaliesToday ?? 0 }} Temuan Hari Ini
+                                </h4>
+                            </div>
+                        </div>
+                        <a href="{{ route('security.checkpoints.index') }}?status=anomaly" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                            Lihat <i class="fas fa-chevron-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4 mt-2">
             <div class="card-header bg-white border-bottom border-light">
                 <h3 class="card-title text-primary"><i class="fas fa-list"></i> Update Work Order Terbaru</h3>
             </div>

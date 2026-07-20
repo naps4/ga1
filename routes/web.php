@@ -71,6 +71,16 @@ Route::get('/dashboard', function () {
         
         $viewData['pendingFpu'] = \App\Models\FpuRequest::whereIn('status_approval', ['Menunggu Verifikasi HRGA', 'Menunggu Admin GA'])->count();
         $viewData['recentWO'] = \App\Models\WorkOrder::orderBy('created_at', 'desc')->take(5)->get();
+
+        // Security Checkpoint Stats untuk Admin
+        $viewData['totalAreas'] = \App\Models\SecurityCheckpoint::count();
+        $viewData['checkedToday'] = \App\Models\SecurityCheckpointLog::whereDate('checked_at', \Carbon\Carbon::today())
+            ->where('is_evident_report', false)
+            ->distinct('checkpoint_id')
+            ->count();
+        $viewData['anomaliesToday'] = \App\Models\SecurityCheckpointLog::whereDate('checked_at', \Carbon\Carbon::today())
+            ->where('status', '!=', 'Aman')
+            ->count();
     } elseif ($user->isManager()) {
         $viewData['pendingManagerAtk'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')->count();
         $viewData['totalManagerAtkApproved'] = \App\Models\AtkRequest::where('manager_approved_by', $user->id)->count();
@@ -156,6 +166,30 @@ Route::middleware(['auth'])->group(function () {
     Route::post('atk-requests/{atkRequest}/reject', [\App\Http\Controllers\AtkRequestController::class, 'reject'])->name('atk-requests.reject');
     Route::post('atk-requests/{atkRequest}/handover', [\App\Http\Controllers\AtkRequestController::class, 'handover'])->name('atk-requests.handover');
     Route::get('atk-requests/{atkRequest}/print', [\App\Http\Controllers\AtkRequestController::class, 'print'])->name('atk-requests.print');
+
+    // Rute Security Checkpoint
+    Route::prefix('security')->name('security.')->group(function () {
+        Route::get('/scan', [\App\Http\Controllers\SecurityCheckpointController::class, 'scanPage'])->name('scan');
+        Route::post('/scan', [\App\Http\Controllers\SecurityCheckpointController::class, 'submitLog'])->name('submit');
+        Route::get('/logs', [\App\Http\Controllers\SecurityCheckpointController::class, 'logsIndex'])->name('logs.index');
+        Route::get('/checkpoints', [\App\Http\Controllers\SecurityCheckpointController::class, 'index'])->name('checkpoints.index');
+        Route::post('/checkpoints', [\App\Http\Controllers\SecurityCheckpointController::class, 'storeCheckpoint'])->name('checkpoints.store');
+        Route::put('/checkpoints/{checkpoint}', [\App\Http\Controllers\SecurityCheckpointController::class, 'updateCheckpoint'])->name('checkpoints.update');
+        Route::delete('/checkpoints/{checkpoint}', [\App\Http\Controllers\SecurityCheckpointController::class, 'destroyCheckpoint'])->name('checkpoints.destroy');
+        
+        // Rute CRUD Shifts
+        Route::get('/shifts', [\App\Http\Controllers\SecurityCheckpointController::class, 'shiftsIndex'])->name('shifts.index');
+        Route::post('/shifts', [\App\Http\Controllers\SecurityCheckpointController::class, 'storeShift'])->name('shifts.store');
+        Route::put('/shifts/{shift}', [\App\Http\Controllers\SecurityCheckpointController::class, 'updateShift'])->name('shifts.update');
+        Route::delete('/shifts/{shift}', [\App\Http\Controllers\SecurityCheckpointController::class, 'destroyShift'])->name('shifts.destroy');
+
+        // Rute CRUD Assignments (Penugasan)
+        Route::get('/assignments', [\App\Http\Controllers\SecurityCheckpointController::class, 'assignmentsIndex'])->name('assignments.index');
+        Route::post('/assignments', [\App\Http\Controllers\SecurityCheckpointController::class, 'storeAssignment'])->name('assignments.store');
+        Route::delete('/assignments/{assignment}', [\App\Http\Controllers\SecurityCheckpointController::class, 'destroyAssignment'])->name('assignments.destroy');
+
+        Route::get('/export', [\App\Http\Controllers\SecurityCheckpointController::class, 'exportExcel'])->name('export');
+    });
 });
 
 // Approval Routes (Admin and Super Admin only)
