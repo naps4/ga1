@@ -89,6 +89,9 @@
                 @if($isApprovalMode)
                 <form action="{{ route('atk-requests.approve', $atkRequest->id) }}" method="POST">
                     @csrf
+                    <div class="alert alert-info rounded-3 border-0 py-2 px-3 mb-3 d-flex flex-wrap align-items-center justify-content-between" style="border-radius: .75rem; background-color: #e0f2fe; color: #0369a1;">
+                        <span><i class="fas fa-info-circle mr-1"></i> Anda dapat menyetujui barang <strong>1 per 1</strong>. Item yang dipilih <strong>Pending</strong> akan tetap disimpan untuk di-review kembali nanti, dan status pengajuan akan tetap <strong>Menunggu Persetujuan</strong>.</span>
+                    </div>
                 @endif
 
                 <div class="table-responsive">
@@ -97,12 +100,12 @@
                             <tr>
                                 <th style="width: 5%;" class="text-center">No</th>
                                 <th>Nama Barang</th>
-                                <th style="width: 12%;" class="text-center">Satuan</th>
-                                <th style="width: 20%;">Spesifikasi</th>
-                                <th style="width: 10%;" class="text-center">Qty</th>
+                                <th style="width: 10%;" class="text-center">Satuan</th>
+                                <th style="width: 18%;">Spesifikasi</th>
+                                <th style="width: 8%;" class="text-center">Qty</th>
                                 @if($isApprovalMode)
-                                    <th style="width: 23%;" class="text-center">Tindakan</th>
-                                    <th style="width: 20%;">Catatan Item</th>
+                                    <th style="width: 27%;" class="text-center">Tindakan</th>
+                                    <th style="width: 22%;">Catatan Item</th>
                                 @elseif($showItemStatus)
                                     <th style="width: 15%;" class="text-center">Status</th>
                                     <th style="width: 18%;">Catatan Item</th>
@@ -126,11 +129,14 @@
                                     @if($isApprovalMode)
                                         <td class="text-center align-middle">
                                             <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                                <label class="btn btn-outline-success btn-xs active rounded-left">
-                                                    <input type="radio" name="items[{{ $item->id }}][status]" value="Disetujui" autocomplete="off" checked> <i class="fas fa-check"></i> Setuju
+                                                <label class="btn btn-outline-success btn-xs {{ $item->status_approval === 'Disetujui' ? 'active' : '' }}">
+                                                    <input type="radio" name="items[{{ $item->id }}][status]" value="Disetujui" autocomplete="off" {{ $item->status_approval === 'Disetujui' ? 'checked' : '' }}> <i class="fas fa-check"></i> Setuju
                                                 </label>
-                                                <label class="btn btn-outline-danger btn-xs">
-                                                    <input type="radio" name="items[{{ $item->id }}][status]" value="Ditolak" autocomplete="off"> <i class="fas fa-times"></i> Tolak
+                                                <label class="btn btn-outline-danger btn-xs {{ $item->status_approval === 'Ditolak' ? 'active' : '' }}">
+                                                    <input type="radio" name="items[{{ $item->id }}][status]" value="Ditolak" autocomplete="off" {{ $item->status_approval === 'Ditolak' ? 'checked' : '' }}> <i class="fas fa-times"></i> Tolak
+                                                </label>
+                                                <label class="btn btn-outline-warning btn-xs {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'active' : '' }}">
+                                                    <input type="radio" name="items[{{ $item->id }}][status]" value="Pending" autocomplete="off" {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'checked' : '' }}> <i class="fas fa-hourglass-half"></i> Pending
                                                 </label>
                                             </div>
                                         </td>
@@ -180,11 +186,14 @@
                                         @if($isApprovalMode)
                                             <td class="text-center align-middle">
                                                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                                    <label class="btn btn-outline-success btn-xs active rounded-left">
-                                                        <input type="radio" name="items[{{ $item->id }}][status]" value="Disetujui" autocomplete="off" checked> <i class="fas fa-check"></i> Setuju
+                                                    <label class="btn btn-outline-success btn-xs {{ $item->status_approval === 'Disetujui' ? 'active' : '' }}">
+                                                        <input type="radio" name="items[{{ $item->id }}][status]" value="Disetujui" autocomplete="off" {{ $item->status_approval === 'Disetujui' ? 'checked' : '' }}> <i class="fas fa-check"></i> Setuju
                                                     </label>
-                                                    <label class="btn btn-outline-danger btn-xs">
-                                                        <input type="radio" name="items[{{ $item->id }}][status]" value="Ditolak" autocomplete="off"> <i class="fas fa-times"></i> Tolak
+                                                    <label class="btn btn-outline-danger btn-xs {{ $item->status_approval === 'Ditolak' ? 'active' : '' }}">
+                                                        <input type="radio" name="items[{{ $item->id }}][status]" value="Ditolak" autocomplete="off" {{ $item->status_approval === 'Ditolak' ? 'checked' : '' }}> <i class="fas fa-times"></i> Tolak
+                                                    </label>
+                                                    <label class="btn btn-outline-warning btn-xs {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'active' : '' }}">
+                                                        <input type="radio" name="items[{{ $item->id }}][status]" value="Pending" autocomplete="off" {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'checked' : '' }}> <i class="fas fa-hourglass-half"></i> Pending
                                                     </label>
                                                 </div>
                                             </td>

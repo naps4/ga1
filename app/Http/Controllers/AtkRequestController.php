@@ -439,13 +439,15 @@ class AtkRequestController extends Controller
 
             $request->validate([
                 'items' => 'required|array',
-                'items.*.status' => 'required|in:Disetujui,Ditolak',
+                'items.*.status' => 'required|in:Disetujui,Ditolak,Pending',
                 'items.*.notes' => 'nullable|string',
                 'manager_notes' => 'nullable|string',
             ]);
 
-            DB::transaction(function () use ($request, $atkRequest, $user) {
-                $hasApprovedItem = false;
+            $pendingCount = 0;
+            $approvedCount = 0;
+
+            DB::transaction(function () use ($request, $atkRequest, $user, &$pendingCount, &$approvedCount) {
                 foreach ($request->items as $itemId => $itemData) {
                     $item = AtkRequestItem::where('atk_request_id', $atkRequest->id)->findOrFail($itemId);
                     $itemStatus = $itemData['status'];
@@ -455,24 +457,43 @@ class AtkRequestController extends Controller
                         'status_approval' => $itemStatus,
                         'notes' => $itemNote,
                     ]);
-
-                    if ($itemStatus === 'Disetujui') {
-                        $hasApprovedItem = true;
-                    }
                 }
 
-                // If all items are rejected, request is rejected. Else, moves to Admin GA
-                $newStatus = $hasApprovedItem ? 'Menunggu Persetujuan Admin GA' : 'Ditolak/Revisi';
-                
-                $atkRequest->update([
-                    'status_approval' => $newStatus,
-                    'manager_approved_by' => $user->id,
-                    'manager_approved_at' => now(),
-                    'manager_notes' => $request->manager_notes ?? ($hasApprovedItem ? null : 'Semua item ditolak oleh manager.'),
-                ]);
+                // Check remaining item statuses
+                $allItems = AtkRequestItem::where('atk_request_id', $atkRequest->id)->get();
+                $pendingCount = $allItems->filter(function($i) {
+                    return $i->status_approval === 'Pending' || empty($i->status_approval);
+                })->count();
+
+                $approvedCount = $allItems->filter(function($i) {
+                    return $i->status_approval === 'Disetujui';
+                })->count();
+
+                if ($pendingCount > 0) {
+                    // Still has items waiting for review -> Keep status as 'Menunggu Persetujuan Manager'
+                    $atkRequest->update([
+                        'manager_notes' => $request->manager_notes,
+                    ]);
+                } else {
+                    // All items reviewed -> Move to Admin GA if any approved, or Reject if all rejected
+                    $newStatus = $approvedCount > 0 ? 'Menunggu Persetujuan Admin GA' : 'Ditolak/Revisi';
+                    
+                    $atkRequest->update([
+                        'status_approval' => $newStatus,
+                        'manager_approved_by' => $user->id,
+                        'manager_approved_at' => now(),
+                        'manager_notes' => $request->manager_notes ?? ($approvedCount > 0 ? null : 'Semua item ditolak oleh manager.'),
+                    ]);
+                }
             });
 
-            return redirect()->route('atk-requests.show', $atkRequest->id)->with('success', 'Permintaan berhasil diproses oleh Manager.');
+            if ($pendingCount > 0) {
+                return redirect()->route('atk-requests.show', $atkRequest->id)
+                    ->with('success', 'Persetujuan parsial item berhasil disimpan. Terdapat ' . $pendingCount . ' item lagi yang masih menunggu review.');
+            }
+
+            return redirect()->route('atk-requests.show', $atkRequest->id)
+                ->with('success', 'Semua item telah selesai diproses oleh Manager.');
         }
 
         // 2. Admin GA Approval Step
@@ -483,13 +504,14 @@ class AtkRequestController extends Controller
 
             $request->validate([
                 'items' => 'required|array',
-                'items.*.status' => 'required|in:Disetujui,Ditolak',
+                'items.*.status' => 'required|in:Disetujui,Ditolak,Pending',
                 'items.*.notes' => 'nullable|string',
                 'notes' => 'nullable|string',
             ]);
 
-            DB::transaction(function () use ($request, $atkRequest, $user) {
-                $hasApprovedItem = false;
+            $pendingCount = 0;
+
+            DB::transaction(function () use ($request, $atkRequest, $user, &$pendingCount) {
                 foreach ($request->items as $itemId => $itemData) {
                     $item = AtkRequestItem::where('atk_request_id', $atkRequest->id)->findOrFail($itemId);
                     $itemStatus = $itemData['status'];
@@ -499,23 +521,40 @@ class AtkRequestController extends Controller
                         'status_approval' => $itemStatus,
                         'notes' => $itemNote,
                     ]);
-
-                    if ($itemStatus === 'Disetujui') {
-                        $hasApprovedItem = true;
-                    }
                 }
 
-                $newStatus = $hasApprovedItem ? 'Disetujui' : 'Ditolak/Revisi';
+                $allItems = AtkRequestItem::where('atk_request_id', $atkRequest->id)->get();
+                $pendingCount = $allItems->filter(function($i) {
+                    return $i->status_approval === 'Pending' || empty($i->status_approval);
+                })->count();
 
-                $atkRequest->update([
-                    'status_approval' => $newStatus,
-                    'approved_by' => $user->id,
-                    'approved_at' => now(),
-                    'notes' => $request->notes ?? ($hasApprovedItem ? null : 'Semua item ditolak oleh Admin GA.'),
-                ]);
+                $approvedCount = $allItems->filter(function($i) {
+                    return $i->status_approval === 'Disetujui';
+                })->count();
+
+                if ($pendingCount > 0) {
+                    $atkRequest->update([
+                        'notes' => $request->notes,
+                    ]);
+                } else {
+                    $newStatus = $approvedCount > 0 ? 'Disetujui' : 'Ditolak/Revisi';
+
+                    $atkRequest->update([
+                        'status_approval' => $newStatus,
+                        'approved_by' => $user->id,
+                        'approved_at' => now(),
+                        'notes' => $request->notes ?? ($approvedCount > 0 ? null : 'Semua item ditolak oleh Admin GA.'),
+                    ]);
+                }
             });
 
-            return redirect()->route('atk-requests.show', $atkRequest->id)->with('success', 'Permintaan berhasil diproses oleh Admin GA.');
+            if ($pendingCount > 0) {
+                return redirect()->route('atk-requests.show', $atkRequest->id)
+                    ->with('success', 'Persetujuan parsial item berhasil disimpan oleh Admin GA. Terdapat ' . $pendingCount . ' item lagi yang masih menunggu review.');
+            }
+
+            return redirect()->route('atk-requests.show', $atkRequest->id)
+                ->with('success', 'Semua item telah selesai diproses oleh Admin GA.');
         }
 
         abort(400, 'Permintaan tidak dalam status yang dapat disetujui.');
