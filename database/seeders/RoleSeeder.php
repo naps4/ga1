@@ -131,5 +131,57 @@ class RoleSeeder extends Seeder
                 'bio' => 'Petugas Keamanan (Security Guard)',
             ]
         );
+
+        User::firstOrCreate(
+            ['email' => 'security1@ga-system.com'],
+            [
+                'name' => 'Agus Security',
+                'password' => Hash::make('password'),
+                'role' => 'security',
+                'status' => 'active',
+                'phone' => '+62812345687',
+                'company' => 'Security Dept',
+                'bio' => 'Petugas Keamanan (Security Guard)',
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'security2@ga-system.com'],
+            [
+                'name' => 'Budi Security',
+                'password' => Hash::make('password'),
+                'role' => 'security',
+                'status' => 'active',
+                'phone' => '+62812345688',
+                'company' => 'Security Dept',
+                'bio' => 'Petugas Keamanan (Security Guard)',
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'security3@ga-system.com'],
+            [
+                'name' => 'Cecep Security',
+                'password' => Hash::make('password'),
+                'role' => 'security',
+                'status' => 'active',
+                'phone' => '+62812345689',
+                'company' => 'Security Dept',
+                'bio' => 'Petugas Keamanan (Security Guard)',
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'security4@ga-system.com'],
+            [
+                'name' => 'Dedi Security',
+                'password' => Hash::make('password'),
+                'role' => 'security',
+                'status' => 'active',
+                'phone' => '+62812345690',
+                'company' => 'Security Dept',
+                'bio' => 'Petugas Keamanan (Security Guard)',
+            ]
+        );
     }
 }
