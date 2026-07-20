@@ -42,10 +42,22 @@
                     <i class="fas fa-file-alt mr-2"></i>Detail Permintaan {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'Rumah Tangga' : 'ATK' }} - {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($atkRequest->id, 4, '0', STR_PAD_LEFT) }}
                 </h3>
                 <div>
-                    <a href="{{ route('atk-requests.print', $atkRequest->id) }}" target="_blank" class="btn btn-primary rounded-pill btn-sm shadow-sm mr-2">
-                        <i class="fas fa-print"></i> Cetak Formulir
-                    </a>
-                    @if(in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']) && $atkRequest->user_id === auth()->id())
+                    @php
+                        $hasApprovedItems = $atkRequest->items->where('status_approval', 'Disetujui')->count() > 0;
+                        $hasReviewedItems = $atkRequest->items->whereIn('status_approval', ['Disetujui', 'Ditolak'])->count() > 0;
+                    @endphp
+
+                    @if($hasApprovedItems)
+                        <a href="{{ route('atk-requests.print', $atkRequest->id) }}" target="_blank" class="btn btn-primary rounded-pill btn-sm shadow-sm mr-2">
+                            <i class="fas fa-print"></i> Cetak Formulir
+                        </a>
+                    @else
+                        <button type="button" class="btn btn-outline-secondary rounded-pill btn-sm shadow-sm mr-2" disabled title="Formulir hanya dapat dicetak jika sudah ada barang yang disetujui">
+                            <i class="fas fa-print"></i> Cetak Formulir
+                        </button>
+                    @endif
+
+                    @if(in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']) && $atkRequest->user_id === auth()->id() && !$hasReviewedItems)
                         <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-success rounded-pill btn-sm shadow-sm">
                             <i class="fas fa-pencil-alt"></i> Edit Permintaan
                         </a>

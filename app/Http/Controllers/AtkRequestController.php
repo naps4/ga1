@@ -301,8 +301,13 @@ class AtkRequestController extends Controller
             abort(403);
         }
 
-        if (!in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan'])) {
-            return redirect()->route('atk-requests.show', $atkRequest->id)->withErrors(['error' => 'Permintaan yang sudah disetujui tidak dapat diubah.']);
+        if (!in_array($atkRequest->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager'])) {
+            return redirect()->route('atk-requests.show', $atkRequest->id)->with('error', 'Permintaan yang sudah disetujui tidak dapat diubah.');
+        }
+
+        $hasReviewedItems = $atkRequest->items()->whereIn('status_approval', ['Disetujui', 'Ditolak'])->exists();
+        if ($hasReviewedItems) {
+            return redirect()->route('atk-requests.show', $atkRequest->id)->with('error', 'Permintaan tidak dapat diedit karena sebagian item telah di-review.');
         }
 
         $standardItems = $this->getItemsForType('ATK');
@@ -719,8 +724,12 @@ class AtkRequestController extends Controller
     {
         $atkRequest->load(['user', 'approver', 'managerApprover']);
         
-        // Filter out rejected items from the print view
-        $items = $atkRequest->items()->where('status_approval', '!=', 'Ditolak')->get();
+        // Formulir HANYA mencetak item yang sudah berstatus 'Disetujui'
+        $items = $atkRequest->items()->where('status_approval', 'Disetujui')->get();
+
+        if ($items->count() === 0) {
+            return back()->with('error', 'Formulir belum dapat dicetak karena belum ada barang yang disetujui.');
+        }
         
         $itemsMap = $items->where('is_custom', false)->keyBy('item_name')->toArray();
         $customItems = $items->where('is_custom', true)->values()->all();
