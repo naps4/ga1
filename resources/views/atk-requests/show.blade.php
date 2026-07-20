@@ -610,12 +610,105 @@
                 </div>
             </form>
         </div>
+<!-- Modal Revisi Seluruh Item Ditolak -->
+<div class="modal fade" id="reviseRejectedItemsModal" tabindex="-1" aria-labelledby="reviseRejectedItemsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form id="reviseRejectedItemsForm" onsubmit="submitBulkItemRevision(event)">
+                @csrf
+                <div class="modal-header border-bottom-0 bg-warning text-dark rounded-top-4 py-3">
+                    <h5 class="modal-title font-weight-bold" id="reviseRejectedItemsModalLabel">
+                        <i class="fas fa-edit mr-2"></i> Form Revisi Barang yang Ditolak
+                    </h5>
+                    <button type="button" class="close text-dark" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="alert alert-warning rounded-3 border-0 py-2 px-3 mb-4 small" style="background-color: #fffbeb; color: #92400e;">
+                        <i class="fas fa-info-circle mr-1"></i> Berikut adalah daftar barang yang ditolak beserta catatan evaluasi dari Manager/Admin GA. Silakan sesuaikan Qty / spesifikasi lalu klik Simpan.
+                    </div>
+
+                    @foreach($atkRequest->items->where('status_approval', 'Ditolak') as $index => $rejItem)
+                        <div class="card border rounded-3 mb-3 shadow-sm" style="border-left: 4px solid #ef4444 !important;">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="font-weight-bold text-dark mb-0">
+                                        <i class="fas fa-box text-danger mr-1"></i> {{ $rejItem->item_name }} 
+                                        <span class="badge badge-secondary ml-1">{{ $rejItem->unit }}</span>
+                                    </h6>
+                                    <span class="badge badge-danger">Ditolak</span>
+                                </div>
+
+                                @if($rejItem->notes)
+                                    <div class="p-2 mb-3 rounded-2 small text-danger font-weight-bold" style="background-color: #fef2f2; border: 1px dashed #fca5a5;">
+                                        <i class="fas fa-comment-dots mr-1"></i> Catatan Evaluator: "{{ $rejItem->notes }}"
+                                    </div>
+                                @endif
+
+                                <input type="hidden" name="items[{{ $index }}][id]" value="{{ $rejItem->id }}">
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-2">
+                                        <label class="small font-weight-bold text-muted mb-1">Jumlah (Qty) Baru</label>
+                                        <input type="number" name="items[{{ $index }}][quantity]" class="form-control form-control-sm" value="{{ $rejItem->quantity }}" min="1" required style="border-radius: .4rem;">
+                                    </div>
+                                    <div class="col-md-8 mb-2">
+                                        <label class="small font-weight-bold text-muted mb-1">Spesifikasi / Catatan Baru</label>
+                                        <input type="text" name="items[{{ $index }}][description]" class="form-control form-control-sm" value="{{ $rejItem->description }}" placeholder="Misal: Ukuran F4, Warna Hitam..." style="border-radius: .4rem;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="modal-footer border-top-0 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning text-dark rounded-pill px-4 font-weight-bold shadow-sm">
+                        <i class="fas fa-paper-plane mr-1"></i> Simpan &amp; Ajukan Ulang Revisi
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
+    function submitBulkItemRevision(e) {
+        e.preventDefault();
+        var formData = $('#reviseRejectedItemsForm').serialize();
+
+        $.ajax({
+            url: "{{ route('atk-requests.revise-rejected-items', $atkRequest->id) }}",
+            type: "POST",
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    $('#reviseRejectedItemsModal').modal('hide');
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Revisi Berhasil!',
+                            text: response.message,
+                            timer: 2000
+                        }).then(function() {
+                            window.location.reload();
+                        });
+                    } else {
+                        alert(response.message);
+                        window.location.reload();
+                    }
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Gagal menyimpan revisi barang.';
+                alert(errorMsg);
+            }
+        });
+    }
+
     function openReviseItemModal(itemId, itemName, qty, desc) {
         $('#revise_item_id').val(itemId);
         $('#revise_item_name_title').text(itemName);
