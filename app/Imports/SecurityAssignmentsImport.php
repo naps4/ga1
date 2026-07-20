@@ -45,7 +45,7 @@ class SecurityAssignmentsImport implements ToModel, WithHeadingRow
         // 2. Cari Shift Kerja
         $shift = null;
         if (!empty($row['nama_shift'])) {
-            $shift = SecurityShift::where('name', trim($row['nama_shift']))->first();
+            $shift = $this->findShiftByName($row['nama_shift']);
             if (!$shift) {
                 $this->skippedRows[] = [
                     'row' => $this->currentRow,
@@ -98,5 +98,52 @@ class SecurityAssignmentsImport implements ToModel, WithHeadingRow
             'assigned_date' => $assignedDate,
             'notes'         => $row['catatan'] ?? null,
         ]);
+    }
+
+    /**
+     * Pencarian Shift Kerja dengan toleransi penulisan (fuzzy / keyword mapping)
+     */
+    protected function findShiftByName($inputName)
+    {
+        $inputClean = strtolower(trim($inputName));
+        if (empty($inputClean)) {
+            return null;
+        }
+
+        // 1. Coba exact match / case insensitive
+        $shifts = SecurityShift::all();
+        foreach ($shifts as $s) {
+            if (strtolower(trim($s->name)) === $inputClean) {
+                return $s;
+            }
+        }
+
+        // 2. Pemetaan toleransi kata kunci (Pagi, Sore/Siang, Malam/Malem)
+        foreach ($shifts as $s) {
+            $dbNameLower = strtolower($s->name);
+            
+            // Shift 1 / Pagi
+            if (str_contains($inputClean, 'pagi') || str_contains($inputClean, '1')) {
+                if (str_contains($dbNameLower, 'pagi') || str_contains($dbNameLower, '1')) {
+                    return $s;
+                }
+            }
+            
+            // Shift 2 / Sore / Siang
+            if (str_contains($inputClean, 'sore') || str_contains($inputClean, 'siang') || str_contains($inputClean, '2')) {
+                if (str_contains($dbNameLower, 'sore') || str_contains($dbNameLower, '2')) {
+                    return $s;
+                }
+            }
+            
+            // Shift 3 / Malam / Malem
+            if (str_contains($inputClean, 'malam') || str_contains($inputClean, 'malem') || str_contains($inputClean, '3')) {
+                if (str_contains($dbNameLower, 'malam') || str_contains($dbNameLower, '3')) {
+                    return $s;
+                }
+            }
+        }
+
+        return null;
     }
 }
