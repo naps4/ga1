@@ -582,7 +582,8 @@ class AtkRequestController extends Controller
                 ->with('success', 'Semua item telah selesai diproses oleh Admin GA.');
         }
 
-        abort(400, 'Permintaan tidak dalam status yang dapat disetujui.');
+        return redirect()->route('atk-requests.show', $atkRequest->id)
+            ->with('info', 'Permintaan ini sudah selesai diproses atau status persetujuan telah diperbarui.');
     }
 
     public function approveItem(Request $request, AtkRequest $atkRequest)
@@ -609,7 +610,7 @@ class AtkRequestController extends Controller
                 return response()->json(['success' => false, 'message' => 'Aksi ini hanya untuk Admin GA.'], 403);
             }
         } else {
-            return response()->json(['success' => false, 'message' => 'Permintaan tidak dalam status yang dapat di-review.'], 400);
+            return response()->json(['success' => true, 'message' => 'Status permintaan sudah diperbarui.', 'all_completed' => true]);
         }
 
         $allCompleted = false;
