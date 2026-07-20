@@ -1405,6 +1405,40 @@
         });
     </script>
 
+    <!-- Fix dropdown menu clipping for top menu navbar -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.jQuery) {
+                window.jQuery(document).on('show.bs.dropdown', '.top-menu-list .dropdown', function () {
+                    var $dropdown = window.jQuery(this);
+                    var $menu = $dropdown.find('.dropdown-menu');
+                    var $toggle = $dropdown.find('.dropdown-toggle');
+                    
+                    setTimeout(function() {
+                        var offset = $toggle.offset();
+                        $menu.css({
+                            'position': 'fixed',
+                            'top': (offset.top + $toggle.outerHeight() + 4 - window.jQuery(window).scrollTop()) + 'px',
+                            'left': (offset.left) + 'px',
+                            'z-index': 1060
+                        });
+                    }, 0);
+                });
+
+                window.jQuery('.top-menu-list').on('scroll', function() {
+                    window.jQuery('.top-menu-list .dropdown.show .dropdown-menu').each(function() {
+                        var $dropdown = window.jQuery(this).closest('.dropdown');
+                        var $toggle = $dropdown.find('.dropdown-toggle');
+                        var offset = $toggle.offset();
+                        window.jQuery(this).css({
+                            'left': (offset.left) + 'px'
+                        });
+                    });
+                });
+            }
+        });
+    </script>
+
     <!-- Notification System -->
     <script>
         $(document).ready(function() {
