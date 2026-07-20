@@ -646,6 +646,22 @@ class AtkRequestController extends Controller
         ]);
     }
 
+    public function updateNotes(Request $request, AtkRequest $atkRequest)
+    {
+        $user = auth()->user();
+        $notes = $request->input('notes');
+
+        if ($atkRequest->status_approval === 'Menunggu Persetujuan Manager' && ($user->isManager() || $user->isAdmin() || $user->isSuperAdmin())) {
+            $atkRequest->update(['manager_notes' => $notes]);
+            return response()->json(['success' => true, 'message' => 'Catatan umum Manager berhasil disimpan.']);
+        } elseif ($atkRequest->status_approval === 'Menunggu Persetujuan Admin GA' && ($user->isAdmin() || $user->isSuperAdmin())) {
+            $atkRequest->update(['notes' => $notes]);
+            return response()->json(['success' => true, 'message' => 'Catatan umum Admin GA berhasil disimpan.']);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Tidak memiliki izin untuk memperbarui catatan.'], 403);
+    }
+
     public function reject(Request $request, AtkRequest $atkRequest)
     {
         $user = auth()->user();

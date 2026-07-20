@@ -290,7 +290,7 @@
                 </h3>
             </div>
             <div class="card-body">
-                <div class="text-center mb-4">
+                <div class="text-center mb-3">
                     <h6 class="font-weight-bold text-muted">Status Saat Ini:</h6>
                     @if($atkRequest->status_approval === 'Draft')
                         <span class="badge badge-secondary text-lg px-4 py-2 rounded-pill">Draft</span>
@@ -305,6 +305,37 @@
                     @endif
                 </div>
 
+                <!-- Ringkasan Stat Item Approval -->
+                <div class="p-3 bg-light rounded-4 mb-4 border text-center">
+                    <div class="font-weight-bold text-xs text-muted mb-2 text-uppercase" style="letter-spacing: 0.5px;">
+                        <i class="fas fa-boxes mr-1"></i> Ringkasan Status Barang
+                    </div>
+                    <div class="d-flex justify-content-around align-items-center">
+                        <div>
+                            <span class="d-block font-weight-bold text-success text-md">{{ $atkRequest->items->where('status_approval', 'Disetujui')->count() }}</span>
+                            <small class="text-muted">Disetujui</small>
+                        </div>
+                        <div>
+                            <span class="d-block font-weight-bold text-danger text-md">{{ $atkRequest->items->where('status_approval', 'Ditolak')->count() }}</span>
+                            <small class="text-muted">Ditolak</small>
+                        </div>
+                        <div>
+                            <span class="d-block font-weight-bold text-warning text-md">{{ $atkRequest->items->filter(function($i){ return $i->status_approval === 'Pending' || empty($i->status_approval); })->count() }}</span>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                </div>
+
+                @if($isApprovalMode)
+                    <div class="p-3 bg-light rounded-4 mb-3 border">
+                        <label for="sidebar_general_notes" class="font-weight-bold text-sm text-primary mb-1">
+                            <i class="fas fa-comment-alt mr-1"></i> Catatan Umum {{ $isManagerApproval ? 'Manager' : 'Admin GA' }}:
+                        </label>
+                        <textarea id="sidebar_general_notes" class="form-control form-control-sm" rows="3" placeholder="Tulis catatan persetujuan keseluruhan di sini..." onchange="saveGeneralNotes(this)">{{ $isManagerApproval ? $atkRequest->manager_notes : $atkRequest->notes }}</textarea>
+                        <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle mr-1"></i> Catatan ini tersimpan otomatis &amp; dapat dilihat oleh pengaju.</small>
+                    </div>
+                @endif
+
                 <div class="timeline timeline-inverse small">
                     <!-- Stage 1: Pengajuan -->
                     <div>
@@ -313,7 +344,7 @@
                             <span class="time"><i class="fas fa-clock"></i> {{ $atkRequest->created_at->format('d/m H:i') }}</span>
                             <h3 class="timeline-header border-0 font-weight-bold text-sm">Diajukan</h3>
                             <div class="timeline-body p-2 text-muted">
-                                Oleh: {{ $atkRequest->user->name }}
+                                Oleh: <strong>{{ $atkRequest->user->name }}</strong>
                             </div>
                         </div>
                     </div>
@@ -327,7 +358,12 @@
                                     <span class="time"><i class="fas fa-clock"></i> {{ \Carbon\Carbon::parse($atkRequest->manager_approved_at)->format('d/m H:i') }}</span>
                                     <h3 class="timeline-header border-0 font-weight-bold text-sm">Persetujuan Manager</h3>
                                     <div class="timeline-body p-2 text-muted">
-                                        Disetujui oleh: <strong>{{ $atkRequest->managerApprover->name ?? '-' }}</strong>
+                                        Disetujui oleh: <strong>{{ $atkRequest->managerApprover->name ?? 'Manager' }}</strong>
+                                        @if($atkRequest->manager_notes)
+                                            <div class="mt-2 text-dark font-italic bg-white p-2 rounded border-left border-success">
+                                                <i class="fas fa-quote-left text-muted mr-1"></i> {{ $atkRequest->manager_notes }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             @elseif($atkRequest->status_approval === 'Menunggu Persetujuan Manager')
@@ -336,6 +372,11 @@
                                     <h3 class="timeline-header border-0 font-weight-bold text-sm">Review Manager</h3>
                                     <div class="timeline-body p-2 text-muted">
                                         Menunggu persetujuan dari Operational Manager.
+                                        @if($atkRequest->manager_notes)
+                                            <div class="mt-2 text-dark font-italic bg-white p-2 rounded border-left border-info">
+                                                <i class="fas fa-comment-dots text-info mr-1"></i> Catatan Sementara: {{ $atkRequest->manager_notes }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             @elseif($atkRequest->status_approval === 'Ditolak/Revisi' && !$atkRequest->manager_approved_by)
@@ -357,18 +398,28 @@
                             @if($atkRequest->approved_by)
                                 <i class="fas fa-check-double bg-success"></i>
                                 <div class="timeline-item border-0 shadow-none bg-light rounded-4">
-                                    <span class="time"><i class="fas fa-clock"></i> {{ $atkRequest->approved_at->format('d/m H:i') }}</span>
+                                    <span class="time"><i class="fas fa-clock"></i> {{ $atkRequest->approved_at ? $atkRequest->approved_at->format('d/m H:i') : '' }}</span>
                                     <h3 class="timeline-header border-0 font-weight-bold text-sm">Persetujuan Admin GA</h3>
                                     <div class="timeline-body p-2 text-muted">
-                                        Disetujui oleh: <strong>{{ $atkRequest->approver->name }}</strong>
+                                        Disetujui oleh: <strong>{{ $atkRequest->approver->name ?? 'Admin GA' }}</strong>
+                                        @if($atkRequest->notes)
+                                            <div class="mt-2 text-dark font-italic bg-white p-2 rounded border-left border-success">
+                                                <i class="fas fa-quote-left text-muted mr-1"></i> {{ $atkRequest->notes }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             @elseif($atkRequest->status_approval === 'Menunggu Persetujuan Admin GA')
-                                <i class="fas fa-clock bg-warning"></i>
+                                <i class="fas fa-clock bg-info"></i>
                                 <div class="timeline-item border-0 shadow-none bg-light rounded-4">
                                     <h3 class="timeline-header border-0 font-weight-bold text-sm">Review Admin GA</h3>
                                     <div class="timeline-body p-2 text-muted">
                                         Menunggu verifikasi akhir dari Admin GA.
+                                        @if($atkRequest->notes)
+                                            <div class="mt-2 text-dark font-italic bg-white p-2 rounded border-left border-info">
+                                                <i class="fas fa-comment-dots text-info mr-1"></i> Catatan Sementara: {{ $atkRequest->notes }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             @elseif($atkRequest->status_approval === 'Ditolak/Revisi' && $atkRequest->manager_approved_by)
@@ -552,6 +603,34 @@
                 item_id: itemId,
                 status: status,
                 notes: notes
+            }
+        });
+    }
+
+    function saveGeneralNotes(inputElement) {
+        var notes = $(inputElement).val();
+        var Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        $.ajax({
+            url: "{{ route('atk-requests.update-notes', $atkRequest->id) }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                notes: notes
+            },
+            success: function(response) {
+                if (response.success && window.Swal) {
+                    Toast.fire({
+                        icon: 'success',
+                        title: response.message
+                    });
+                }
             }
         });
     }
