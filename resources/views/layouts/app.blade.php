@@ -163,62 +163,19 @@
             overflow: visible !important;
         }
 
-        .top-menu-scroll::before,
-        .top-menu-scroll::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 24px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity .2s ease;
-            z-index: 5;
-        }
-
-        .top-menu-scroll::before {
-            left: 0;
-            background: linear-gradient(to right, #fff, rgba(255,255,255,0));
-        }
-
-        .top-menu-scroll::after {
-            right: 0;
-            background: linear-gradient(to left, #fff, rgba(255,255,255,0));
-        }
-
-        body.dark-mode .top-menu-scroll::before {
-            background: linear-gradient(to right, #343a40, rgba(52, 58, 64, 0));
-        }
-
-        body.dark-mode .top-menu-scroll::after {
-            background: linear-gradient(to left, #343a40, rgba(52, 58, 64, 0));
-        }
-
-        .top-menu-scroll.has-left::before {
-            opacity: 1;
-        }
-
-        .top-menu-scroll.has-right::after {
-            opacity: 1;
-        }
-
         .top-menu-list {
             display: flex;
             align-items: center;
-            gap: 0.85rem;
-            overflow-x: auto;
-            overflow-y: visible !important;
+            gap: 0.75rem;
+            overflow: visible !important;
             white-space: nowrap;
-            padding: .15rem 0 .35rem;
+            padding: .15rem 0;
             margin: 0;
             list-style: none;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
-            -webkit-overflow-scrolling: touch;
         }
 
         .top-menu-list > li.dropdown {
-            position: relative;
+            position: relative !important;
         }
 
         .top-menu-list .dropdown-menu {
@@ -227,25 +184,9 @@
             left: 0 !important;
             right: auto !important;
             transform: none !important;
-            margin-top: 0.35rem !important;
-            z-index: 1050 !important;
-        }
-
-        .top-menu-list::-webkit-scrollbar {
-            height: 3px;
-        }
-
-        .top-menu-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .top-menu-list::-webkit-scrollbar-thumb {
-            background: rgba(148, 163, 184, 0.35);
-            border-radius: 4px;
-        }
-
-        .top-menu-list::-webkit-scrollbar-thumb:hover {
-            background: rgba(148, 163, 184, 0.7);
+            margin-top: 0.4rem !important;
+            z-index: 1060 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
         }
 
         @media (max-width: 1366px) {
