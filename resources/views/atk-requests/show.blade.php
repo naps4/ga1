@@ -61,10 +61,16 @@
                         </button>
                     @endif
 
-                    @if($canRevise)
-                        <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-warning text-dark rounded-pill btn-sm shadow-sm font-weight-bold">
-                            <i class="fas fa-edit mr-1"></i> Revisi Permintaan
-                        </a>
+                    @if($atkRequest->status_approval !== 'Disetujui')
+                        @if($hasRejectedItems)
+                            <button type="button" class="btn btn-warning text-dark rounded-pill btn-sm shadow-sm font-weight-bold" data-toggle="modal" data-target="#reviseRejectedItemsModal">
+                                <i class="fas fa-edit mr-1"></i> Revisi Permintaan
+                            </button>
+                        @else
+                            <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-warning text-dark rounded-pill btn-sm shadow-sm font-weight-bold">
+                                <i class="fas fa-edit mr-1"></i> Edit Permintaan
+                            </a>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -168,13 +174,11 @@
                                                 <span class="badge badge-success"><i class="fas fa-check"></i> Disetujui</span>
                                             @elseif($item->status_approval === 'Ditolak')
                                                 <span class="badge badge-danger"><i class="fas fa-times"></i> Ditolak</span>
-                                                @if($isOwner)
-                                                    <br>
-                                                    <button type="button" class="btn btn-xs btn-warning text-dark font-weight-bold mt-1 shadow-sm px-2 py-1" style="font-size: 11px; border-radius: .4rem;"
-                                                            onclick="openReviseItemModal({{ $item->id }}, '{{ addslashes($item->item_name) }}', {{ $item->quantity }}, '{{ addslashes($item->description ?? '') }}')">
-                                                        <i class="fas fa-edit mr-1"></i> Revisi Item
-                                                    </button>
-                                                @endif
+                                                <br>
+                                                <button type="button" class="btn btn-xs btn-warning text-dark font-weight-bold mt-1 shadow-sm px-2 py-1" style="font-size: 11px; border-radius: .4rem;"
+                                                        onclick="openReviseItemModal({{ $item->id }}, '{{ addslashes($item->item_name) }}', {{ $item->quantity }}, '{{ addslashes($item->description ?? '') }}')">
+                                                    <i class="fas fa-edit mr-1"></i> Revisi Item
+                                                </button>
                                             @else
                                                 <span class="badge badge-warning text-dark"><i class="fas fa-hourglass-half"></i> Pending</span>
                                             @endif
@@ -235,13 +239,11 @@
                                                     <span class="badge badge-success"><i class="fas fa-check"></i> Disetujui</span>
                                                 @elseif($item->status_approval === 'Ditolak')
                                                     <span class="badge badge-danger"><i class="fas fa-times"></i> Ditolak</span>
-                                                    @if($isOwner)
-                                                        <br>
-                                                        <button type="button" class="btn btn-xs btn-warning text-dark font-weight-bold mt-1 shadow-sm px-2 py-1" style="font-size: 11px; border-radius: .4rem;"
-                                                                onclick="openReviseItemModal({{ $item->id }}, '{{ addslashes($item->item_name) }}', {{ $item->quantity }}, '{{ addslashes($item->description ?? '') }}')">
-                                                            <i class="fas fa-edit mr-1"></i> Revisi Item
-                                                        </button>
-                                                    @endif
+                                                    <br>
+                                                    <button type="button" class="btn btn-xs btn-warning text-dark font-weight-bold mt-1 shadow-sm px-2 py-1" style="font-size: 11px; border-radius: .4rem;"
+                                                            onclick="openReviseItemModal({{ $item->id }}, '{{ addslashes($item->item_name) }}', {{ $item->quantity }}, '{{ addslashes($item->description ?? '') }}')">
+                                                        <i class="fas fa-edit mr-1"></i> Revisi Item
+                                                    </button>
                                                 @else
                                                     <span class="badge badge-warning text-dark"><i class="fas fa-hourglass-half"></i> Pending</span>
                                                 @endif
