@@ -11,30 +11,49 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class SecurityAssignmentsImport implements ToModel, WithHeadingRow
 {
+    public $skippedRows = [];
+    protected $currentRow = 1;
+
     public function model(array $row)
     {
-        // Memerlukan header: email_petugas, nama_petugas, nama_shift, penempatan_area, tanggal_tugas, catatan
+        $this->currentRow++;
         
+        $email = $row['email_petugas'] ?? null;
+        $name = $row['nama_petugas'] ?? null;
+
         // 1. Cari Petugas Security
         $user = null;
-        if (!empty($row['email_petugas'])) {
-            $user = User::where('email', trim($row['email_petugas']))->first();
+        if (!empty($email)) {
+            $user = User::where('email', trim($email))->first();
         }
         
-        if (!$user && !empty($row['nama_petugas'])) {
+        if (!$user && !empty($name)) {
             $user = User::where('role', 'security')
-                ->where('name', 'like', '%' . trim($row['nama_petugas']) . '%')
+                ->where('name', 'like', '%' . trim($name) . '%')
                 ->first();
         }
 
         if (!$user) {
-            return null; // Skip jika user security tidak ditemukan
+            $this->skippedRows[] = [
+                'row' => $this->currentRow,
+                'petugas' => (!empty($email) ? $email : $name) ?: '(Kosong)',
+                'reason' => 'Akun petugas security tidak ditemukan di database.'
+            ];
+            return null;
         }
 
         // 2. Cari Shift Kerja
         $shift = null;
         if (!empty($row['nama_shift'])) {
             $shift = SecurityShift::where('name', trim($row['nama_shift']))->first();
+            if (!$shift) {
+                $this->skippedRows[] = [
+                    'row' => $this->currentRow,
+                    'petugas' => $user->name,
+                    'reason' => 'Shift "' . $row['nama_shift'] . '" tidak terdaftar.'
+                ];
+                return null;
+            }
         }
 
         // 3. Resolve Tanggal Tugas
@@ -62,7 +81,14 @@ class SecurityAssignmentsImport implements ToModel, WithHeadingRow
         }
 
         if ($query->exists()) {
-            return null; // Skip jika penugasan sudah ada
+            $this->skippedRows[] = [
+                'row' => $this->currentRow,
+                'petugas' => $user->name,
+                'reason' => $assignedDate 
+                    ? 'Sudah ditugaskan pada tanggal ' . $assignedDate
+                    : 'Sudah memiliki penempatan permanen.'
+            ];
+            return null;
         }
 
         return new SecurityAssignment([

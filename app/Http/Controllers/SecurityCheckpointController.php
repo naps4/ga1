@@ -487,8 +487,19 @@ class SecurityCheckpointController extends Controller
         ]);
 
         try {
-            Excel::import(new SecurityShiftsImport, $request->file('file'));
-            return back()->with('success', 'Data Shift berhasil di-import.');
+            $import = new SecurityShiftsImport;
+            Excel::import($import, $request->file('file'));
+
+            if (!empty($import->skippedRows)) {
+                $warningMsg = '<strong>Import selesai, tetapi beberapa baris dilewati:</strong><br><ul class="mb-0 mt-1 pl-3">';
+                foreach ($import->skippedRows as $skip) {
+                    $warningMsg .= "<li>Baris {$skip['row']} ({$skip['shift']}): {$skip['reason']}</li>";
+                }
+                $warningMsg .= '</ul>';
+                return back()->with('success', 'Data Shift selesai diproses.')->with('info', $warningMsg);
+            }
+
+            return back()->with('success', 'Semua data Shift berhasil di-import.');
         } catch (\Exception $e) {
             return back()->withErrors(['file' => 'Gagal mengimpor file: ' . $e->getMessage()]);
         }
@@ -504,8 +515,19 @@ class SecurityCheckpointController extends Controller
         ]);
 
         try {
-            Excel::import(new SecurityAssignmentsImport, $request->file('file'));
-            return back()->with('success', 'Data Penjadwalan berhasil di-import.');
+            $import = new SecurityAssignmentsImport;
+            Excel::import($import, $request->file('file'));
+
+            if (!empty($import->skippedRows)) {
+                $warningMsg = '<strong>Import selesai, tetapi beberapa baris dilewati:</strong><br><ul class="mb-0 mt-1 pl-3">';
+                foreach ($import->skippedRows as $skip) {
+                    $warningMsg .= "<li>Baris {$skip['row']} ({$skip['petugas']}): {$skip['reason']}</li>";
+                }
+                $warningMsg .= '</ul>';
+                return back()->with('success', 'Data Penjadwalan selesai diproses.')->with('info', $warningMsg);
+            }
+
+            return back()->with('success', 'Semua data Penjadwalan berhasil di-import.');
         } catch (\Exception $e) {
             return back()->withErrors(['file' => 'Gagal mengimpor file: ' . $e->getMessage()]);
         }

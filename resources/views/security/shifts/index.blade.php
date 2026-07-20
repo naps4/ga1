@@ -29,6 +29,15 @@
             </div>
         @endif
 
+        @if(session('info'))
+            <div class="alert alert-info alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+                <i class="fas fa-info-circle mr-1"></i> {!! session('info') !!}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
         @if($errors->any())
             <div class="alert alert-danger alert-dismissible fade show rounded-pill shadow-sm mb-4" role="alert">
                 <i class="fas fa-exclamation-triangle mr-1"></i> {{ $errors->first() }}

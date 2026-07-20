@@ -8,10 +8,19 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class SecurityShiftsImport implements ToModel, WithHeadingRow
 {
+    public $skippedRows = [];
+    protected $currentRow = 1;
+
     public function model(array $row)
     {
-        // Memerlukan header: nama_shift, jam_mulai, jam_selesai
+        $this->currentRow++;
+
         if (empty($row['nama_shift'])) {
+            $this->skippedRows[] = [
+                'row' => $this->currentRow,
+                'shift' => '(Kosong)',
+                'reason' => 'Nama shift tidak boleh kosong.'
+            ];
             return null;
         }
 
@@ -25,18 +34,27 @@ class SecurityShiftsImport implements ToModel, WithHeadingRow
             $endTime = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($endTime)->format('H:i');
         }
 
-        // Pastikan format aman
         $startTime = $startTime ? date('H:i', strtotime($startTime)) : null;
         $endTime = $endTime ? date('H:i', strtotime($endTime)) : null;
 
         if (!$startTime || !$endTime) {
-            return null; // Skip jika jam mulai/selesai tidak valid
+            $this->skippedRows[] = [
+                'row' => $this->currentRow,
+                'shift' => $row['nama_shift'],
+                'reason' => 'Jam mulai atau jam selesai tidak valid.'
+            ];
+            return null;
         }
 
         // Cek duplikasi nama shift
         $exists = SecurityShift::where('name', $row['nama_shift'])->exists();
         if ($exists) {
-            return null; // Skip jika sudah ada
+            $this->skippedRows[] = [
+                'row' => $this->currentRow,
+                'shift' => $row['nama_shift'],
+                'reason' => 'Shift dengan nama ini sudah terdaftar.'
+            ];
+            return null;
         }
 
         return new SecurityShift([
