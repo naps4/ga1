@@ -168,6 +168,13 @@
                                                 <span class="badge badge-success"><i class="fas fa-check"></i> Disetujui</span>
                                             @elseif($item->status_approval === 'Ditolak')
                                                 <span class="badge badge-danger"><i class="fas fa-times"></i> Ditolak</span>
+                                                @if($isOwner)
+                                                    <br>
+                                                    <button type="button" class="btn btn-xs btn-warning text-dark font-weight-bold mt-1 shadow-sm px-2 py-1" style="font-size: 11px; border-radius: .4rem;"
+                                                            onclick="openReviseItemModal({{ $item->id }}, '{{ addslashes($item->item_name) }}', {{ $item->quantity }}, '{{ addslashes($item->description ?? '') }}')">
+                                                        <i class="fas fa-edit mr-1"></i> Revisi Item
+                                                    </button>
+                                                @endif
                                             @else
                                                 <span class="badge badge-warning text-dark"><i class="fas fa-hourglass-half"></i> Pending</span>
                                             @endif
@@ -228,6 +235,13 @@
                                                     <span class="badge badge-success"><i class="fas fa-check"></i> Disetujui</span>
                                                 @elseif($item->status_approval === 'Ditolak')
                                                     <span class="badge badge-danger"><i class="fas fa-times"></i> Ditolak</span>
+                                                    @if($isOwner)
+                                                        <br>
+                                                        <button type="button" class="btn btn-xs btn-warning text-dark font-weight-bold mt-1 shadow-sm px-2 py-1" style="font-size: 11px; border-radius: .4rem;"
+                                                                onclick="openReviseItemModal({{ $item->id }}, '{{ addslashes($item->item_name) }}', {{ $item->quantity }}, '{{ addslashes($item->description ?? '') }}')">
+                                                            <i class="fas fa-edit mr-1"></i> Revisi Item
+                                                        </button>
+                                                    @endif
                                                 @else
                                                     <span class="badge badge-warning text-dark"><i class="fas fa-hourglass-half"></i> Pending</span>
                                                 @endif
@@ -556,25 +570,108 @@
                     <button type="submit" class="btn btn-primary rounded-pill px-4">Simpan Konfirmasi</button>
                 </div>
             </form>
+        </div>
+    </div>
 </div>
+
+<!-- Revise Single Item Modal -->
+<div class="modal fade" id="reviseItemModal" tabindex="-1" aria-labelledby="reviseItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form id="reviseItemForm" onsubmit="submitItemRevision(event)">
+                @csrf
+                <input type="hidden" id="revise_item_id" name="item_id">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title font-weight-bold text-warning" id="reviseItemModalLabel">
+                        <i class="fas fa-edit mr-1"></i> Revisi Item: <span id="revise_item_name_title"></span>
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body pb-2 pt-0">
+                    <div class="alert alert-info rounded-3 small py-2 px-3 mb-3" style="background-color: #e0f2fe; color: #0369a1; border: 0;">
+                        <i class="fas fa-info-circle mr-1"></i> Sesuaikan Jumlah (Qty) atau spesifikasi item yang ditolak untuk diajukan ulang ke Manager.
+                    </div>
+                    <div class="form-group">
+                        <label for="revise_quantity" class="font-weight-600">Jumlah (Qty) Baru:</label>
+                        <input type="number" name="quantity" id="revise_quantity" class="form-control" min="1" required style="border-radius: .5rem;">
+                    </div>
+                    <div class="form-group">
+                        <label for="revise_description" class="font-weight-600">Spesifikasi / Catatan Tambahan:</label>
+                        <input type="text" name="description" id="revise_description" class="form-control" placeholder="Contoh: Ukuran F4, Warna Hitam..." style="border-radius: .5rem;">
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light rounded-pill px-3" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning text-dark rounded-pill px-4 font-weight-bold">
+                        <i class="fas fa-check-circle mr-1"></i> Simpan Revisi Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
+    function openReviseItemModal(itemId, itemName, qty, desc) {
+        $('#revise_item_id').val(itemId);
+        $('#revise_item_name_title').text(itemName);
+        $('#revise_quantity').val(qty);
+        $('#revise_description').val(desc);
+        $('#reviseItemModal').modal('show');
+    }
+
+    function submitItemRevision(e) {
+        e.preventDefault();
+        var itemId = $('#revise_item_id').val();
+        var qty = $('#revise_quantity').val();
+        var desc = $('#revise_description').val();
+
+        $.ajax({
+            url: "{{ route('atk-requests.revise-item', $atkRequest->id) }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                item_id: itemId,
+                quantity: qty,
+                description: desc
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#reviseItemModal').modal('hide');
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Revisi Berhasil!',
+                            text: response.message,
+                            timer: 2000
+                        }).then(function() {
+                            window.location.reload();
+                        });
+                    } else {
+                        alert(response.message);
+                        window.location.reload();
+                    }
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Gagal memperbarui item.';
+                alert(errorMsg);
+            }
+        });
+    }
+
     function submitSingleItemApproval(itemId, status, labelElement) {
-        var $label = $(labelElement);
-        var $group = $label.closest('.btn-group');
-        var $noteInput = $group.closest('tr').find('input[name="items[' + itemId + '][notes]"]');
-        var notes = $noteInput.val() || '';
+        var $btnGroup = $(labelElement).closest('.btn-group-toggle');
+        $btnGroup.find('.btn').removeClass('active');
+        $(labelElement).addClass('active');
 
-        // UI Optimistic Highlight
-        $group.find('.btn').removeClass('active');
-        $label.addClass('active');
-        $group.find('input[type="radio"]').prop('checked', false);
-        $label.find('input[type="radio"]').prop('checked', true);
+        var notesInput = $('input[name="items[' + itemId + '][notes]"]');
+        var notes = notesInput.length ? notesInput.val() : '';
 
-        // Toast feedback
         var Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -616,8 +713,9 @@
 
     function saveItemNote(itemId, inputElement) {
         var notes = $(inputElement).val();
-        var $group = $(inputElement).closest('tr').find('.btn-group');
-        var status = $group.find('input[type="radio"]:checked').val() || 'Pending';
+        var $btnGroup = $(inputElement).closest('tr').find('.btn-group-toggle');
+        var activeBtn = $btnGroup.find('label.active input');
+        var status = activeBtn.length ? activeBtn.val() : 'Pending';
 
         $.ajax({
             url: "{{ route('atk-requests.approve-item', $atkRequest->id) }}",

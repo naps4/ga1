@@ -664,6 +664,45 @@ class AtkRequestController extends Controller
         ]);
     }
 
+    public function reviseItem(Request $request, AtkRequest $atkRequest)
+    {
+        $user = auth()->user();
+
+        if ($atkRequest->user_id !== $user->id && !$user->isAdmin() && !$user->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki hak akses untuk merevisi item ini.'], 403);
+        }
+
+        $request->validate([
+            'item_id' => 'required|exists:atk_request_items,id',
+            'quantity' => 'required|integer|min:1',
+            'description' => 'nullable|string',
+        ]);
+
+        $item = AtkRequestItem::where('atk_request_id', $atkRequest->id)->findOrFail($request->item_id);
+
+        DB::transaction(function () use ($atkRequest, $item, $request) {
+            $item->update([
+                'quantity' => $request->quantity,
+                'description' => $request->description ?? $item->description,
+                'status_approval' => 'Pending',
+            ]);
+
+            // Reset request status back to Menunggu Persetujuan Manager so Manager can re-review
+            $atkRequest->update([
+                'status_approval' => 'Menunggu Persetujuan Manager',
+                'manager_approved_by' => null,
+                'manager_approved_at' => null,
+                'approved_by' => null,
+                'approved_at' => null,
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Item \"{$item->item_name}\" berhasil direvisi menjadi Qty {$request->quantity} dan diajukan ulang ke Manager.",
+        ]);
+    }
+
     public function updateNotes(Request $request, AtkRequest $atkRequest)
     {
         $user = auth()->user();
