@@ -62,6 +62,12 @@
                             <i class="fas fa-pencil-alt"></i> Edit Permintaan
                         </a>
                     @endif
+
+                    @if($atkRequest->status_approval === 'Ditolak/Revisi' && $atkRequest->user_id === auth()->id())
+                        <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-warning rounded-pill btn-sm shadow-sm">
+                            <i class="fas fa-redo-alt"></i> Revisi & Ajukan Ulang
+                        </a>
+                    @endif
                 </div>
             </div>
             
@@ -483,6 +489,15 @@
                     <button type="button" class="btn btn-primary btn-block rounded-pill shadow-sm" data-toggle="modal" data-target="#handoverModal">
                         <i class="fas fa-handshake mr-1"></i> Konfirmasi Penyerahan
                     </button>
+                @elseif($atkRequest->status_approval === 'Ditolak/Revisi' && $atkRequest->user_id === auth()->id())
+                    <hr>
+                    <div class="alert alert-danger border-0 rounded-4 p-3 mb-3 small">
+                        <h6 class="font-weight-bold mb-1"><i class="fas fa-exclamation-triangle mr-1"></i> Pengajuan Ditolak</h6>
+                        <span>Silakan lakukan penyesuaian pada item, lalu ajukan ulang ke Manager.</span>
+                    </div>
+                    <a href="{{ route('atk-requests.edit', $atkRequest->id) }}" class="btn btn-warning btn-block rounded-pill shadow-sm font-weight-bold">
+                        <i class="fas fa-redo-alt mr-1"></i> Revisi & Ajukan Ulang
+                    </a>
                 @endif
             </div>
         </div>

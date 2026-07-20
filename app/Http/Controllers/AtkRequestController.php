@@ -305,9 +305,13 @@ class AtkRequestController extends Controller
             return redirect()->route('atk-requests.show', $atkRequest->id)->with('error', 'Permintaan yang sudah disetujui tidak dapat diubah.');
         }
 
-        $hasReviewedItems = $atkRequest->items()->whereIn('status_approval', ['Disetujui', 'Ditolak'])->exists();
-        if ($hasReviewedItems) {
-            return redirect()->route('atk-requests.show', $atkRequest->id)->with('error', 'Permintaan tidak dapat diedit karena sebagian item telah di-review.');
+        // Jika status Ditolak/Revisi, izinkan edit meskipun item sudah pernah di-review
+        // karena tujuannya memang untuk merevisi sebelum diajukan ulang.
+        if ($atkRequest->status_approval !== 'Ditolak/Revisi') {
+            $hasReviewedItems = $atkRequest->items()->whereIn('status_approval', ['Disetujui', 'Ditolak'])->exists();
+            if ($hasReviewedItems) {
+                return redirect()->route('atk-requests.show', $atkRequest->id)->with('error', 'Permintaan tidak dapat diedit karena sebagian item telah di-review.');
+            }
         }
 
         $standardItems = $this->getItemsForType('ATK');
@@ -326,7 +330,9 @@ class AtkRequestController extends Controller
         $existingItems = $atkRequest->items->where('is_custom', false)->keyBy('item_name')->toArray();
         $customItems = $atkRequest->items->where('is_custom', true)->values()->toArray();
 
-        return view('atk-requests.edit', compact('atkRequest', 'standardItems', 'householdItems', 'months', 'existingItems', 'customItems'));
+        $isResubmit = ($atkRequest->status_approval === 'Ditolak/Revisi');
+
+        return view('atk-requests.edit', compact('atkRequest', 'standardItems', 'householdItems', 'months', 'existingItems', 'customItems', 'isResubmit'));
     }
 
     public function update(Request $request, AtkRequest $atkRequest)
@@ -349,20 +355,34 @@ class AtkRequestController extends Controller
             'custom_items' => 'nullable|array',
         ]);
 
-        $action = $request->input('action', 'draft');
-        $status = ($action === 'submit') ? 'Menunggu Persetujuan Manager' : 'Draft';
+        $action         = $request->input('action', 'draft');
+        $status         = ($action === 'submit') ? 'Menunggu Persetujuan Manager' : 'Draft';
+        $wasRejected    = ($atkRequest->status_approval === 'Ditolak/Revisi');
 
-        DB::transaction(function () use ($request, $atkRequest, $status) {
-            $atkRequest->update([
-                'request_type' => $request->request_type,
-                'nama' => $request->nama,
-                'divisi' => $request->divisi,
-                'periode' => $request->periode,
-                'tanggal_pengajuan' => $request->tanggal_pengajuan,
-                'status_approval' => $status,
-            ]);
+        DB::transaction(function () use ($request, $atkRequest, $status, $wasRejected) {
+            $updateData = [
+                'request_type'     => $request->request_type,
+                'nama'             => $request->nama,
+                'divisi'           => $request->divisi,
+                'periode'          => $request->periode,
+                'tanggal_pengajuan'=> $request->tanggal_pengajuan,
+                'status_approval'  => $status,
+            ];
 
-            // Clear old items
+            // Jika diajukan ulang dari status Ditolak/Revisi, bersihkan semua jejak
+            // persetujuan sebelumnya agar Manager & Admin GA bisa mereview dari awal.
+            if ($wasRejected && $status === 'Menunggu Persetujuan Manager') {
+                $updateData['manager_approved_by'] = null;
+                $updateData['manager_approved_at'] = null;
+                $updateData['approved_by']         = null;
+                $updateData['approved_at']         = null;
+                $updateData['manager_notes']       = null;
+                $updateData['notes']               = null;
+            }
+
+            $atkRequest->update($updateData);
+
+            // Clear old items (selalu hapus dan buat ulang agar status_approval = Pending)
             $atkRequest->items()->delete();
 
             // Save Standard Items
@@ -373,11 +393,11 @@ class AtkRequestController extends Controller
                         $desc = isset($itemData['options']) ? implode(', ', $itemData['options']) : ($itemData['custom_option'] ?? null);
                         AtkRequestItem::create([
                             'atk_request_id' => $atkRequest->id,
-                            'item_name' => $itemName,
-                            'unit' => $itemData['unit'] ?? 'Pcs',
-                            'description' => $desc,
-                            'quantity' => $qty,
-                            'is_custom' => false,
+                            'item_name'      => $itemName,
+                            'unit'           => $itemData['unit'] ?? 'Pcs',
+                            'description'    => $desc,
+                            'quantity'       => $qty,
+                            'is_custom'      => false,
                         ]);
                     }
                 }
@@ -399,12 +419,12 @@ class AtkRequestController extends Controller
 
                         AtkRequestItem::create([
                             'atk_request_id' => $atkRequest->id,
-                            'item_name' => $cItem['name'],
-                            'unit' => $cItem['unit'] ?? 'Pcs',
-                            'description' => $cItem['desc'] ?? null,
-                            'quantity' => $qty,
-                            'is_custom' => true,
-                            'attachment' => $attachmentPath,
+                            'item_name'      => $cItem['name'],
+                            'unit'           => $cItem['unit'] ?? 'Pcs',
+                            'description'    => $cItem['desc'] ?? null,
+                            'quantity'       => $qty,
+                            'is_custom'      => true,
+                            'attachment'     => $attachmentPath,
                         ]);
                     }
                 }
@@ -412,7 +432,11 @@ class AtkRequestController extends Controller
         });
 
         $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';
-        $msg = ($status === 'Draft') ? "Draft permintaan {$typeName} berhasil diperbarui." : "Permintaan {$typeName} berhasil diajukan.";
+        if ($wasRejected && $status === 'Menunggu Persetujuan Manager') {
+            $msg = "Permintaan {$typeName} berhasil direvisi dan diajukan ulang.";
+        } else {
+            $msg = ($status === 'Draft') ? "Draft permintaan {$typeName} berhasil diperbarui." : "Permintaan {$typeName} berhasil diajukan.";
+        }
         return redirect()->route('atk-requests.index')->with('success', $msg);
     }
 
