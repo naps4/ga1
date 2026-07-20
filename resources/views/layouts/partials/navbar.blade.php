@@ -25,9 +25,15 @@
     <div class="top-menu-scroll d-none d-md-flex flex-grow-1 ml-4 mr-auto">
         <ul class="top-menu-list" style="margin-bottom: 0; padding-top: 0; align-items: center;">
             <li>
-                <a href="{{ route('dashboard') }}" class="top-menu-link {{ request()->routeIs('dashboard') || request()->routeIs('super-admin.dashboard') ? 'active' : '' }}">
-                    <span>Dasbor</span>
-                </a>
+                @if(auth()->user()->role === 'security')
+                    <a href="{{ route('security.scan') }}" class="top-menu-link {{ request()->routeIs('security.scan') ? 'active' : '' }}">
+                        <span>Scan Checkpoint</span>
+                    </a>
+                @else
+                    <a href="{{ route('dashboard') }}" class="top-menu-link {{ request()->routeIs('dashboard') || request()->routeIs('super-admin.dashboard') ? 'active' : '' }}">
+                        <span>Dasbor</span>
+                    </a>
+                @endif
             </li>
 
             <li>

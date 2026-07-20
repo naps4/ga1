@@ -44,9 +44,15 @@
     {{-- Nav items --}}
     <ul class="mobile-drawer-nav">
         <li>
-            <a href="{{ route('dashboard') }}" class="mobile-drawer-link {{ request()->routeIs('dashboard') || request()->routeIs('super-admin.dashboard') ? 'active' : '' }}">
-                <i class="fas fa-home"></i><span>Dasbor</span>
-            </a>
+            @if(auth()->user()->role === 'security')
+                <a href="{{ route('security.scan') }}" class="mobile-drawer-link {{ request()->routeIs('security.scan') ? 'active' : '' }}">
+                    <i class="fas fa-qrcode"></i><span>Scan Checkpoint</span>
+                </a>
+            @else
+                <a href="{{ route('dashboard') }}" class="mobile-drawer-link {{ request()->routeIs('dashboard') || request()->routeIs('super-admin.dashboard') ? 'active' : '' }}">
+                    <i class="fas fa-home"></i><span>Dasbor</span>
+                </a>
+            @endif
         </li>
 
         <li>
