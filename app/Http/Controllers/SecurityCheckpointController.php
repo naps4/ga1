@@ -155,8 +155,16 @@ class SecurityCheckpointController extends Controller
             ->whereDate('assigned_date', Carbon::today())
             ->first();
 
+        // 1.5. Cek penugasan permanen / default (assigned_date is null) jika tidak ada penugasan hari ini
+        if (!$assignment) {
+            $assignment = SecurityAssignment::with('shift')
+                ->where('user_id', $user->id)
+                ->whereNull('assigned_date')
+                ->first();
+        }
+
         $currentShift = null;
-        if ($assignment) {
+        if ($assignment && $assignment->shift) {
             $currentShift = $assignment->shift->name;
         } else {
             // 2. Fallback deteksi berdasarkan waktu sekarang
@@ -359,17 +367,12 @@ class SecurityCheckpointController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100|unique:security_shifts,name',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i',
+            'start_time' => 'required',
+            'end_time' => 'required',
         ]);
 
-        SecurityShift::create([
-            'name' => $request->name,
-            'start_time' => $request->start_time . ':00',
-            'end_time' => $request->end_time . ':00',
-        ]);
-
-        return back()->with('success', 'Shift baru berhasil ditambahkan.');
+        SecurityShift::create($request->all());
+        return back()->with('success', 'Shift berhasil ditambahkan.');
     }
 
     /**
@@ -379,16 +382,11 @@ class SecurityCheckpointController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100|unique:security_shifts,name,' . $shift->id,
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i',
+            'start_time' => 'required',
+            'end_time' => 'required',
         ]);
 
-        $shift->update([
-            'name' => $request->name,
-            'start_time' => $request->start_time . (strlen($request->start_time) === 5 ? ':00' : ''),
-            'end_time' => $request->end_time . (strlen($request->end_time) === 5 ? ':00' : ''),
-        ]);
-
+        $shift->update($request->all());
         return back()->with('success', 'Shift berhasil diperbarui.');
     }
 
@@ -432,26 +430,34 @@ class SecurityCheckpointController extends Controller
     {
         $request->validate([
             'user_id'       => 'required|exists:users,id',
-            'shift_id'      => 'required|exists:security_shifts,id',
+            'shift_id'      => 'nullable|exists:security_shifts,id',
             'plant'         => 'nullable|string|max:100',
-            'assigned_date' => 'required|date',
+            'assigned_date' => 'nullable|date',
             'notes'         => 'nullable|string',
         ]);
 
-        // Cek duplikasi penugasan untuk user pada tanggal tersebut
-        $exists = SecurityAssignment::where('user_id', $request->user_id)
-            ->whereDate('assigned_date', $request->assigned_date)
-            ->exists();
+        // Cek duplikasi penugasan untuk user pada tanggal tersebut atau penempatan permanen
+        $query = SecurityAssignment::where('user_id', $request->user_id);
+        if ($request->filled('assigned_date')) {
+            $query->whereDate('assigned_date', $request->assigned_date);
+        } else {
+            $query->whereNull('assigned_date');
+        }
+
+        $exists = $query->exists();
 
         if ($exists) {
-            return back()->withErrors(['assigned_date' => 'Petugas keamanan ini sudah ditugaskan pada tanggal tersebut.'])->withInput();
+            $errMsg = $request->filled('assigned_date') 
+                ? 'Petugas keamanan ini sudah ditugaskan pada tanggal tersebut.'
+                : 'Petugas keamanan ini sudah memiliki penempatan permanen (tanpa tanggal).';
+            return back()->withErrors(['assigned_date' => $errMsg])->withInput();
         }
 
         SecurityAssignment::create([
             'user_id'       => $request->user_id,
-            'shift_id'      => $request->shift_id,
+            'shift_id'      => $request->shift_id ?: null,
             'plant'         => $request->plant ?: null,
-            'assigned_date' => $request->assigned_date,
+            'assigned_date' => $request->assigned_date ?: null,
             'notes'         => $request->notes,
         ]);
 

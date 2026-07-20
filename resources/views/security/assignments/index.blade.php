@@ -100,10 +100,18 @@
                                                 </div>
                                             </td>
                                             <td class="text-center font-weight-bold">
-                                                {{ $item->assigned_date->format('d M Y') }}
+                                                @if($item->assigned_date)
+                                                    {{ $item->assigned_date->format('d M Y') }}
+                                                @else
+                                                    <span class="badge badge-secondary px-2.5 py-1 rounded">Permanen</span>
+                                                @endif
                                             </td>
                                             <td class="text-center">
-                                                <span class="badge badge-primary px-2.5 py-1 rounded">{{ $item->shift->name }}</span>
+                                                @if($item->shift)
+                                                    <span class="badge badge-primary px-2.5 py-1 rounded">{{ $item->shift->name }}</span>
+                                                @else
+                                                    <span class="text-muted small">Fleksibel</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 @if($item->plant)
@@ -115,7 +123,11 @@
                                                 @endif
                                             </td>
                                             <td class="text-center text-muted small">
-                                                {{ \Carbon\Carbon::parse($item->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($item->shift->end_time)->format('H:i') }}
+                                                @if($item->shift)
+                                                    {{ \Carbon\Carbon::parse($item->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($item->shift->end_time)->format('H:i') }}
+                                                @else
+                                                    -
+                                                @endif
                                             </td>
                                             <td>{{ $item->notes ?? '-' }}</td>
                                             <td class="text-center">
@@ -186,9 +198,9 @@
                         </select>
                     </div>
                     <div class="form-group mb-3">
-                        <label class="font-weight-600 text-dark">Shift Kerja <span class="text-danger">*</span></label>
-                        <select name="shift_id" class="form-control" required>
-                            <option value="">Pilih Shift...</option>
+                        <label class="font-weight-600 text-dark">Shift Kerja <span class="text-muted small">(Opsional)</span></label>
+                        <select name="shift_id" class="form-control">
+                            <option value="">Pilih Shift (Kosongkan jika shift fleksibel)...</option>
                             @foreach($shifts as $shift)
                                 <option value="{{ $shift->id }}" {{ old('shift_id') == $shift->id ? 'selected' : '' }}>
                                     {{ $shift->name }} ({{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }})
@@ -210,8 +222,12 @@
                         </small>
                     </div>
                     <div class="form-group mb-3">
-                        <label class="font-weight-600 text-dark">Tanggal Tugas <span class="text-danger">*</span></label>
-                        <input type="date" name="assigned_date" class="form-control" value="{{ old('assigned_date', now()->format('Y-m-d')) }}" required>
+                        <label class="font-weight-600 text-dark">Tanggal Tugas <span class="text-muted small">(Opsional)</span></label>
+                        <input type="date" name="assigned_date" class="form-control" value="{{ old('assigned_date') }}">
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Kosongkan jika ingin menjadikannya sebagai <strong>Penempatan Permanen / Default</strong> untuk petugas ini.
+                        </small>
                     </div>
                     <div class="form-group mb-0">
                         <label class="font-weight-600 text-dark">Catatan Tambahan</label>
