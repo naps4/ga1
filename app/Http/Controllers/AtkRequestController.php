@@ -363,9 +363,9 @@ class AtkRequestController extends Controller
                 'status_approval'  => $status,
             ];
 
-            // Jika diajukan ulang dari status Ditolak/Revisi, bersihkan semua jejak
-            // persetujuan sebelumnya agar Manager & Admin GA bisa mereview dari awal.
-            if ($wasRejected && $status === 'Menunggu Persetujuan Manager') {
+            // Jika diajukan ulang ke Manager, bersihkan semua jejak persetujuan sebelumnya
+            // agar Manager & Admin GA bisa mereview ulang seluruh item.
+            if ($status === 'Menunggu Persetujuan Manager') {
                 $updateData['manager_approved_by'] = null;
                 $updateData['manager_approved_at'] = null;
                 $updateData['approved_by']         = null;
@@ -386,12 +386,13 @@ class AtkRequestController extends Controller
                     if ($qty > 0) {
                         $desc = isset($itemData['options']) ? implode(', ', $itemData['options']) : ($itemData['custom_option'] ?? null);
                         AtkRequestItem::create([
-                            'atk_request_id' => $atkRequest->id,
-                            'item_name'      => $itemName,
-                            'unit'           => $itemData['unit'] ?? 'Pcs',
-                            'description'    => $desc,
-                            'quantity'       => $qty,
-                            'is_custom'      => false,
+                            'atk_request_id'  => $atkRequest->id,
+                            'item_name'       => $itemName,
+                            'unit'            => $itemData['unit'] ?? 'Pcs',
+                            'description'     => $desc,
+                            'quantity'        => $qty,
+                            'is_custom'       => false,
+                            'status_approval' => 'Pending',
                         ]);
                     }
                 }
@@ -412,13 +413,14 @@ class AtkRequestController extends Controller
                         }
 
                         AtkRequestItem::create([
-                            'atk_request_id' => $atkRequest->id,
-                            'item_name'      => $cItem['name'],
-                            'unit'           => $cItem['unit'] ?? 'Pcs',
-                            'description'    => $cItem['desc'] ?? null,
-                            'quantity'       => $qty,
-                            'is_custom'      => true,
-                            'attachment'     => $attachmentPath,
+                            'atk_request_id'  => $atkRequest->id,
+                            'item_name'       => $cItem['name'],
+                            'unit'            => $cItem['unit'] ?? 'Pcs',
+                            'description'     => $cItem['desc'] ?? null,
+                            'quantity'        => $qty,
+                            'is_custom'       => true,
+                            'attachment'      => $attachmentPath,
+                            'status_approval' => 'Pending',
                         ]);
                     }
                 }
