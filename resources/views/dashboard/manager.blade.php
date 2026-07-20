@@ -88,19 +88,46 @@
             </div>
             <div class="col-md-4 mb-3">
                 <div class="card shadow-sm border-0 rounded-4 bg-white mb-0 h-100">
-                    <div class="card-body d-flex align-items-center justify-content-between p-4">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-circle bg-success-light text-success d-flex align-items-center justify-content-center mr-3" style="width: 54px; height: 54px; background-color: rgba(16, 185, 129, 0.1);">
-                                <i class="fas fa-user-clock fa-lg"></i>
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-success-light text-success d-flex align-items-center justify-content-center mr-3" style="width: 42px; height: 42px; background-color: rgba(16, 185, 129, 0.1);">
+                                    <i class="fas fa-user-clock fa-md"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-0 small font-weight-bold" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;">On Duty Hari Ini</h6>
+                                    <h5 class="mb-0 font-weight-bold text-success">{{ count($todayAssignments ?? []) }} Petugas Aktif</h5>
+                                </div>
                             </div>
-                            <div>
-                                <h6 class="text-muted mb-1 small font-weight-bold">Security On Duty Hari Ini</h6>
-                                <h4 class="mb-0 font-weight-bold text-success">{{ count($todayAssignments ?? []) }} Petugas Aktif</h4>
-                            </div>
+                            <span class="badge badge-success rounded-pill px-2 py-1 small" style="font-size: 0.7rem;">Aktif</span>
                         </div>
-                        <span class="btn btn-sm btn-success rounded-pill px-3 disabled">
-                            Aktif
-                        </span>
+                        
+                        <div class="mt-2 border-top pt-2" style="max-height: 120px; overflow-y: auto;">
+                            @forelse($todayAssignments ?? [] as $assignment)
+                                <div class="d-flex align-items-center justify-content-between mb-1.5" style="font-size: 0.8rem; line-height: 1.4;">
+                                    <div class="d-flex align-items-center" style="max-width: 60%; min-width: 0;">
+                                        <i class="fas fa-user-shield text-success mr-2" style="font-size: 0.75rem; flex-shrink: 0;"></i>
+                                        <span class="font-weight-bold text-dark text-truncate" title="{{ $assignment->user->name ?? '-' }}">{{ $assignment->user->name ?? '-' }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-end" style="max-width: 40%; min-width: 0; flex-shrink: 0;">
+                                        @if($assignment->plant)
+                                            <span class="badge badge-light border text-muted py-0.5 px-1.5 font-weight-normal text-truncate mr-1" style="font-size: 0.65rem;" title="{{ $assignment->plant }}">
+                                                <i class="fas fa-industry mr-0.5" style="font-size: 0.6rem;"></i>{{ $assignment->plant }}
+                                            </span>
+                                        @endif
+                                        @if($assignment->shift)
+                                            <span class="badge badge-primary py-0.5 px-1.5 font-weight-normal text-truncate" style="font-size: 0.65rem;" title="{{ $assignment->shift->name }}">
+                                                {{ $assignment->shift->name }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center text-muted py-2 small" style="font-size: 0.78rem;">
+                                    Tidak ada petugas aktif hari ini
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
             </div>
