@@ -229,36 +229,81 @@
                         </div>
                         
                         <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
-                            @foreach($checkpoints as $cp)
-                                @php
-                                    $isChecked = in_array($cp->id, $todayCheckedCodes);
-                                @endphp
-                                <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-light checklist-item" data-id="{{ $cp->id }}" data-checked="{{ $isChecked ? '1' : '0' }}">
-                                    <div class="d-flex align-items-center">
-                                        <div class="mr-3">
-                                            @if($isChecked)
-                                                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
-                                                    <i class="fas fa-check" style="font-size: .85rem;"></i>
-                                                </div>
-                                            @else
-                                                <div class="border rounded-circle d-flex align-items-center justify-content-center text-muted" style="width: 28px; height: 28px; background: #fff;">
-                                                    <i class="far fa-circle" style="font-size: .85rem;"></i>
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0 font-weight-bold {{ $isChecked ? 'text-muted text-decoration-line-through' : 'text-dark' }}">{{ $cp->area_name }}</h6>
-                                            <small class="text-muted">{{ $cp->plant }} &bull; <code>{{ $cp->code }}</code></small>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        @if($isChecked)
-                                            <span class="badge badge-success px-2.5 py-1 rounded-pill small">Selesai</span>
-                                        @else
-                                            <span class="badge badge-warning px-2.5 py-1 rounded-pill small">Pending</span>
-                                        @endif
-                                    </div>
+                            @php
+                                $groupedByPlant = $checkpoints->groupBy('plant');
+                            @endphp
+                            @foreach($groupedByPlant as $plantName => $plantCps)
+                                {{-- Plant Header --}}
+                                <div class="px-3 py-2 bg-primary text-white" style="font-size:.78rem;">
+                                    <i class="fas fa-industry mr-1"></i> <strong>{{ $plantName }}</strong>
                                 </div>
+
+                                @php
+                                    $subAreaGroups  = $plantCps->whereNotNull('sub_area')->groupBy('sub_area');
+                                    $noSubAreaItems = $plantCps->whereNull('sub_area');
+                                @endphp
+
+                                {{-- With sub_area --}}
+                                @foreach($subAreaGroups as $subAreaName => $subCps)
+                                    <div class="px-3 py-1 bg-light border-bottom" style="font-size:.76rem;">
+                                        <i class="fas fa-folder-open mr-1 text-warning"></i>
+                                        <span class="font-weight-bold text-secondary">{{ $subAreaName }}</span>
+                                    </div>
+                                    @foreach($subCps as $cp)
+                                        @php $isChecked = in_array($cp->id, $todayCheckedCodes); @endphp
+                                        <div class="list-group-item d-flex justify-content-between align-items-center py-2 pl-4 border-light checklist-item"
+                                             data-id="{{ $cp->id }}" data-checked="{{ $isChecked ? '1' : '0' }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="mr-2">
+                                                    @if($isChecked)
+                                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width:24px;height:24px;">
+                                                            <i class="fas fa-check" style="font-size:.75rem;"></i>
+                                                        </div>
+                                                    @else
+                                                        <div class="border rounded-circle d-flex align-items-center justify-content-center text-muted" style="width:24px;height:24px;background:#fff;">
+                                                            <i class="far fa-circle" style="font-size:.75rem;"></i>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 font-weight-bold {{ $isChecked ? 'text-muted text-decoration-line-through' : 'text-dark' }}" style="font-size:.85rem;">{{ $cp->area_name }}</h6>
+                                                    <small class="text-muted"><code>{{ $cp->code }}</code></small>
+                                                </div>
+                                            </div>
+                                            <span class="badge {{ $isChecked ? 'badge-success' : 'badge-warning' }} rounded-pill px-2 small">
+                                                {{ $isChecked ? 'Selesai' : 'Pending' }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                @endforeach
+
+                                {{-- Without sub_area --}}
+                                @foreach($noSubAreaItems as $cp)
+                                    @php $isChecked = in_array($cp->id, $todayCheckedCodes); @endphp
+                                    <div class="list-group-item d-flex justify-content-between align-items-center py-2 border-light checklist-item"
+                                         data-id="{{ $cp->id }}" data-checked="{{ $isChecked ? '1' : '0' }}">
+                                        <div class="d-flex align-items-center">
+                                            <div class="mr-3">
+                                                @if($isChecked)
+                                                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width:28px;height:28px;">
+                                                        <i class="fas fa-check" style="font-size:.85rem;"></i>
+                                                    </div>
+                                                @else
+                                                    <div class="border rounded-circle d-flex align-items-center justify-content-center text-muted" style="width:28px;height:28px;background:#fff;">
+                                                        <i class="far fa-circle" style="font-size:.85rem;"></i>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 font-weight-bold {{ $isChecked ? 'text-muted text-decoration-line-through' : 'text-dark' }}">{{ $cp->area_name }}</h6>
+                                                <small class="text-muted">{{ $cp->plant }} &bull; <code>{{ $cp->code }}</code></small>
+                                            </div>
+                                        </div>
+                                        <span class="badge {{ $isChecked ? 'badge-success' : 'badge-warning' }} rounded-pill px-2 small">
+                                            {{ $isChecked ? 'Selesai' : 'Pending' }}
+                                        </span>
+                                    </div>
+                                @endforeach
                             @endforeach
                         </div>
                     </div>
