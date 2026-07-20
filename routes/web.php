@@ -93,6 +93,12 @@ Route::get('/dashboard', function () {
             ->get();
         $viewData['todayAssignments'] = $specificToday->merge($permanentToday);
 
+        // Semua Jadwal Penugasan Security (Jadwal Keseluruhan)
+        $viewData['allAssignments'] = \App\Models\SecurityAssignment::with('user', 'shift')
+            ->orderByRaw('assigned_date IS NULL DESC')
+            ->orderBy('assigned_date', 'desc')
+            ->get();
+
     } elseif ($user->isManager()) {
         $viewData['pendingManagerAtk'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')->count();
         $viewData['totalManagerAtkApproved'] = \App\Models\AtkRequest::where('manager_approved_by', $user->id)->count();
@@ -122,6 +128,12 @@ Route::get('/dashboard', function () {
             ->whereNotIn('user_id', $excludedUserIds)
             ->get();
         $viewData['todayAssignments'] = $specificToday->merge($permanentToday);
+
+        // Semua Jadwal Penugasan Security (Jadwal Keseluruhan)
+        $viewData['allAssignments'] = \App\Models\SecurityAssignment::with('user', 'shift')
+            ->orderByRaw('assigned_date IS NULL DESC')
+            ->orderBy('assigned_date', 'desc')
+            ->get();
 
     } elseif ($user->role === 'security') {
         // Security Guard langsung diarahkan ke halaman scan

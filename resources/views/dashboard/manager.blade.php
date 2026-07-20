@@ -46,6 +46,66 @@
             </div>
         </div>
 
+        <!-- Security Checkpoint Summary Row -->
+        <div class="row mt-3">
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm border-0 rounded-4 bg-white mb-0 h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between p-4">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-primary-light text-primary d-flex align-items-center justify-content-center mr-3" style="width: 54px; height: 54px; background-color: rgba(37, 99, 235, 0.1);">
+                                <i class="fas fa-shield-alt fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1 small font-weight-bold">Patroli Security Hari Ini</h6>
+                                <h4 class="mb-0 font-weight-bold text-dark">{{ $checkedToday ?? 0 }} / {{ $totalAreas ?? 0 }} Area Terpantau</h4>
+                            </div>
+                        </div>
+                        <a href="{{ route('security.checkpoints.index') }}" class="btn btn-sm btn-primary rounded-pill px-3">
+                            Detail <i class="fas fa-chevron-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm border-0 rounded-4 bg-white mb-0 h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between p-4">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center mr-3 {{ ($anomaliesToday ?? 0) > 0 ? 'bg-danger-light text-danger' : 'bg-success-light text-success' }}" style="width: 54px; height: 54px; background-color: {{ ($anomaliesToday ?? 0) > 0 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)' }};">
+                                <i class="fas {{ ($anomaliesToday ?? 0) > 0 ? 'fa-exclamation-triangle' : 'fa-check-circle' }} fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1 small font-weight-bold">Temuan / Anomali Keamanan</h6>
+                                <h4 class="mb-0 font-weight-bold {{ ($anomaliesToday ?? 0) > 0 ? 'text-danger' : 'text-success' }}">
+                                    {{ $anomaliesToday ?? 0 }} Temuan Hari Ini
+                                </h4>
+                            </div>
+                        </div>
+                        <a href="{{ route('security.checkpoints.index') }}?status=anomaly" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                            Lihat <i class="fas fa-chevron-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm border-0 rounded-4 bg-white mb-0 h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between p-4">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-success-light text-success d-flex align-items-center justify-content-center mr-3" style="width: 54px; height: 54px; background-color: rgba(16, 185, 129, 0.1);">
+                                <i class="fas fa-user-clock fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1 small font-weight-bold">Security On Duty Hari Ini</h6>
+                                <h4 class="mb-0 font-weight-bold text-success">{{ count($todayAssignments ?? []) }} Petugas Aktif</h4>
+                            </div>
+                        </div>
+                        <span class="btn btn-sm btn-success rounded-pill px-3 disabled">
+                            Aktif
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent ATK Requests Summary Card -->
         <div class="card shadow-sm border-0 rounded-4 mt-3">
             <div class="card-header bg-white border-bottom border-light py-3 d-flex align-items-center justify-content-between">
@@ -115,11 +175,11 @@
                     </table>
                 </div>
             </div>
-        <!-- Security Shift & Penugasan Hari Ini -->
+        <!-- Security Shift & Penugasan Keseluruhan -->
         <div class="card shadow-sm border-0 rounded-4 mt-4">
             <div class="card-header bg-white border-bottom border-light py-3 d-flex align-items-center justify-content-between">
                 <h3 class="card-title text-info m-0 font-weight-bold">
-                    <i class="fas fa-calendar-check mr-1"></i> Jadwal Shift & Penugasan Security Hari Ini
+                    <i class="fas fa-calendar-check mr-1"></i> Jadwal & Penugasan Security Keseluruhan
                 </h3>
             </div>
             <div class="card-body p-0">
@@ -128,7 +188,7 @@
                         <thead class="bg-light text-muted">
                             <tr>
                                 <th class="py-3 px-4">Petugas Security</th>
-                                <th class="py-3 text-center">Tipe Tugas</th>
+                                <th class="py-3 text-center">Tipe Tugas / Tanggal</th>
                                 <th class="py-3 text-center">Shift</th>
                                 <th class="py-3 text-center">Jam Tugas</th>
                                 <th class="py-3">Penempatan Area</th>
@@ -136,7 +196,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($todayAssignments ?? [] as $assignment)
+                            @forelse($allAssignments ?? [] as $assignment)
                                 <tr>
                                     <td class="py-3 px-4">
                                         <div class="d-flex align-items-center">
@@ -180,7 +240,7 @@
                                 <tr>
                                     <td colspan="6" class="text-center text-muted py-4">
                                         <i class="fas fa-calendar-times fa-2x mb-2 text-light"></i>
-                                        <p class="mb-0">Belum ada jadwal penugasan security hari ini.</p>
+                                        <p class="mb-0">Belum ada jadwal penugasan security yang terdaftar.</p>
                                     </td>
                                 </tr>
                             @endforelse
