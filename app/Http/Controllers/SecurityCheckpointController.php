@@ -170,16 +170,23 @@ class SecurityCheckpointController extends Controller
             $currentShift = $shifts->first()->name ?? 'Shift 1 - Pagi';
         }
 
-        // Ambil semua area checkpoint untuk checklist visual
-        $checkpoints = SecurityCheckpoint::orderBy('plant')->orderBy('area_name')->get();
+        // Ambil semua area checkpoint — filter per plant penempatan jika ada
+        $checkpointQuery = SecurityCheckpoint::orderBy('plant')->orderBy('sub_area')->orderBy('area_name');
+        if ($assignment && $assignment->plant) {
+            $checkpointQuery->where('plant', $assignment->plant);
+        }
+        $checkpoints = $checkpointQuery->get();
 
         // Hitung area yang sudah dikunjungi petugas hari ini
         $todayCheckedCodes = SecurityCheckpointLog::whereDate('checked_at', Carbon::today())
             ->where('is_evident_report', false)
+            ->where('user_id', auth()->id())
             ->pluck('checkpoint_id')
             ->toArray();
 
-        return view('security.scan', compact('currentShift', 'shifts', 'checkpoints', 'todayCheckedCodes'));
+        $assignedPlant = $assignment->plant ?? null;
+
+        return view('security.scan', compact('currentShift', 'shifts', 'checkpoints', 'todayCheckedCodes', 'assignedPlant'));
     }
 
     /**
@@ -366,9 +373,9 @@ class SecurityCheckpointController extends Controller
      */
     public function assignmentsIndex(Request $request)
     {
-        // Ambil semua user dengan role security
-        $guards = User::where('role', 'security')->orderBy('name')->get();
-        $shifts = SecurityShift::orderBy('start_time')->get();
+        $guards      = User::where('role', 'security')->orderBy('name')->get();
+        $shifts      = SecurityShift::orderBy('start_time')->get();
+        $plantsList  = SecurityCheckpoint::pluck('plant')->filter()->unique()->sort()->values();
 
         // Query penugasan
         $query = SecurityAssignment::with('user', 'shift');
@@ -382,7 +389,7 @@ class SecurityCheckpointController extends Controller
 
         $assignments = $query->orderBy('assigned_date', 'desc')->paginate(20)->withQueryString();
 
-        return view('security.assignments.index', compact('guards', 'shifts', 'assignments'));
+        return view('security.assignments.index', compact('guards', 'shifts', 'assignments', 'plantsList'));
     }
 
     /**
@@ -391,10 +398,11 @@ class SecurityCheckpointController extends Controller
     public function storeAssignment(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'shift_id' => 'required|exists:security_shifts,id',
+            'user_id'       => 'required|exists:users,id',
+            'shift_id'      => 'required|exists:security_shifts,id',
+            'plant'         => 'nullable|string|max:100',
             'assigned_date' => 'required|date',
-            'notes' => 'nullable|string',
+            'notes'         => 'nullable|string',
         ]);
 
         // Cek duplikasi penugasan untuk user pada tanggal tersebut
@@ -407,10 +415,11 @@ class SecurityCheckpointController extends Controller
         }
 
         SecurityAssignment::create([
-            'user_id' => $request->user_id,
-            'shift_id' => $request->shift_id,
+            'user_id'       => $request->user_id,
+            'shift_id'      => $request->shift_id,
+            'plant'         => $request->plant ?: null,
             'assigned_date' => $request->assigned_date,
-            'notes' => $request->notes,
+            'notes'         => $request->notes,
         ]);
 
         return back()->with('success', 'Jadwal penugasan security berhasil ditambahkan.');

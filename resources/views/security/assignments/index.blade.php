@@ -83,8 +83,9 @@
                                         <th class="py-3">Petugas Security</th>
                                         <th class="py-3 text-center">Tanggal Tugas</th>
                                         <th class="py-3 text-center">Shift Kerja</th>
+                                        <th class="py-3">Penempatan Area</th>
                                         <th class="py-3 text-center">Jam Tugas</th>
-                                        <th class="py-3">Catatan / Keterangan</th>
+                                        <th class="py-3">Catatan</th>
                                         <th class="py-3 text-center" style="width: 100px;">Aksi</th>
                                     </tr>
                                 </thead>
@@ -103,6 +104,15 @@
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge badge-primary px-2.5 py-1 rounded">{{ $item->shift->name }}</span>
+                                            </td>
+                                            <td>
+                                                @if($item->plant)
+                                                    <span class="badge badge-success rounded-pill px-2">
+                                                        <i class="fas fa-industry mr-1"></i>{{ $item->plant }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted small">Semua Area</span>
+                                                @endif
                                             </td>
                                             <td class="text-center text-muted small">
                                                 {{ \Carbon\Carbon::parse($item->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($item->shift->end_time)->format('H:i') }}
@@ -185,6 +195,19 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="font-weight-600 text-dark">Penempatan Area <span class="text-muted small">(Opsional)</span></label>
+                        <select name="plant" class="form-control">
+                            <option value="">-- Semua Area / Tidak Spesifik --</option>
+                            @foreach($plantsList as $pl)
+                                <option value="{{ $pl }}" {{ old('plant') == $pl ? 'selected' : '' }}>{{ $pl }}</option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Jika dipilih, petugas hanya akan melihat checkpoint di area ini saat scan patroli.
+                        </small>
                     </div>
                     <div class="form-group mb-3">
                         <label class="font-weight-600 text-dark">Tanggal Tugas <span class="text-danger">*</span></label>

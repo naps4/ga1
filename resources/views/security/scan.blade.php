@@ -4,7 +4,14 @@
 <div class="content-header px-2">
     <div class="container-fluid">
         <h1 class="m-0 font-weight-bold text-dark" style="font-size: 1.5rem;"><i class="fas fa-barcode text-primary mr-1"></i> Scan Checkpoint Patroli</h1>
-        <p class="text-muted small mb-0">Lakukan pemindaian barcode area untuk memverifikasi kehadiran dan mencatat laporan patroli.</p>
+        <p class="text-muted small mb-0">
+            Lakukan pemindaian barcode area untuk memverifikasi kehadiran dan mencatat laporan patroli.
+            @if($assignedPlant)
+                &nbsp;<span class="badge badge-success rounded-pill px-3 py-1">
+                    <i class="fas fa-industry mr-1"></i> Penempatan: {{ $assignedPlant }}
+                </span>
+            @endif
+        </p>
     </div>
 </div>
 

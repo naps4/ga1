@@ -12,6 +12,7 @@ class SecurityAssignment extends Model
     protected $fillable = [
         'user_id',
         'shift_id',
+        'plant',
         'assigned_date',
         'notes',
     ];
