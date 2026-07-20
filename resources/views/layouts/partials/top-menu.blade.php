@@ -55,11 +55,13 @@
             @endif
         </li>
 
+        @if(auth()->user()->role !== 'security')
         <li>
             <a href="{{ route('atk-requests.index') }}" class="mobile-drawer-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}">
                 <i class="fas fa-pencil-alt"></i><span>Permintaan</span>
             </a>
         </li>
+        @endif
 
         @if(auth()->user()->isSuperAdmin())
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Work Order GA</span></a></li>

@@ -143,6 +143,11 @@ class AtkRequestController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+
+        if ($user->role === 'security') {
+            return redirect()->route('security.scan')->with('error', 'Role Security tidak memiliki akses ke menu Permintaan.');
+        }
+
         $query = AtkRequest::with(['user', 'approver', 'items']);
 
         if (!$user->isManager() && !$user->isAdmin() && !$user->isSuperAdmin()) {

@@ -36,11 +36,13 @@
                 @endif
             </li>
 
+            @if(auth()->user()->role !== 'security')
             <li>
                 <a href="{{ route('atk-requests.index') }}" class="top-menu-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}">
                     <span>Permintaan</span>
                 </a>
             </li>
+            @endif
 
             @if(auth()->user()->isSuperAdmin())
                 <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><span>Work Order GA</span></a></li>

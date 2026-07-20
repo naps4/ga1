@@ -35,6 +35,7 @@
                     </a>
                 </li>
 
+                @if(auth()->user()->role !== 'security')
                 <!-- Permintaan ATK -->
                 <li class="nav-item">
                     <a href="{{ route('atk-requests.index') }}" class="nav-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}">
@@ -42,6 +43,7 @@
                         <p>Permintaan</p>
                     </a>
                 </li>
+                @endif
 
                 @if(auth()->user()->isClient())
                     <!-- Client Menu -->
