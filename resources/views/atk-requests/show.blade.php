@@ -129,19 +129,22 @@
                                     @if($isApprovalMode)
                                         <td class="text-center align-middle">
                                             <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                                <label class="btn btn-outline-success btn-xs {{ $item->status_approval === 'Disetujui' ? 'active' : '' }}">
+                                                <label class="btn btn-outline-success btn-xs {{ $item->status_approval === 'Disetujui' ? 'active' : '' }}"
+                                                       onclick="submitSingleItemApproval({{ $item->id }}, 'Disetujui', this)">
                                                     <input type="radio" name="items[{{ $item->id }}][status]" value="Disetujui" autocomplete="off" {{ $item->status_approval === 'Disetujui' ? 'checked' : '' }}> <i class="fas fa-check"></i> Setuju
                                                 </label>
-                                                <label class="btn btn-outline-danger btn-xs {{ $item->status_approval === 'Ditolak' ? 'active' : '' }}">
+                                                <label class="btn btn-outline-danger btn-xs {{ $item->status_approval === 'Ditolak' ? 'active' : '' }}"
+                                                       onclick="submitSingleItemApproval({{ $item->id }}, 'Ditolak', this)">
                                                     <input type="radio" name="items[{{ $item->id }}][status]" value="Ditolak" autocomplete="off" {{ $item->status_approval === 'Ditolak' ? 'checked' : '' }}> <i class="fas fa-times"></i> Tolak
                                                 </label>
-                                                <label class="btn btn-outline-warning btn-xs {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'active' : '' }}">
+                                                <label class="btn btn-outline-warning btn-xs {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'active' : '' }}"
+                                                       onclick="submitSingleItemApproval({{ $item->id }}, 'Pending', this)">
                                                     <input type="radio" name="items[{{ $item->id }}][status]" value="Pending" autocomplete="off" {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'checked' : '' }}> <i class="fas fa-hourglass-half"></i> Pending
                                                 </label>
                                             </div>
                                         </td>
                                         <td class="align-middle">
-                                            <input type="text" name="items[{{ $item->id }}][notes]" class="form-control form-control-sm" placeholder="Catatan..." value="{{ $item->notes }}">
+                                            <input type="text" name="items[{{ $item->id }}][notes]" class="form-control form-control-sm" placeholder="Catatan..." value="{{ $item->notes }}" onchange="saveItemNote({{ $item->id }}, this)">
                                         </td>
                                     @elseif($showItemStatus)
                                         <td class="text-center align-middle">
@@ -186,19 +189,22 @@
                                         @if($isApprovalMode)
                                             <td class="text-center align-middle">
                                                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                                    <label class="btn btn-outline-success btn-xs {{ $item->status_approval === 'Disetujui' ? 'active' : '' }}">
+                                                    <label class="btn btn-outline-success btn-xs {{ $item->status_approval === 'Disetujui' ? 'active' : '' }}"
+                                                           onclick="submitSingleItemApproval({{ $item->id }}, 'Disetujui', this)">
                                                         <input type="radio" name="items[{{ $item->id }}][status]" value="Disetujui" autocomplete="off" {{ $item->status_approval === 'Disetujui' ? 'checked' : '' }}> <i class="fas fa-check"></i> Setuju
                                                     </label>
-                                                    <label class="btn btn-outline-danger btn-xs {{ $item->status_approval === 'Ditolak' ? 'active' : '' }}">
+                                                    <label class="btn btn-outline-danger btn-xs {{ $item->status_approval === 'Ditolak' ? 'active' : '' }}"
+                                                           onclick="submitSingleItemApproval({{ $item->id }}, 'Ditolak', this)">
                                                         <input type="radio" name="items[{{ $item->id }}][status]" value="Ditolak" autocomplete="off" {{ $item->status_approval === 'Ditolak' ? 'checked' : '' }}> <i class="fas fa-times"></i> Tolak
                                                     </label>
-                                                    <label class="btn btn-outline-warning btn-xs {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'active' : '' }}">
+                                                    <label class="btn btn-outline-warning btn-xs {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'active' : '' }}"
+                                                           onclick="submitSingleItemApproval({{ $item->id }}, 'Pending', this)">
                                                         <input type="radio" name="items[{{ $item->id }}][status]" value="Pending" autocomplete="off" {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'checked' : '' }}> <i class="fas fa-hourglass-half"></i> Pending
                                                     </label>
                                                 </div>
                                             </td>
                                             <td class="align-middle">
-                                                <input type="text" name="items[{{ $item->id }}][notes]" class="form-control form-control-sm" placeholder="Catatan..." value="{{ $item->notes }}">
+                                                <input type="text" name="items[{{ $item->id }}][notes]" class="form-control form-control-sm" placeholder="Catatan..." value="{{ $item->notes }}" onchange="saveItemNote({{ $item->id }}, this)">
                                             </td>
                                         @elseif($showItemStatus)
                                             <td class="text-center align-middle">
@@ -471,7 +477,79 @@
                     <button type="submit" class="btn btn-primary rounded-pill px-4">Simpan Konfirmasi</button>
                 </div>
             </form>
-        </div>
-    </div>
+</div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    function submitSingleItemApproval(itemId, status, labelElement) {
+        var $label = $(labelElement);
+        var $group = $label.closest('.btn-group');
+        var $noteInput = $group.closest('tr').find('input[name="items[' + itemId + '][notes]"]');
+        var notes = $noteInput.val() || '';
+
+        // UI Optimistic Highlight
+        $group.find('.btn').removeClass('active');
+        $label.addClass('active');
+        $group.find('input[type="radio"]').prop('checked', false);
+        $label.find('input[type="radio"]').prop('checked', true);
+
+        // Toast feedback
+        var Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true
+        });
+
+        $.ajax({
+            url: "{{ route('atk-requests.approve-item', $atkRequest->id) }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                item_id: itemId,
+                status: status,
+                notes: notes
+            },
+            success: function(response) {
+                if (response.success) {
+                    if (window.Swal) {
+                        Toast.fire({
+                            icon: 'success',
+                            title: response.message
+                        });
+                    }
+                    if (response.all_completed) {
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1000);
+                    }
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Gagal menyimpan status item.';
+                alert(errorMsg);
+            }
+        });
+    }
+
+    function saveItemNote(itemId, inputElement) {
+        var notes = $(inputElement).val();
+        var $group = $(inputElement).closest('tr').find('.btn-group');
+        var status = $group.find('input[type="radio"]:checked').val() || 'Pending';
+
+        $.ajax({
+            url: "{{ route('atk-requests.approve-item', $atkRequest->id) }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                item_id: itemId,
+                status: status,
+                notes: notes
+            }
+        });
+    }
+</script>
+@endpush

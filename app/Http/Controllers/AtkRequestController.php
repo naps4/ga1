@@ -560,6 +560,87 @@ class AtkRequestController extends Controller
         abort(400, 'Permintaan tidak dalam status yang dapat disetujui.');
     }
 
+    public function approveItem(Request $request, AtkRequest $atkRequest)
+    {
+        $user = auth()->user();
+
+        $request->validate([
+            'item_id' => 'required|exists:atk_request_items,id',
+            'status' => 'required|in:Disetujui,Ditolak,Pending',
+            'notes' => 'nullable|string',
+        ]);
+
+        $item = AtkRequestItem::where('atk_request_id', $atkRequest->id)->findOrFail($request->item_id);
+
+        $isManagerStep = ($atkRequest->status_approval === 'Menunggu Persetujuan Manager');
+        $isAdminStep = ($atkRequest->status_approval === 'Menunggu Persetujuan Admin GA');
+
+        if ($isManagerStep) {
+            if (!$user->isManager() && !$user->isAdmin() && !$user->isSuperAdmin()) {
+                return response()->json(['success' => false, 'message' => 'Aksi ini hanya untuk Operational Manager.'], 403);
+            }
+        } elseif ($isAdminStep) {
+            if (!$user->isAdmin() && !$user->isSuperAdmin()) {
+                return response()->json(['success' => false, 'message' => 'Aksi ini hanya untuk Admin GA.'], 403);
+            }
+        } else {
+            return response()->json(['success' => false, 'message' => 'Permintaan tidak dalam status yang dapat di-review.'], 400);
+        }
+
+        $allCompleted = false;
+        $newRequestStatus = $atkRequest->status_approval;
+
+        DB::transaction(function () use ($request, $atkRequest, $item, $user, $isManagerStep, $isAdminStep, &$allCompleted, &$newRequestStatus) {
+            $item->update([
+                'status_approval' => $request->status,
+                'notes' => $request->has('notes') ? $request->notes : $item->notes,
+            ]);
+
+            $allItems = AtkRequestItem::where('atk_request_id', $atkRequest->id)->get();
+            $pendingCount = $allItems->filter(function ($i) {
+                return $i->status_approval === 'Pending' || empty($i->status_approval);
+            })->count();
+
+            $approvedCount = $allItems->filter(function ($i) {
+                return $i->status_approval === 'Disetujui';
+            })->count();
+
+            if ($pendingCount === 0) {
+                $allCompleted = true;
+                if ($isManagerStep) {
+                    $newRequestStatus = $approvedCount > 0 ? 'Menunggu Persetujuan Admin GA' : 'Ditolak/Revisi';
+                    $atkRequest->update([
+                        'status_approval' => $newRequestStatus,
+                        'manager_approved_by' => $user->id,
+                        'manager_approved_at' => now(),
+                    ]);
+                } elseif ($isAdminStep) {
+                    $newRequestStatus = $approvedCount > 0 ? 'Disetujui' : 'Ditolak/Revisi';
+                    $atkRequest->update([
+                        'status_approval' => $newRequestStatus,
+                        'approved_by' => $user->id,
+                        'approved_at' => now(),
+                    ]);
+                }
+            }
+        });
+
+        $statusLabel = [
+            'Disetujui' => 'disetujui',
+            'Ditolak' => 'ditolak',
+            'Pending' => 'diset ke Pending'
+        ][$request->status] ?? 'diperbarui';
+
+        return response()->json([
+            'success' => true,
+            'message' => "Item \"{$item->item_name}\" berhasil {$statusLabel}.",
+            'item_id' => $item->id,
+            'item_status' => $item->status_approval,
+            'all_completed' => $allCompleted,
+            'new_request_status' => $newRequestStatus,
+        ]);
+    }
+
     public function reject(Request $request, AtkRequest $atkRequest)
     {
         $user = auth()->user();
