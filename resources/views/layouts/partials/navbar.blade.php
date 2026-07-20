@@ -89,6 +89,17 @@
 
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
+        {{-- Tombol Scan cepat untuk Security Guard (mobile only) --}}
+        @if(auth()->user()->role === 'security')
+        <li class="nav-item d-flex d-md-none align-items-center mr-1">
+            <a href="{{ route('security.scan') }}"
+               class="btn btn-sm btn-primary rounded-pill px-3 py-1 font-weight-bold"
+               style="font-size:.8rem; letter-spacing:.02em;">
+                <i class="fas fa-qrcode mr-1"></i> Scan
+            </a>
+        </li>
+        @endif
+
         <!-- Notifications Dropdown Menu -->
         <li class="nav-item dropdown">
             <a class="nav-link top-icon-btn" data-toggle="dropdown" href="#" id="notification-bell">

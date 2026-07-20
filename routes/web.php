@@ -89,6 +89,9 @@ Route::get('/dashboard', function () {
             ->orderBy('updated_at', 'desc')
             ->take(5)
             ->get();
+    } elseif ($user->role === 'security') {
+        // Security Guard langsung diarahkan ke halaman scan
+        return redirect()->route('security.scan');
     }
     
     return view('dashboard', $viewData);

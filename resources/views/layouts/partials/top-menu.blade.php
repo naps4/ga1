@@ -71,6 +71,16 @@
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Tugas Teknisi (WO)</span></a></li>
             <li><a href="{{ route('chat.index') }}" class="mobile-drawer-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><i class="fas fa-comments"></i><span>Chat</span></a></li>
 
+        @elseif(auth()->user()->role === 'security')
+            <li>
+                <a href="{{ route('security.scan') }}"
+                   class="mobile-drawer-link {{ request()->routeIs('security.scan') ? 'active' : '' }}"
+                   style="background: rgba(37,99,235,.06); border-left: 3px solid #2563eb; margin: .3rem .5rem; border-radius: .5rem; padding: .85rem 1rem;">
+                    <i class="fas fa-qrcode" style="color:#2563eb; font-size:1.1rem;"></i>
+                    <span style="color:#1e40af; font-weight:700;">Scan Checkpoint</span>
+                </a>
+            </li>
+
         @elseif(auth()->user()->isClient())
             <li><a href="{{ route('work-orders.create') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.create') ? 'active' : '' }}"><i class="fas fa-plus-circle"></i><span>Buat Pengajuan</span></a></li>
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.index') || request()->routeIs('work-orders.show') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Riwayat Pengajuan</span></a></li>
