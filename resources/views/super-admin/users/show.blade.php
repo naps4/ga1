@@ -17,7 +17,7 @@
                          alt="User profile picture">
                 </div>
                 <h3 class="profile-username text-center">{{ $user->name }}</h3>
-                <p class="text-muted text-center">{{ ucfirst($user->role) }}</p>
+                <p class="text-muted text-center"><span class="badge {{ $user->role_badge_class }}">{{ $user->role_label }}</span></p>
 
                 <ul class="list-group list-group-unbordered mb-3">
                     <li class="list-group-item">

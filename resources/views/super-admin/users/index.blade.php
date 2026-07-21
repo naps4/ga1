@@ -41,9 +41,10 @@
                             <select name="role" class="form-control">
                                 <option value="">Semua Role</option>
                                 <option value="client" {{ request('role') == 'client' ? 'selected' : '' }}>Client</option>
-                                {{-- <option value="developer" {{ request('role') == 'developer' ? 'selected' : '' }}>Developer</option> --}}
-                                <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="manager" {{ request('role') == 'manager' ? 'selected' : '' }}>Operational Manager</option>
                                 <option value="developer" {{ request('role') == 'developer' ? 'selected' : '' }}>Developer</option>
+                                <option value="security" {{ request('role') == 'security' ? 'selected' : '' }}>Security</option>
+                                <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="super_admin" {{ request('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                             </select>
                         </div>
@@ -85,15 +86,7 @@
                                     <td><div class="font-weight-600 text-dark">{{ $user->name }}</div></td>
                                     <td class="d-none d-md-table-cell text-muted">{{ $user->email }}</td>
                                     <td>
-                                        @if($user->role == 'super_admin')
-                                            <span class="badge badge-danger">Super Admin</span>
-                                        @elseif($user->role == 'admin')
-                                            <span class="badge badge-warning">Admin</span>
-                                        @elseif($user->role == 'developer')
-                                            <span class="badge badge-info">Developer</span>
-                                        @else
-                                            <span class="badge badge-secondary">Client</span>
-                                        @endif
+                                        <span class="badge {{ $user->role_badge_class }}">{{ $user->role_label }}</span>
                                     </td>
                                     <td class="d-none d-sm-table-cell">
                                         @if($user->status == 'active')

@@ -207,6 +207,34 @@ class User extends Authenticatable
         $this->update(['status' => 'suspended']);
     }
 
+    // Role display helpers
+    public function getRoleLabelAttribute()
+    {
+        return match ($this->role) {
+            'super_admin' => 'Super Admin',
+            'admin'       => 'Admin',
+            'manager'     => 'Operational Manager',
+            'developer'   => 'Developer',
+            'security'    => 'Security',
+            'client'      => 'Client',
+            default       => ucfirst(str_replace('_', ' ', $this->role ?? 'Client')),
+        };
+    }
+
+    public function getRoleBadgeClassAttribute()
+    {
+        return match ($this->role) {
+            'super_admin' => 'badge-danger',
+            'admin'       => 'badge-warning',
+            'manager'     => 'badge-primary',
+            'developer'   => 'badge-info',
+            'security'    => 'badge-dark',
+            'client'      => 'badge-secondary',
+            default       => 'badge-secondary',
+        };
+    }
+
+
     // Avatar helper
     public function getAvatarUrlAttribute()
     {
