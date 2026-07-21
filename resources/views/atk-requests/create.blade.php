@@ -606,17 +606,21 @@
                     <input type="hidden" name="items[${name}][unit]" value="${unit}">
                 </td>
                 <td class="align-middle">
-                    <span>${specText}</span>
+                    <span class="spec-text-display">${specText}</span>
                     ${optionsInputsHtml}
-                    <input type="hidden" name="items[${name}][custom_option]" value="${customOption}">
+                    <input type="hidden" class="input-custom-option" name="items[${name}][custom_option]" value="${customOption}">
                 </td>
                 <td class="align-middle text-center">
                     <input type="number" name="items[${name}][qty]" class="form-control form-control-sm text-center qty-input mx-auto" min="1" value="${qty}" style="width: 75px;">
                 </td>
                 <td class="align-middle text-center">
-                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill remove-row-btn"><i class="fas fa-trash"></i></button>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <button type="button" class="btn btn-warning btn-sm rounded-circle edit-row-btn mr-1" title="Edit Item"><i class="fas fa-edit"></i></button>
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle remove-row-btn" title="Hapus"><i class="fas fa-trash"></i></button>
+                    </div>
                 </td>
             `;
+            tr.dataset.name = name;
             
             tableBody.appendChild(tr);
             updateUIState();
@@ -628,6 +632,7 @@
             const tr = document.createElement('tr');
             tr.className = 'custom-item-row';
             tr.dataset.index = index;
+            tr.dataset.name = name;
             
             let specText = desc ? desc : '-';
             if (fileName) {
@@ -637,23 +642,26 @@
             tr.innerHTML = `
                 <td class="text-center align-middle row-no"></td>
                 <td class="align-middle font-weight-bold text-danger">
-                    ${name}
+                    <span class="item-name-display">${name}</span>
                     <span class="badge badge-warning ml-1 small">Kustom</span>
-                    <input type="hidden" name="custom_items[${index}][name]" value="${name}">
+                    <input type="hidden" class="input-custom-name" name="custom_items[${index}][name]" value="${name}">
                 </td>
                 <td class="text-center align-middle">
-                    <span class="badge badge-secondary">${unit}</span>
-                    <input type="hidden" name="custom_items[${index}][unit]" value="${unit}">
+                    <span class="badge badge-secondary item-unit-badge">${unit}</span>
+                    <input type="hidden" class="input-custom-unit" name="custom_items[${index}][unit]" value="${unit}">
                 </td>
                 <td class="align-middle">
-                    <span>${specText}</span>
-                    <input type="hidden" name="custom_items[${index}][desc]" value="${desc}">
+                    <span class="spec-text-display">${specText}</span>
+                    <input type="hidden" class="input-custom-desc" name="custom_items[${index}][desc]" value="${desc}">
                 </td>
                 <td class="align-middle text-center">
                     <input type="number" name="custom_items[${index}][qty]" class="form-control form-control-sm text-center qty-input mx-auto" min="1" value="${qty}" style="width: 75px;">
                 </td>
                 <td class="align-middle text-center">
-                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill remove-row-btn"><i class="fas fa-trash"></i></button>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <button type="button" class="btn btn-warning btn-sm rounded-circle edit-row-btn mr-1" title="Edit Item"><i class="fas fa-edit"></i></button>
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle remove-row-btn" title="Hapus"><i class="fas fa-trash"></i></button>
+                    </div>
                 </td>
             `;
             
@@ -662,8 +670,152 @@
             updateUIState();
         }
 
-        // Remove row logic
+        // Action Buttons Handler (Edit and Remove)
         document.getElementById('summary-table-body').addEventListener('click', function(e) {
+            const editBtn = e.target.closest('.edit-row-btn');
+            if (editBtn) {
+                const tr = editBtn.closest('tr');
+                if (tr.classList.contains('custom-item-row')) {
+                    const nameInput = tr.querySelector('.input-custom-name');
+                    const unitInput = tr.querySelector('.input-custom-unit');
+                    const descInput = tr.querySelector('.input-custom-desc');
+                    const qtyInput = tr.querySelector('.qty-input');
+                    const nameDisplay = tr.querySelector('.item-name-display');
+                    const unitDisplay = tr.querySelector('.item-unit-badge');
+                    const specDisplay = tr.querySelector('.spec-text-display');
+
+                    const currentName = nameInput ? nameInput.value : '';
+                    const currentUnit = unitInput ? unitInput.value : 'Pcs';
+                    const currentDesc = descInput ? descInput.value : '';
+                    const currentQty = qtyInput ? qtyInput.value : 1;
+
+                    Swal.fire({
+                        title: '<i class="fas fa-edit text-warning mr-2"></i>Edit Barang Kustom',
+                        html: `
+                            <div class="text-left mt-2">
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold small text-muted mb-1">Nama Barang:</label>
+                                    <input type="text" id="swal-edit-name" class="form-control rounded-pill" value="${currentName.replace(/"/g, '&quot;')}">
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-group mb-3">
+                                            <label class="font-weight-bold small text-muted mb-1">Satuan:</label>
+                                            <input type="text" id="swal-edit-unit" class="form-control rounded-pill" value="${currentUnit.replace(/"/g, '&quot;')}">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group mb-3">
+                                            <label class="font-weight-bold small text-muted mb-1">Jumlah (Qty):</label>
+                                            <input type="number" id="swal-edit-qty" class="form-control rounded-pill text-center font-weight-bold" min="1" value="${currentQty}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label class="font-weight-bold small text-muted mb-1">Keterangan Spesifikasi:</label>
+                                    <input type="text" id="swal-edit-desc" class="form-control rounded-pill" value="${currentDesc.replace(/"/g, '&quot;')}">
+                                </div>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="fas fa-check mr-1"></i>Simpan',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#ffc107',
+                        customClass: {
+                            confirmButton: 'px-4 rounded-pill text-dark font-weight-bold',
+                            cancelButton: 'px-4 rounded-pill'
+                        },
+                        focusConfirm: false,
+                        preConfirm: () => {
+                            const newName = document.getElementById('swal-edit-name').value.trim();
+                            const newUnit = document.getElementById('swal-edit-unit').value.trim() || 'Pcs';
+                            const newQty = parseInt(document.getElementById('swal-edit-qty').value) || 1;
+                            const newDesc = document.getElementById('swal-edit-desc').value.trim();
+
+                            if (!newName) {
+                                Swal.showValidationMessage('Nama barang kustom tidak boleh kosong.');
+                                return false;
+                            }
+                            return { newName, newUnit, newQty, newDesc };
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const { newName, newUnit, newQty, newDesc } = result.value;
+                            if (nameInput) nameInput.value = newName;
+                            if (unitInput) unitInput.value = newUnit;
+                            if (descInput) descInput.value = newDesc;
+                            if (qtyInput) qtyInput.value = newQty;
+
+                            if (nameDisplay) nameDisplay.textContent = newName;
+                            if (unitDisplay) unitDisplay.textContent = newUnit;
+                            if (specDisplay) {
+                                let specHtml = newDesc ? newDesc : '-';
+                                const fileBadge = specDisplay.querySelector('.badge, a.badge');
+                                if (fileBadge) {
+                                    specHtml += '<br>' + fileBadge.outerHTML;
+                                }
+                                specDisplay.innerHTML = specHtml;
+                            }
+                        }
+                    });
+                } else {
+                    const name = tr.dataset.name || tr.querySelector('td:nth-child(2)').childNodes[0].textContent.trim();
+                    const qtyInput = tr.querySelector('.qty-input');
+                    const customOptInput = tr.querySelector('.input-custom-option');
+                    const specDisplay = tr.querySelector('.spec-text-display');
+
+                    const currentQty = qtyInput ? qtyInput.value : 1;
+                    const currentCustomOpt = customOptInput ? customOptInput.value : '';
+
+                    Swal.fire({
+                        title: `<i class="fas fa-edit text-warning mr-2"></i>Edit ${name}`,
+                        html: `
+                            <div class="text-left mt-2">
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold small text-muted mb-1">Jumlah (Qty):</label>
+                                    <input type="number" id="swal-edit-std-qty" class="form-control rounded-pill text-center font-weight-bold" min="1" value="${currentQty}">
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label class="font-weight-bold small text-muted mb-1">Keterangan Tambahan / Custom:</label>
+                                    <input type="text" id="swal-edit-std-opt" class="form-control rounded-pill" value="${currentCustomOpt.replace(/"/g, '&quot;')}">
+                                </div>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="fas fa-check mr-1"></i>Simpan',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#ffc107',
+                        customClass: {
+                            confirmButton: 'px-4 rounded-pill text-dark font-weight-bold',
+                            cancelButton: 'px-4 rounded-pill'
+                        },
+                        focusConfirm: false,
+                        preConfirm: () => {
+                            const newQty = parseInt(document.getElementById('swal-edit-std-qty').value) || 1;
+                            const newOpt = document.getElementById('swal-edit-std-opt').value.trim();
+                            return { newQty, newOpt };
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const { newQty, newOpt } = result.value;
+                            if (qtyInput) qtyInput.value = newQty;
+                            if (customOptInput) customOptInput.value = newOpt;
+
+                            const hiddenOpts = tr.querySelectorAll('input[name*="[options][]"]');
+                            const opts = [];
+                            hiddenOpts.forEach(h => opts.push(h.value));
+                            let specText = opts.join(', ');
+                            if (newOpt) {
+                                specText = specText ? `${specText}, ${newOpt}` : newOpt;
+                            }
+                            if (!specText) specText = '-';
+                            if (specDisplay) specDisplay.textContent = specText;
+                        }
+                    });
+                }
+                return;
+            }
+
             if (e.target.closest('.remove-row-btn')) {
                 const tr = e.target.closest('tr');
                 if (tr.classList.contains('custom-item-row')) {
