@@ -214,7 +214,7 @@ class User extends Authenticatable
             'super_admin' => 'Super Admin',
             'admin'       => 'Admin',
             'manager'     => 'Operational Manager',
-            'developer'   => 'Developer',
+            'developer'   => 'Teknisi',
             'security'    => 'Security',
             'client'      => 'Client',
             default       => ucfirst(str_replace('_', ' ', $this->role ?? 'Client')),

@@ -42,7 +42,7 @@
                                 <option value="">Semua Role</option>
                                 <option value="client" {{ request('role') == 'client' ? 'selected' : '' }}>Client</option>
                                 <option value="manager" {{ request('role') == 'manager' ? 'selected' : '' }}>Operational Manager</option>
-                                <option value="developer" {{ request('role') == 'developer' ? 'selected' : '' }}>Developer</option>
+                                <option value="developer" {{ request('role') == 'developer' ? 'selected' : '' }}>Teknisi</option>
                                 <option value="security" {{ request('role') == 'security' ? 'selected' : '' }}>Security</option>
                                 <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="super_admin" {{ request('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
