@@ -62,10 +62,36 @@
                         </div>
                     </div>
 
-                    <div class="form-group mb-4">
-                        <label class="font-weight-600 text-dark">Email Default Admin</label>
-                        <input type="email" name="admin_email" class="form-control form-control-lg border-light shadow-none bg-light" value="{{ old('admin_email', $settings['admin_email']) }}">
-                        <small class="form-text text-muted mt-1">Digunakan sebagai email sistem utama.</small>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group mb-4">
+                                <label class="font-weight-600 text-dark">Email Default Admin</label>
+                                <input type="email" name="admin_email" class="form-control form-control-lg border-light shadow-none bg-light" value="{{ old('admin_email', $settings['admin_email']) }}">
+                                <small class="form-text text-muted mt-1">Digunakan sebagai email sistem utama.</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-4 p-3 rounded" style="border: 2px dashed #dc3545; background-color: #fff8f8;">
+                                <label class="font-weight-bold text-danger d-flex align-items-center mb-2">
+                                    <i class="fas fa-file-pdf mr-2"></i> Logo Report / Kop Surat
+                                    <span class="badge badge-danger ml-auto px-2 py-1" style="font-size: 0.75rem; background-color: #dc3545;">
+                                        <i class="fas fa-print mr-1"></i> Khusus Print
+                                    </span>
+                                </label>
+                                @if(!empty($settings['report_logo']))
+                                    <div class="mb-2">
+                                        <img src="{{ asset('storage/' . $settings['report_logo']) }}" alt="Logo Report Print" class="img-thumbnail border-danger" style="max-height: 70px;">
+                                    </div>
+                                @endif
+                                <div class="custom-file border-danger">
+                                    <input type="file" class="custom-file-input" id="report_logo" name="report_logo" accept="image/*">
+                                    <label class="custom-file-label text-danger font-weight-500" for="report_logo" style="border-color: #dc3545;">Pilih file logo report (print)...</label>
+                                </div>
+                                <small class="form-text text-danger font-weight-bold mt-2">
+                                    <i class="fas fa-exclamation-circle mr-1"></i> Upload logo khusus untuk dicetak pada kop surat / report PDF. (Maks. 2MB)
+                                </small>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row">

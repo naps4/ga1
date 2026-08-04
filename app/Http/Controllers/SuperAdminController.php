@@ -239,6 +239,7 @@ class SuperAdminController extends Controller
             'maintenance_mode' => 'nullable|boolean',
             'app_logo' => 'nullable|image|max:2048', // max 2MB
             'app_favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,ico|max:1024', // max 1MB
+            'report_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,ico|max:2048', // max 2MB
             'company_name' => 'required|string|max:200',
             'company_address' => 'required|string|max:500',
             'company_phone' => 'required|string|max:50',
@@ -281,6 +282,24 @@ class SuperAdminController extends Controller
             $faviconPath = 'settings/' . $faviconName;
             \Illuminate\Support\Facades\Storage::disk('public')->put($faviconPath, file_get_contents($faviconFile->getPathname()));
             $settings['app_favicon'] = $faviconPath;
+        }
+
+        if ($request->hasFile('report_logo')) {
+            if (!$request->file('report_logo')->isValid()) {
+                return back()->withErrors(['report_logo' => 'File logo report gagal diunggah. Pastikan ukuran file sesuai batas.'])->withInput();
+            }
+            // Hapus report logo lama jika ada
+            if (!empty($settings['report_logo'])) {
+                $oldReportLogoPath = storage_path('app/public/' . ltrim($settings['report_logo'], '/'));
+                if (File::exists($oldReportLogoPath)) {
+                    File::delete($oldReportLogoPath);
+                }
+            }
+            $reportLogoFile = $request->file('report_logo');
+            $reportLogoName = \Illuminate\Support\Str::random(40) . '.' . $reportLogoFile->getClientOriginalExtension();
+            $reportLogoPath = 'settings/' . $reportLogoName;
+            \Illuminate\Support\Facades\Storage::disk('public')->put($reportLogoPath, file_get_contents($reportLogoFile->getPathname()));
+            $settings['report_logo'] = $reportLogoPath;
         }
 
         $settings['app_name'] = $validated['app_name'];
@@ -541,8 +560,9 @@ class SuperAdminController extends Controller
         $settings    = $this->loadSystemSettings();
         $companyName = $settings['company_name'] ?? config('app.name', 'PT. FPU');
         $logoPath    = null;
-        if (!empty($settings['app_logo'])) {
-            $candidate = storage_path('app/public/' . $settings['app_logo']);
+        $reportLogoKey = !empty($settings['report_logo']) ? $settings['report_logo'] : ($settings['app_logo'] ?? '');
+        if (!empty($reportLogoKey)) {
+            $candidate = storage_path('app/public/' . $reportLogoKey);
             if (file_exists($candidate)) {
                 $logoPath = $candidate;
             }
@@ -745,6 +765,7 @@ class SuperAdminController extends Controller
             'app_name' => config('app.name', 'Antrian Project'),
             'app_logo' => '',
             'app_favicon' => '',
+            'report_logo' => '',
             'admin_email' => 'admin@antrian.com',
             'per_page' => 15,
             'email_notifications' => true,

@@ -23,6 +23,7 @@ class SettingsHelper
                 'app_name' => config('app.name', 'Antrian Project'),
                 'app_logo' => '',
                 'app_favicon' => '',
+                'report_logo' => '',
                 'admin_email' => 'admin@antrian.com',
                 'per_page' => 15,
                 'email_notifications' => true,
@@ -44,5 +45,19 @@ class SettingsHelper
         }
 
         return $default;
+    }
+
+    /**
+     * Get report/print logo path (falls back to app_logo).
+     *
+     * @return string|null
+     */
+    public static function getReportLogo()
+    {
+        $reportLogo = static::get('report_logo');
+        if (!empty($reportLogo)) {
+            return $reportLogo;
+        }
+        return static::get('app_logo');
     }
 }

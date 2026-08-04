@@ -138,9 +138,9 @@
             <div class="kop-surat">
                 <table style="width: 100%; border: none; border-collapse: collapse;">
                     <tr>
-                        @if(\App\Helpers\SettingsHelper::get('app_logo'))
+                        @if(\App\Helpers\SettingsHelper::getReportLogo())
                             <td style="width: 15%; padding-right: 20px; vertical-align: middle;">
-                                <img src="{{ asset('storage/' . \App\Helpers\SettingsHelper::get('app_logo')) }}" alt="Logo" style="max-height: 60px; object-fit: contain;">
+                                <img src="{{ asset('storage/' . \App\Helpers\SettingsHelper::getReportLogo()) }}" alt="Logo" style="max-height: 60px; object-fit: contain;">
                             </td>
                         @endif
                         <td class="text-center" style="vertical-align: middle;">

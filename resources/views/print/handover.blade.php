@@ -7,8 +7,8 @@
     <table class="wo-table" style="width: 100%; margin-bottom: 10px; table-layout: fixed; border-collapse: collapse;">
         <tr>
             <td class="wo-table-logo" style="width: 15%; padding: 2px; border: 1px solid #000; text-align: center; vertical-align: middle;">
-                @if(\App\Helpers\SettingsHelper::get('app_logo'))
-                    <img src="{{ asset('storage/' . \App\Helpers\SettingsHelper::get('app_logo')) }}" alt="Logo" style="width: 100%; max-height: 55px; object-fit: contain;">
+                @if(\App\Helpers\SettingsHelper::getReportLogo())
+                    <img src="{{ asset('storage/' . \App\Helpers\SettingsHelper::getReportLogo()) }}" alt="Logo" style="width: 100%; max-height: 55px; object-fit: contain;">
                 @else
                     <div style="color: #7cb342; font-weight: 900; font-size: 14px;">{{ \App\Helpers\SettingsHelper::get('company_name', 'HERBATECH') }}</div>
                 @endif

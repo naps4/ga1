@@ -106,7 +106,7 @@
                 </td>
                 <td style="text-align: right; vertical-align: bottom;">
                     @php
-                        $logo = \App\Helpers\SettingsHelper::get('app_logo');
+                        $logo = \App\Helpers\SettingsHelper::getReportLogo();
                         $logoPath = $logo ? storage_path('app/public/' . $logo) : null;
                     @endphp
                     @if($logoPath && file_exists($logoPath))

@@ -84,7 +84,7 @@
         <tr>
             <td style="width: 58%; border: none; vertical-align: bottom; padding-bottom: 5px;">
                 @php
-                    $logo = \App\Helpers\SettingsHelper::get('app_logo');
+                    $logo = \App\Helpers\SettingsHelper::getReportLogo();
                     $logoPath = $logo ? storage_path('app/public/' . $logo) : null;
                 @endphp
                 @if($logo && $logoPath && file_exists($logoPath))
