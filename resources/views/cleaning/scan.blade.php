@@ -258,6 +258,8 @@
     let isScannerRunning = false;
     let timerInterval = null;
     let secondsElapsed = 0;
+    let lastScannedCode = null;
+    let isScanningPaused = false;
 
     const allCheckpoints = @json($checkpoints);
 
@@ -280,7 +282,7 @@
                 let code = this.getAttribute('data-code');
                 let name = this.getAttribute('data-name');
                 let target = this.getAttribute('data-target');
-                onScanSuccess(code, name, target);
+                onScanSuccess(code, name, target, true);
             });
         });
     });
@@ -290,10 +292,13 @@
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
         html5QrCode.start({ facingMode: "environment" }, config, (decodedText, decodedResult) => {
+            if (isScanningPaused || lastScannedCode === decodedText) {
+                return; // Mencegah pemicuan ulang beruntun setiap frame (10fps) yang membuat form bergetar/bergerak sendiri
+            }
             let cp = allCheckpoints.find(c => c.code === decodedText);
             let name = cp ? cp.area_name : decodedText;
             let target = cp ? cp.target_duration : 5;
-            onScanSuccess(decodedText, name, target);
+            onScanSuccess(decodedText, name, target, false);
         }).catch(err => {
             console.log("Scanner start failed or fallback:", err);
         });
@@ -310,11 +315,16 @@
                     isScannerRunning = false;
                 });
             } else {
+                isScanningPaused = false;
+                lastScannedCode = null;
                 html5QrCode.start({ facingMode: "environment" }, config, (decodedText, decodedResult) => {
+                    if (isScanningPaused || lastScannedCode === decodedText) {
+                        return;
+                    }
                     let cp = allCheckpoints.find(c => c.code === decodedText);
                     let name = cp ? cp.area_name : decodedText;
                     let target = cp ? cp.target_duration : 5;
-                    onScanSuccess(decodedText, name, target);
+                    onScanSuccess(decodedText, name, target, false);
                 });
                 this.innerHTML = '<i class="fas fa-stop mr-1"></i> Matikan Kamera';
                 this.style.background = '#fef2f2';
@@ -325,12 +335,21 @@
         });
 
         document.getElementById('nextScanBtn').addEventListener('click', function() {
+            isScanningPaused = false;
+            lastScannedCode = null;
             document.getElementById('scannerPlaceholder').classList.add('d-none');
             document.getElementById('scanSuccessBadge').classList.add('d-none');
         });
     }
 
-    function onScanSuccess(code, areaName, targetDuration) {
+    function onScanSuccess(code, areaName, targetDuration, isManual = false) {
+        if (!isManual && isScanningPaused && lastScannedCode === code) {
+            return;
+        }
+
+        isScanningPaused = true;
+        lastScannedCode = code;
+
         document.getElementById('barcode_code').value = code;
         document.getElementById('formAreaName').innerText = areaName;
         
@@ -343,7 +362,13 @@
 
         startTimer();
 
-        window.scrollTo({ top: document.getElementById('formLaporanCard').offsetTop - 20, behavior: 'smooth' });
+        // Scroll 1 kali saja dengan mulus ke posisi form laporan
+        const formElement = document.getElementById('formLaporanCard');
+        if (formElement) {
+            const yOffset = -20;
+            const y = formElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
     }
 
     function startTimer() {
