@@ -129,6 +129,11 @@ class User extends Authenticatable
         return $this->role === 'security';
     }
 
+    public function isCleaning()
+    {
+        return $this->role === 'cleaning';
+    }
+
     public function isAdmin()
     {
         return $this->role === 'admin';
@@ -216,6 +221,7 @@ class User extends Authenticatable
             'manager'     => 'Operational Manager',
             'developer'   => 'Teknisi',
             'security'    => 'Security',
+            'cleaning'    => 'Cleaning Service',
             'client'      => 'Client',
             default       => ucfirst(str_replace('_', ' ', $this->role ?? 'Client')),
         };
@@ -229,6 +235,7 @@ class User extends Authenticatable
             'manager'     => 'badge-primary',
             'developer'   => 'badge-info',
             'security'    => 'badge-dark',
+            'cleaning'    => 'badge-teal',
             'client'      => 'badge-secondary',
             default       => 'badge-secondary',
         };

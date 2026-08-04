@@ -44,6 +44,7 @@
                                 <option value="manager" {{ request('role') == 'manager' ? 'selected' : '' }}>Operational Manager</option>
                                 <option value="developer" {{ request('role') == 'developer' ? 'selected' : '' }}>Teknisi</option>
                                 <option value="security" {{ request('role') == 'security' ? 'selected' : '' }}>Security</option>
+                                <option value="cleaning" {{ request('role') == 'cleaning' ? 'selected' : '' }}>Cleaning Service</option>
                                 <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="super_admin" {{ request('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                             </select>

@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             ProjectStageSeeder::class,
             SecurityCheckpointSeeder::class,
             SecurityShiftSeeder::class,
+            CleaningCheckpointSeeder::class,
+            CleaningShiftSeeder::class,
         ]);
     }
 }

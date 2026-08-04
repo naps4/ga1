@@ -48,6 +48,10 @@
                 <a href="{{ route('security.scan') }}" class="mobile-drawer-link {{ request()->routeIs('security.scan') ? 'active' : '' }}">
                     <i class="fas fa-qrcode"></i><span>Scan Checkpoint</span>
                 </a>
+            @elseif(auth()->user()->role === 'cleaning')
+                <a href="{{ route('cleaning.scan') }}" class="mobile-drawer-link {{ request()->routeIs('cleaning.scan') ? 'active' : '' }}">
+                    <i class="fas fa-qrcode"></i><span>Scan Kebersihan</span>
+                </a>
             @else
                 <a href="{{ route('dashboard') }}" class="mobile-drawer-link {{ request()->routeIs('dashboard') || request()->routeIs('super-admin.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-home"></i><span>Dasbor</span>
@@ -55,16 +59,10 @@
             @endif
         </li>
 
-        @if(auth()->user()->role !== 'security')
-        <li>
-            <a href="{{ route('atk-requests.index') }}" class="mobile-drawer-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}">
-                <i class="fas fa-pencil-alt"></i><span>Permintaan</span>
-            </a>
-        </li>
-        @endif
-
         @if(auth()->user()->isSuperAdmin())
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Work Order GA</span></a></li>
+            <li><a href="{{ route('atk-requests.index') }}" class="mobile-drawer-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}"><i class="fas fa-pencil-alt"></i><span>Permintaan ATK</span></a></li>
+            <li><a href="{{ route('cleaning.logs.index') }}" class="mobile-drawer-link {{ request()->routeIs('cleaning.logs.index') ? 'active' : '' }}"><i class="fas fa-broom"></i><span>Rekap Kebersihan</span></a></li>
             <li><a href="{{ route('super-admin.reports') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.reports*') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i><span>Laporan GA</span></a></li>
             <li><a href="{{ route('super-admin.users.index') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><i class="fas fa-users"></i><span>Data Karyawan</span></a></li>
             <li><a href="{{ route('super-admin.master-barang.index') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.master-barang.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i><span>Master Barang</span></a></li>
@@ -72,11 +70,14 @@
 
         @elseif(auth()->user()->canApproveProjects())
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Work Order GA</span></a></li>
+            <li><a href="{{ route('atk-requests.index') }}" class="mobile-drawer-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}"><i class="fas fa-pencil-alt"></i><span>Permintaan ATK</span></a></li>
+            <li><a href="{{ route('cleaning.logs.index') }}" class="mobile-drawer-link {{ request()->routeIs('cleaning.logs.index') ? 'active' : '' }}"><i class="fas fa-broom"></i><span>Rekap Kebersihan</span></a></li>
             <li><a href="{{ route('chat.index') }}" class="mobile-drawer-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><i class="fas fa-comments"></i><span>Chat</span></a></li>
             <li><a href="{{ route('super-admin.users.index') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><i class="fas fa-users"></i><span>Data Karyawan</span></a></li>
 
         @elseif(auth()->user()->isManager())
             <li><a href="{{ route('security.logs.index') }}" class="mobile-drawer-link {{ request()->routeIs('security.logs.index') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i><span>Laporan & Rekap Security</span></a></li>
+            <li><a href="{{ route('cleaning.logs.index') }}" class="mobile-drawer-link {{ request()->routeIs('cleaning.logs.index') ? 'active' : '' }}"><i class="fas fa-broom"></i><span>Laporan & Rekap Kebersihan</span></a></li>
 
         @elseif(auth()->user()->isDeveloper())
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Tugas Teknisi (WO)</span></a></li>
@@ -89,6 +90,16 @@
                    style="background: rgba(37,99,235,.06); border-left: 3px solid #2563eb; margin: .3rem .5rem; border-radius: .5rem; padding: .85rem 1rem;">
                     <i class="fas fa-qrcode" style="color:#2563eb; font-size:1.1rem;"></i>
                     <span style="color:#1e40af; font-weight:700;">Scan Checkpoint</span>
+                </a>
+            </li>
+
+        @elseif(auth()->user()->role === 'cleaning')
+            <li>
+                <a href="{{ route('cleaning.scan') }}"
+                   class="mobile-drawer-link {{ request()->routeIs('cleaning.scan') ? 'active' : '' }}"
+                   style="background: rgba(13,148,136,.06); border-left: 3px solid #0d9488; margin: .3rem .5rem; border-radius: .5rem; padding: .85rem 1rem;">
+                    <i class="fas fa-qrcode" style="color:#0d9488; font-size:1.1rem;"></i>
+                    <span style="color:#0f766e; font-weight:700;">Scan Kebersihan</span>
                 </a>
             </li>
 

@@ -29,6 +29,10 @@
                     <a href="{{ route('security.scan') }}" class="top-menu-link {{ request()->routeIs('security.scan') ? 'active' : '' }}">
                         <span>Scan Checkpoint</span>
                     </a>
+                @elseif(auth()->user()->role === 'cleaning')
+                    <a href="{{ route('cleaning.scan') }}" class="top-menu-link {{ request()->routeIs('cleaning.scan') ? 'active' : '' }}">
+                        <span>Scan Kebersihan</span>
+                    </a>
                 @else
                     <a href="{{ route('dashboard') }}" class="top-menu-link {{ request()->routeIs('dashboard') || request()->routeIs('super-admin.dashboard') ? 'active' : '' }}">
                         <span>Dasbor</span>
@@ -36,16 +40,16 @@
                 @endif
             </li>
 
-            @if(auth()->user()->role !== 'security')
-            <li>
-                <a href="{{ route('atk-requests.index') }}" class="top-menu-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}">
-                    <span>Permintaan</span>
-                </a>
-            </li>
-            @endif
-
             @if(auth()->user()->isSuperAdmin())
-                <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><span>Work Order GA</span></a></li>
+                <li class="dropdown position-relative">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('work-orders.*') || request()->routeIs('atk-requests.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Work Order & Permintaan</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('work-orders.index') }}"><i class="fas fa-hard-hat mr-2 text-primary"></i> Work Order GA</a>
+                        <a class="dropdown-item py-2" href="{{ route('atk-requests.index') }}"><i class="fas fa-pencil-alt mr-2 text-info"></i> Permintaan ATK</a>
+                    </div>
+                </li>
                 <li class="dropdown position-relative">
                     <a class="top-menu-link dropdown-toggle {{ request()->routeIs('security.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                         <span>Security Checkpoint</span>
@@ -57,13 +61,39 @@
                         <a class="dropdown-item py-2" href="{{ route('security.assignments.index') }}"><i class="fas fa-calendar-alt mr-2 text-warning"></i> Penjadwalan Security</a>
                     </div>
                 </li>
-                <li><a href="{{ route('super-admin.reports') }}" class="top-menu-link {{ request()->routeIs('super-admin.reports*') ? 'active' : '' }}"><span>Laporan GA</span></a></li>
-                <li><a href="{{ route('super-admin.users.index') }}" class="top-menu-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><span>Data Karyawan</span></a></li>
-                <li><a href="{{ route('super-admin.master-barang.index') }}" class="top-menu-link {{ request()->routeIs('super-admin.master-barang.*') ? 'active' : '' }}"><span>Master Barang</span></a></li>
-                <li><a href="{{ route('super-admin.settings') }}" class="top-menu-link {{ request()->routeIs('super-admin.settings') ? 'active' : '' }}"><span>Pengaturan</span></a></li>
+                <li class="dropdown position-relative">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('cleaning.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Cleaning Checkpoint</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('cleaning.logs.index') }}"><i class="fas fa-file-invoice-dollar mr-2 text-info"></i> Laporan & Rekap</a>
+                        <a class="dropdown-item py-2" href="{{ route('cleaning.checkpoints.index') }}"><i class="fas fa-broom mr-2" style="color: #0d9488;"></i> Master Area</a>
+                        <a class="dropdown-item py-2" href="{{ route('cleaning.shifts.index') }}"><i class="fas fa-clock mr-2 text-success"></i> Master Shift Kerja</a>
+                        <a class="dropdown-item py-2" href="{{ route('cleaning.assignments.index') }}"><i class="fas fa-calendar-alt mr-2 text-warning"></i> Penjadwalan Kebersihan</a>
+                    </div>
+                </li>
+                <li class="dropdown position-relative">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('super-admin.reports*') || request()->routeIs('super-admin.users.*') || request()->routeIs('super-admin.master-barang.*') || request()->routeIs('super-admin.settings') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Kelola GA</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('super-admin.reports') }}"><i class="fas fa-chart-bar mr-2 text-info"></i> Laporan GA</a>
+                        <a class="dropdown-item py-2" href="{{ route('super-admin.users.index') }}"><i class="fas fa-users mr-2 text-primary"></i> Data Karyawan</a>
+                        <a class="dropdown-item py-2" href="{{ route('super-admin.master-barang.index') }}"><i class="fas fa-boxes mr-2 text-warning"></i> Master Barang</a>
+                        <a class="dropdown-item py-2" href="{{ route('super-admin.settings') }}"><i class="fas fa-cog mr-2 text-secondary"></i> Pengaturan Aplikasi</a>
+                    </div>
+                </li>
 
             @elseif(auth()->user()->canApproveProjects())
-                <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><span>Work Order GA</span></a></li>
+                <li class="dropdown position-relative">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('work-orders.*') || request()->routeIs('atk-requests.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Work Order & Permintaan</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('work-orders.index') }}"><i class="fas fa-hard-hat mr-2 text-primary"></i> Work Order GA</a>
+                        <a class="dropdown-item py-2" href="{{ route('atk-requests.index') }}"><i class="fas fa-pencil-alt mr-2 text-info"></i> Permintaan ATK</a>
+                    </div>
+                </li>
                 <li class="dropdown position-relative">
                     <a class="top-menu-link dropdown-toggle {{ request()->routeIs('security.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                         <span>Security Checkpoint</span>
@@ -73,6 +103,17 @@
                         <a class="dropdown-item py-2" href="{{ route('security.checkpoints.index') }}"><i class="fas fa-map-marker-alt mr-2 text-primary"></i> Master Area</a>
                         <a class="dropdown-item py-2" href="{{ route('security.shifts.index') }}"><i class="fas fa-clock mr-2 text-success"></i> Master Shift Kerja</a>
                         <a class="dropdown-item py-2" href="{{ route('security.assignments.index') }}"><i class="fas fa-calendar-alt mr-2 text-warning"></i> Penjadwalan Security</a>
+                    </div>
+                </li>
+                <li class="dropdown position-relative">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('cleaning.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Cleaning Checkpoint</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('cleaning.logs.index') }}"><i class="fas fa-file-invoice-dollar mr-2 text-info"></i> Laporan & Rekap</a>
+                        <a class="dropdown-item py-2" href="{{ route('cleaning.checkpoints.index') }}"><i class="fas fa-broom mr-2" style="color: #0d9488;"></i> Master Area</a>
+                        <a class="dropdown-item py-2" href="{{ route('cleaning.shifts.index') }}"><i class="fas fa-clock mr-2 text-success"></i> Master Shift Kerja</a>
+                        <a class="dropdown-item py-2" href="{{ route('cleaning.assignments.index') }}"><i class="fas fa-calendar-alt mr-2 text-warning"></i> Penjadwalan Kebersihan</a>
                     </div>
                 </li>
                 <li><a href="{{ route('chat.index') }}" class="top-menu-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><span>Chat</span></a></li>
@@ -80,11 +121,28 @@
 
             @elseif(auth()->user()->isManager())
                 <li class="dropdown position-relative">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('work-orders.*') || request()->routeIs('atk-requests.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Work Order & Permintaan</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('work-orders.index') }}"><i class="fas fa-hard-hat mr-2 text-primary"></i> Work Order GA</a>
+                        <a class="dropdown-item py-2" href="{{ route('atk-requests.index') }}"><i class="fas fa-pencil-alt mr-2 text-info"></i> Permintaan ATK</a>
+                    </div>
+                </li>
+                <li class="dropdown position-relative">
                     <a class="top-menu-link dropdown-toggle {{ request()->routeIs('security.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                         <span>Security Checkpoint</span>
                     </a>
                     <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
                         <a class="dropdown-item py-2" href="{{ route('security.logs.index') }}"><i class="fas fa-file-invoice-dollar mr-2 text-info"></i> Laporan & Rekap</a>
+                    </div>
+                </li>
+                <li class="dropdown position-relative">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('cleaning.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Cleaning Checkpoint</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('cleaning.logs.index') }}"><i class="fas fa-file-invoice-dollar mr-2 text-info"></i> Laporan & Rekap</a>
                     </div>
                 </li>
 
@@ -95,9 +153,20 @@
             @elseif(auth()->user()->role === 'security')
                 <li><a href="{{ route('security.scan') }}" class="top-menu-link {{ request()->routeIs('security.scan') ? 'active' : '' }}"><span>Scan Checkpoint</span></a></li>
 
+            @elseif(auth()->user()->role === 'cleaning')
+                <li><a href="{{ route('cleaning.scan') }}" class="top-menu-link {{ request()->routeIs('cleaning.scan') ? 'active' : '' }}"><span>Scan Kebersihan</span></a></li>
+
             @elseif(auth()->user()->isClient())
-                <li><a href="{{ route('work-orders.create') }}" class="top-menu-link {{ request()->routeIs('work-orders.create') ? 'active' : '' }}"><span>Buat Pengajuan</span></a></li>
-                <li><a href="{{ route('work-orders.index') }}" class="top-menu-link {{ request()->routeIs('work-orders.index') || request()->routeIs('work-orders.show') ? 'active' : '' }}"><span>Riwayat Pengajuan</span></a></li>
+                <li class="dropdown position-relative">
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('work-orders.*') || request()->routeIs('atk-requests.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Work Order & Permintaan</span>
+                    </a>
+                    <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
+                        <a class="dropdown-item py-2" href="{{ route('work-orders.create') }}"><i class="fas fa-plus-circle mr-2 text-success"></i> Buat Pengajuan WO</a>
+                        <a class="dropdown-item py-2" href="{{ route('work-orders.index') }}"><i class="fas fa-hard-hat mr-2 text-primary"></i> Riwayat Work Order</a>
+                        <a class="dropdown-item py-2" href="{{ route('atk-requests.index') }}"><i class="fas fa-pencil-alt mr-2 text-info"></i> Permintaan ATK</a>
+                    </div>
+                </li>
                 <li><a href="{{ route('chat.index') }}" class="top-menu-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><span>Chat</span></a></li>
             @endif
 
@@ -107,12 +176,20 @@
 
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto flex-shrink-0 align-items-center">
-        {{-- Tombol Scan cepat untuk Security Guard (mobile only) --}}
+        {{-- Tombol Scan cepat untuk Security & Cleaning Guard (mobile only) --}}
         @if(auth()->user()->role === 'security')
         <li class="nav-item d-flex d-md-none align-items-center mr-1">
             <a href="{{ route('security.scan') }}"
                class="btn btn-sm btn-primary rounded-pill px-3 py-1 font-weight-bold"
                style="font-size:.8rem; letter-spacing:.02em;">
+                <i class="fas fa-qrcode mr-1"></i> Scan
+            </a>
+        </li>
+        @elseif(auth()->user()->role === 'cleaning')
+        <li class="nav-item d-flex d-md-none align-items-center mr-1">
+            <a href="{{ route('cleaning.scan') }}"
+               class="btn btn-sm text-white rounded-pill px-3 py-1 font-weight-bold"
+               style="font-size:.8rem; letter-spacing:.02em; background-color: #0d9488;">
                 <i class="fas fa-qrcode mr-1"></i> Scan
             </a>
         </li>

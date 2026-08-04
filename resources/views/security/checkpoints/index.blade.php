@@ -243,9 +243,12 @@
                     <code class="font-weight-bold" id="qrCodeText" style="font-size:1.05rem;">CODE</code>
                 </div>
             </div>
-            <div class="modal-footer border-0 p-3 bg-light text-center justify-content-center">
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-4 mr-2" data-dismiss="modal">Tutup</button>
-                <button type="button" class="btn btn-info rounded-pill px-4" onclick="printQrLabel()">
+            <div class="modal-footer border-0 p-3 bg-light text-center justify-content-center flex-wrap" style="gap:.4rem;">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary rounded-pill px-3" onclick="downloadSecurityQr()">
+                    <i class="fas fa-download mr-1"></i> Download PNG
+                </button>
+                <button type="button" class="btn btn-info rounded-pill px-3" onclick="printQrLabel()">
                     <i class="fas fa-print mr-1"></i> Cetak Label QR
                 </button>
             </div>
@@ -332,6 +335,25 @@
             correctLevel: QRCode.CorrectLevel.H
         });
         $('#qrCodeModal').modal('show');
+    }
+
+    function downloadSecurityQr() {
+        const container = document.getElementById('qrcode-container');
+        const canvas = container.querySelector('canvas');
+        const img    = container.querySelector('img');
+        let dataUrl = canvas ? canvas.toDataURL('image/png') : (img ? img.src : '');
+        let codeText = document.getElementById('qrCodeText').innerText;
+
+        if (dataUrl) {
+            let link = document.createElement('a');
+            link.download = 'QR-' + (codeText || 'checkpoint') + '.png';
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            alert('Gagal mengunduh QR Code. Silakan coba lagi.');
+        }
     }
 
     function printQrLabel() {

@@ -69,6 +69,7 @@
                                     <option value="manager" {{ old('role') == 'manager' ? 'selected' : '' }}>Operational Manager</option>
                                     <option value="developer" {{ old('role') == 'developer' ? 'selected' : '' }}>Teknisi</option>
                                     <option value="security" {{ old('role') == 'security' ? 'selected' : '' }}>Security / Guard</option>
+                                    <option value="cleaning" {{ old('role') == 'cleaning' ? 'selected' : '' }}>Cleaning Service</option>
                                     <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                                     <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                                 </select>

@@ -25,7 +25,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Fallback route untuk melayani file dari storage lokal tanpa perlu symlink public/storage
-// Ini mengatasi masalah "file lampiran tidak bisa dibuka di hosting" karena symlink terputus.
 Route::get('/storage/{path}', function ($path) {
     $absolutePath = realpath(storage_path('app/public/' . $path));
     $publicStoragePath = realpath(storage_path('app/public'));
@@ -138,8 +137,11 @@ Route::get('/dashboard', function () {
     } elseif ($user->role === 'security') {
         // Security Guard langsung diarahkan ke halaman scan
         return redirect()->route('security.scan');
+    } elseif ($user->role === 'cleaning') {
+        // Cleaning Service langsung diarahkan ke halaman scan kebersihan
+        return redirect()->route('cleaning.scan');
     }
-    
+
     return view('dashboard', $viewData);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -246,6 +248,34 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/assignments/template', [\App\Http\Controllers\SecurityCheckpointController::class, 'downloadAssignmentTemplate'])->name('assignments.template');
 
         Route::get('/export', [\App\Http\Controllers\SecurityCheckpointController::class, 'exportExcel'])->name('export');
+    });
+
+    // Rute Cleaning Checkpoint
+    Route::prefix('cleaning')->name('cleaning.')->group(function () {
+        Route::get('/scan', [\App\Http\Controllers\CleaningCheckpointController::class, 'scanPage'])->name('scan');
+        Route::post('/scan', [\App\Http\Controllers\CleaningCheckpointController::class, 'submitLog'])->name('submit');
+        Route::get('/logs', [\App\Http\Controllers\CleaningCheckpointController::class, 'logsIndex'])->name('logs.index');
+        Route::get('/checkpoints', [\App\Http\Controllers\CleaningCheckpointController::class, 'index'])->name('checkpoints.index');
+        Route::post('/checkpoints', [\App\Http\Controllers\CleaningCheckpointController::class, 'storeCheckpoint'])->name('checkpoints.store');
+        Route::put('/checkpoints/{checkpoint}', [\App\Http\Controllers\CleaningCheckpointController::class, 'updateCheckpoint'])->name('checkpoints.update');
+        Route::delete('/checkpoints/{checkpoint}', [\App\Http\Controllers\CleaningCheckpointController::class, 'destroyCheckpoint'])->name('checkpoints.destroy');
+        
+        // Rute CRUD Shifts
+        Route::get('/shifts', [\App\Http\Controllers\CleaningCheckpointController::class, 'shiftsIndex'])->name('shifts.index');
+        Route::post('/shifts', [\App\Http\Controllers\CleaningCheckpointController::class, 'storeShift'])->name('shifts.store');
+        Route::put('/shifts/{shift}', [\App\Http\Controllers\CleaningCheckpointController::class, 'updateShift'])->name('shifts.update');
+        Route::delete('/shifts/{shift}', [\App\Http\Controllers\CleaningCheckpointController::class, 'destroyShift'])->name('shifts.destroy');
+        Route::post('/shifts/import', [\App\Http\Controllers\CleaningCheckpointController::class, 'importShifts'])->name('shifts.import');
+        Route::get('/shifts/template', [\App\Http\Controllers\CleaningCheckpointController::class, 'downloadShiftTemplate'])->name('shifts.template');
+
+        // Rute CRUD Assignments (Penugasan)
+        Route::get('/assignments', [\App\Http\Controllers\CleaningCheckpointController::class, 'assignmentsIndex'])->name('assignments.index');
+        Route::post('/assignments', [\App\Http\Controllers\CleaningCheckpointController::class, 'storeAssignment'])->name('assignments.store');
+        Route::delete('/assignments/{assignment}', [\App\Http\Controllers\CleaningCheckpointController::class, 'destroyAssignment'])->name('assignments.destroy');
+        Route::post('/assignments/import', [\App\Http\Controllers\CleaningCheckpointController::class, 'importAssignments'])->name('assignments.import');
+        Route::get('/assignments/template', [\App\Http\Controllers\CleaningCheckpointController::class, 'downloadAssignmentTemplate'])->name('assignments.template');
+
+        Route::get('/export', [\App\Http\Controllers\CleaningCheckpointController::class, 'exportExcel'])->name('export');
     });
 });
 
