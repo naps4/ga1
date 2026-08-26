@@ -60,4 +60,50 @@ class SettingsHelper
         }
         return static::get('app_logo');
     }
+
+    /**
+     * Resolve public path for DomPDF safely and apply runtime config.
+     *
+     * @return string
+     */
+    public static function configureDompdf(): string
+    {
+        $candidates = [];
+
+        if (app()->bound('path.public')) {
+            $candidates[] = (string) app('path.public');
+        }
+
+        $candidates[] = base_path('public');
+        $candidates[] = base_path('public_html');
+
+        if (!empty($_SERVER['DOCUMENT_ROOT'])) {
+            $candidates[] = (string) $_SERVER['DOCUMENT_ROOT'];
+        }
+
+        if (!empty($_SERVER['SCRIPT_FILENAME'])) {
+            $candidates[] = dirname((string) $_SERVER['SCRIPT_FILENAME']);
+        }
+
+        $resolvedPath = base_path();
+        foreach ($candidates as $candidate) {
+            if (!$candidate) {
+                continue;
+            }
+
+            $resolved = realpath($candidate) ?: $candidate;
+
+            if (is_dir($resolved)) {
+                $resolvedPath = $resolved;
+                break;
+            }
+        }
+
+        config([
+            'dompdf.public_path' => $resolvedPath,
+            'dompdf.options.chroot' => realpath(dirname($resolvedPath)) ?: base_path(),
+        ]);
+
+        return $resolvedPath;
+    }
 }

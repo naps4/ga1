@@ -900,6 +900,8 @@ class AtkRequestController extends Controller
 
         $requests = $query->orderBy('tanggal_pengajuan', 'desc')->get();
 
+        \App\Helpers\SettingsHelper::configureDompdf();
+
         // Check the export mode: aggregated/grouped items vs detailed transaction list
         if ($request->get('mode') === 'aggregation') {
             $aggregatedItems = [];
