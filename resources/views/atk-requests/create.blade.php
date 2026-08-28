@@ -466,6 +466,8 @@
             });
         });
 
+        let standardItemIndex = 0;
+
         // Add Standard Item to Summary List
         const btnAddStandard = document.getElementById('btn-add-standard');
         btnAddStandard.addEventListener('click', function() {
@@ -488,7 +490,14 @@
             const customOptionInput = document.getElementById('item-custom-opt');
             const customOption = customOptionInput ? customOptionInput.value.trim() : '';
             
-            addStandardRow(itemName, unit, qty, options, customOption);
+            if (options.length > 1) {
+                // Pisahkan opsi yang dicentang menjadi item tersendiri agar tiap spesifikasi memiliki jumlah (Qty) masing-masing
+                options.forEach(opt => {
+                    addStandardRow(itemName, unit, qty, [opt], customOption);
+                });
+            } else {
+                addStandardRow(itemName, unit, qty, options, customOption);
+            }
             
             // Reset input values
             document.getElementById('input-qty').value = 1;
@@ -565,10 +574,12 @@
         // Add Standard Row Logic
         function addStandardRow(name, unit, qty, options, customOption) {
             const tableBody = document.getElementById('summary-table-body');
+            const optionsText = options.join('_');
+            const optionSlug = (optionsText + '_' + customOption).replace(/[^a-zA-Z0-9]/g, '_');
             const slug = name.replace(/[^a-zA-Z0-9]/g, '_');
-            const rowId = `row-standard-${slug}`;
+            const rowId = `row-standard-${slug}-${optionSlug}`;
             
-            // Check if standard item already exists
+            // Check if standard item with the exact same specification option already exists
             const existingRow = document.getElementById(rowId);
             if (existingRow) {
                 const qtyInput = existingRow.querySelector('.qty-input');
@@ -580,11 +591,12 @@
                 return;
             }
             
+            const itemKey = `std_${standardItemIndex++}`;
             const tr = document.createElement('tr');
             tr.id = rowId;
             
-            const optionsText = options.join(', ');
-            let specText = optionsText;
+            const optionsTextDisplay = options.join(', ');
+            let specText = optionsTextDisplay;
             if (customOption) {
                 specText = specText ? `${specText}, ${customOption}` : customOption;
             }
@@ -592,7 +604,7 @@
             
             let optionsInputsHtml = '';
             options.forEach(opt => {
-                optionsInputsHtml += `<input type="hidden" name="items[${name}][options][]" value="${opt}">`;
+                optionsInputsHtml += `<input type="hidden" name="items[${itemKey}][options][]" value="${opt}">`;
             });
             
             tr.innerHTML = `
@@ -600,18 +612,19 @@
                 <td class="align-middle font-weight-bold">
                     ${name}
                     <span class="badge badge-primary ml-1 small">Standar</span>
+                    <input type="hidden" name="items[${itemKey}][name]" value="${name}">
                 </td>
                 <td class="text-center align-middle">
                     <span class="badge badge-secondary">${unit}</span>
-                    <input type="hidden" name="items[${name}][unit]" value="${unit}">
+                    <input type="hidden" name="items[${itemKey}][unit]" value="${unit}">
                 </td>
                 <td class="align-middle">
                     <span class="spec-text-display">${specText}</span>
                     ${optionsInputsHtml}
-                    <input type="hidden" class="input-custom-option" name="items[${name}][custom_option]" value="${customOption}">
+                    <input type="hidden" class="input-custom-option" name="items[${itemKey}][custom_option]" value="${customOption}">
                 </td>
                 <td class="align-middle text-center">
-                    <input type="number" name="items[${name}][qty]" class="form-control form-control-sm text-center qty-input mx-auto" min="1" value="${qty}" style="width: 75px;">
+                    <input type="number" name="items[${itemKey}][qty]" class="form-control form-control-sm text-center qty-input mx-auto" min="1" value="${qty}" style="width: 75px;">
                 </td>
                 <td class="align-middle text-center">
                     <div class="d-flex justify-content-center align-items-center">

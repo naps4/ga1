@@ -287,17 +287,22 @@ class AtkRequestController extends Controller
 
             // Save Standard Items
             if ($request->has('items')) {
-                foreach ($request->items as $itemName => $itemData) {
+                foreach ($request->items as $itemKey => $itemData) {
                     $qty = intval($itemData['qty'] ?? 0);
                     if ($qty > 0) {
-                        $desc = isset($itemData['options']) ? implode(', ', $itemData['options']) : ($itemData['custom_option'] ?? null);
+                        $itemName = $itemData['name'] ?? $itemKey;
+                        $options = $itemData['options'] ?? [];
+                        $desc = is_array($options) ? implode(', ', $options) : $options;
+                        if (!empty($itemData['custom_option'])) {
+                            $desc = $desc ? ($desc !== '' ? $desc . ', ' . $itemData['custom_option'] : $itemData['custom_option']) : $desc;
+                        }
                         AtkRequestItem::create([
                             'atk_request_id' => $atk->id,
-                            'item_name' => $itemName,
-                            'unit' => $itemData['unit'] ?? 'Pcs',
-                            'description' => $desc,
-                            'quantity' => $qty,
-                            'is_custom' => false,
+                            'item_name'      => $itemName,
+                            'unit'           => $itemData['unit'] ?? 'Pcs',
+                            'description'    => $desc,
+                            'quantity'       => $qty,
+                            'is_custom'      => false,
                         ]);
                     }
                 }
@@ -364,8 +369,8 @@ class AtkRequestController extends Controller
             $months[$val] = $text;
         }
 
-        // Prepare existing items mapped by name
-        $existingItems = $atkRequest->items->where('is_custom', false)->keyBy('item_name')->toArray();
+        // Prepare existing items
+        $existingItems = $atkRequest->items->where('is_custom', false)->values()->toArray();
         $customItems = $atkRequest->items->where('is_custom', true)->values()->toArray();
 
         return view('atk-requests.edit', compact('atkRequest', 'standardItems', 'householdItems', 'months', 'existingItems', 'customItems'));
@@ -423,10 +428,15 @@ class AtkRequestController extends Controller
 
             // Save Standard Items
             if ($request->has('items')) {
-                foreach ($request->items as $itemName => $itemData) {
+                foreach ($request->items as $itemKey => $itemData) {
                     $qty = intval($itemData['qty'] ?? 0);
                     if ($qty > 0) {
-                        $desc = isset($itemData['options']) ? implode(', ', $itemData['options']) : ($itemData['custom_option'] ?? null);
+                        $itemName = $itemData['name'] ?? $itemKey;
+                        $options = $itemData['options'] ?? [];
+                        $desc = is_array($options) ? implode(', ', $options) : $options;
+                        if (!empty($itemData['custom_option'])) {
+                            $desc = $desc ? ($desc !== '' ? $desc . ', ' . $itemData['custom_option'] : $itemData['custom_option']) : $desc;
+                        }
                         AtkRequestItem::create([
                             'atk_request_id'  => $atkRequest->id,
                             'item_name'       => $itemName,
