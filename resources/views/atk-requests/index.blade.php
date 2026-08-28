@@ -84,6 +84,10 @@
                         </div>
                         
                         <div class="d-flex" style="gap: .5rem;">
+                            <button type="button" class="btn btn-info btn-sm text-white shadow-sm px-3" data-toggle="modal" data-target="#modalRekapTotal" style="border-radius: 0.5rem;">
+                                <i class="fas fa-list-alt mr-1"></i> Lihat Rekap Total
+                            </button>
+
                             <button type="button" onclick="exportPdf('detail')" class="btn btn-danger btn-sm shadow-sm px-3" style="border-radius: 0.5rem;">
                                 <i class="fas fa-file-pdf mr-1"></i> Ekspor PDF (Detail)
                             </button>
@@ -213,6 +217,148 @@
         </div>
     </div>
 </div>
+
+@if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin() || auth()->user()->isManager())
+{{-- Modal Rekap Total Kebutuhan Barang --}}
+<div class="modal fade" id="modalRekapTotal" tabindex="-1" role="dialog" aria-labelledby="modalRekapTotalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 0.8rem; overflow: hidden;">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title font-weight-bold text-dark" id="modalRekapTotalTitle">
+                    <i class="fas fa-boxes text-primary mr-2"></i>Rekap Total Kebutuhan Barang
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info py-2 px-3 small rounded-pill mb-3">
+                    <i class="fas fa-info-circle mr-1"></i> Rekap ini dihitung berdasarkan filter pencarian yang aktif pada daftar permintaan di atas.
+                </div>
+
+                {{-- Nav Tabs --}}
+                <ul class="nav nav-pills mb-3 nav-fill" id="rekapTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active font-weight-bold shadow-sm" id="atk-rekap-tab" data-toggle="pill" href="#pills-atk-rekap" role="tab" aria-controls="pills-atk-rekap" aria-selected="true" style="border-radius: 0.5rem;">
+                            <i class="fas fa-pencil-alt mr-1"></i> ATK (Alat Tulis Kantor)
+                            <span class="badge badge-primary ml-1">{{ count($atkAggregatedItems ?? []) }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link font-weight-bold shadow-sm" id="household-rekap-tab" data-toggle="pill" href="#pills-household-rekap" role="tab" aria-controls="pills-household-rekap" aria-selected="false" style="border-radius: 0.5rem;">
+                            <i class="fas fa-home mr-1"></i> Rumah Tangga (RT)
+                            <span class="badge badge-warning text-dark ml-1">{{ count($householdAggregatedItems ?? []) }}</span>
+                        </a>
+                    </li>
+                </ul>
+
+                {{-- Tab Content --}}
+                <div class="tab-content" id="rekapTabContent">
+                    {{-- Tab ATK --}}
+                    <div class="tab-pane fade show active" id="pills-atk-rekap" role="tabpanel" aria-labelledby="atk-rekap-tab">
+                        <div class="table-responsive style-scroll" style="max-height: 400px;">
+                            <table class="table table-bordered table-striped table-hover mb-0">
+                                <thead class="bg-primary text-white">
+                                    <tr>
+                                        <th style="width: 50px;" class="text-center">No</th>
+                                        <th>Nama Barang ATK</th>
+                                        <th style="width: 120px;" class="text-center">Satuan</th>
+                                        <th style="width: 150px;" class="text-center">Total Qty</th>
+                                        <th style="width: 140px;" class="text-center">Pengajuan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php $totalAtkModalQty = 0; @endphp
+                                    @forelse($atkAggregatedItems ?? [] as $index => $item)
+                                        @php $totalAtkModalQty += $item['total_qty']; @endphp
+                                        <tr>
+                                            <td class="text-center">{{ $index + 1 }}</td>
+                                            <td class="font-weight-bold">{{ $item['name'] }}</td>
+                                            <td class="text-center"><span class="badge badge-light border">{{ $item['unit'] }}</span></td>
+                                            <td class="text-center">
+                                                <span class="badge badge-primary px-2 py-1" style="font-size: 0.85rem;">{{ $item['total_qty'] }}</span>
+                                            </td>
+                                            <td class="text-center small text-muted">{{ $item['request_count'] }}x diajukan</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                Tidak ada data barang ATK pada filter saat ini.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                                @if(!empty($atkAggregatedItems) && count($atkAggregatedItems) > 0)
+                                    <tfoot class="bg-light font-weight-bold">
+                                        <tr>
+                                            <td colspan="3" class="text-right">Total Kebutuhan ATK:</td>
+                                            <td class="text-center text-primary" style="font-size: 1rem;">{{ $totalAtkModalQty }}</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                @endif
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- Tab Rumah Tangga --}}
+                    <div class="tab-pane fade" id="pills-household-rekap" role="tabpanel" aria-labelledby="household-rekap-tab">
+                        <div class="table-responsive style-scroll" style="max-height: 400px;">
+                            <table class="table table-bordered table-striped table-hover mb-0">
+                                <thead class="bg-warning text-white">
+                                    <tr>
+                                        <th style="width: 50px;" class="text-center">No</th>
+                                        <th>Nama Barang Rumah Tangga</th>
+                                        <th style="width: 120px;" class="text-center">Satuan</th>
+                                        <th style="width: 150px;" class="text-center">Total Qty</th>
+                                        <th style="width: 140px;" class="text-center">Pengajuan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php $totalRtModalQty = 0; @endphp
+                                    @forelse($householdAggregatedItems ?? [] as $index => $item)
+                                        @php $totalRtModalQty += $item['total_qty']; @endphp
+                                        <tr>
+                                            <td class="text-center">{{ $index + 1 }}</td>
+                                            <td class="font-weight-bold">{{ $item['name'] }}</td>
+                                            <td class="text-center"><span class="badge badge-light border">{{ $item['unit'] }}</span></td>
+                                            <td class="text-center">
+                                                <span class="badge badge-warning text-dark px-2 py-1" style="font-size: 0.85rem;">{{ $item['total_qty'] }}</span>
+                                            </td>
+                                            <td class="text-center small text-muted">{{ $item['request_count'] }}x diajukan</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                Tidak ada data barang Rumah Tangga pada filter saat ini.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                                @if(!empty($householdAggregatedItems) && count($householdAggregatedItems) > 0)
+                                    <tfoot class="bg-light font-weight-bold">
+                                        <tr>
+                                            <td colspan="3" class="text-right">Total Kebutuhan Rumah Tangga:</td>
+                                            <td class="text-center text-warning" style="font-size: 1rem;">{{ $totalRtModalQty }}</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                @endif
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" onclick="exportPdf('aggregation')" class="btn btn-warning btn-sm text-dark font-weight-bold" style="border-radius: 0.5rem;">
+                    <i class="fas fa-file-pdf mr-1"></i> Cetak Rekap (PDF)
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal" style="border-radius: 0.5rem;">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
 
 @push('scripts')

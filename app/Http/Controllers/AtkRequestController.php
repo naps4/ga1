@@ -189,7 +189,49 @@ class AtkRequestController extends Controller
 
         $requests = $query->orderBy('tanggal_pengajuan', 'desc')->get();
 
-        return view('atk-requests.index', compact('requests'));
+        // Calculate aggregated items separated by request_type (ATK vs Rumah Tangga)
+        $atkAggregatedItems = [];
+        $householdAggregatedItems = [];
+
+        foreach ($requests as $req) {
+            $isHousehold = ($req->request_type === 'Rumah Tangga');
+            foreach ($req->items as $item) {
+                $key = trim(strtolower($item->item_name)) . '_' . trim(strtolower($item->unit));
+                if ($isHousehold) {
+                    if (!isset($householdAggregatedItems[$key])) {
+                        $householdAggregatedItems[$key] = [
+                            'name' => $item->item_name,
+                            'unit' => $item->unit,
+                            'total_qty' => 0,
+                            'request_count' => 0,
+                        ];
+                    }
+                    $householdAggregatedItems[$key]['total_qty'] += $item->quantity;
+                    $householdAggregatedItems[$key]['request_count'] += 1;
+                } else {
+                    if (!isset($atkAggregatedItems[$key])) {
+                        $atkAggregatedItems[$key] = [
+                            'name' => $item->item_name,
+                            'unit' => $item->unit,
+                            'total_qty' => 0,
+                            'request_count' => 0,
+                        ];
+                    }
+                    $atkAggregatedItems[$key]['total_qty'] += $item->quantity;
+                    $atkAggregatedItems[$key]['request_count'] += 1;
+                }
+            }
+        }
+
+        usort($atkAggregatedItems, function($a, $b) {
+            return $b['total_qty'] <=> $a['total_qty'];
+        });
+
+        usort($householdAggregatedItems, function($a, $b) {
+            return $b['total_qty'] <=> $a['total_qty'];
+        });
+
+        return view('atk-requests.index', compact('requests', 'atkAggregatedItems', 'householdAggregatedItems'));
     }
 
     public function create()
@@ -904,29 +946,49 @@ class AtkRequestController extends Controller
 
         // Check the export mode: aggregated/grouped items vs detailed transaction list
         if ($request->get('mode') === 'aggregation') {
-            $aggregatedItems = [];
+            $atkAggregatedItems = [];
+            $householdAggregatedItems = [];
+
             foreach ($requests as $req) {
+                $isHousehold = ($req->request_type === 'Rumah Tangga');
                 foreach ($req->items as $item) {
                     $key = trim(strtolower($item->item_name)) . '_' . trim(strtolower($item->unit));
-                    if (!isset($aggregatedItems[$key])) {
-                        $aggregatedItems[$key] = [
-                            'name' => $item->item_name,
-                            'unit' => $item->unit,
-                            'total_qty' => 0,
-                            'request_count' => 0,
-                        ];
+                    if ($isHousehold) {
+                        if (!isset($householdAggregatedItems[$key])) {
+                            $householdAggregatedItems[$key] = [
+                                'name' => $item->item_name,
+                                'unit' => $item->unit,
+                                'total_qty' => 0,
+                                'request_count' => 0,
+                            ];
+                        }
+                        $householdAggregatedItems[$key]['total_qty'] += $item->quantity;
+                        $householdAggregatedItems[$key]['request_count'] += 1;
+                    } else {
+                        if (!isset($atkAggregatedItems[$key])) {
+                            $atkAggregatedItems[$key] = [
+                                'name' => $item->item_name,
+                                'unit' => $item->unit,
+                                'total_qty' => 0,
+                                'request_count' => 0,
+                            ];
+                        }
+                        $atkAggregatedItems[$key]['total_qty'] += $item->quantity;
+                        $atkAggregatedItems[$key]['request_count'] += 1;
                     }
-                    $aggregatedItems[$key]['total_qty'] += $item->quantity;
-                    $aggregatedItems[$key]['request_count'] += 1;
                 }
             }
 
             // Sort by quantity descending
-            usort($aggregatedItems, function($a, $b) {
+            usort($atkAggregatedItems, function($a, $b) {
                 return $b['total_qty'] <=> $a['total_qty'];
             });
 
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.pdf-aggregation', compact('aggregatedItems', 'request'))
+            usort($householdAggregatedItems, function($a, $b) {
+                return $b['total_qty'] <=> $a['total_qty'];
+            });
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.pdf-aggregation', compact('atkAggregatedItems', 'householdAggregatedItems', 'request'))
                       ->setPaper('a4', 'portrait');
             return $pdf->download('Rekap-Kebutuhan-Barang-' . now()->format('Y-m-d') . '.pdf');
         }

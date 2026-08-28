@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Rekap Kebutuhan Barang</title>
+    <title>Rekap Total Kebutuhan Barang</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,7 +13,7 @@
         }
         .header {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border-bottom: 2px solid #333;
             padding-bottom: 10px;
         }
@@ -44,21 +44,42 @@
             padding: 2px 5px;
             font-size: 10px;
         }
+        .section-header {
+            margin-top: 20px;
+            margin-bottom: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .section-atk {
+            background-color: #1d4ed8;
+            color: #ffffff;
+        }
+        .section-household {
+            background-color: #d97706;
+            color: #ffffff;
+        }
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-bottom: 15px;
         }
         .data-table th, .data-table td {
             border: 1px solid #dee2e6;
-            padding: 8px 10px;
+            padding: 7px 10px;
             vertical-align: middle;
         }
         .data-table th {
             background-color: #f1f3f5;
             font-weight: bold;
             text-align: left;
-            font-size: 10.5px;
+            font-size: 10px;
+        }
+        .table-summary-row {
+            background-color: #f8f9fa;
+            font-weight: bold;
         }
         .footer {
             position: fixed;
@@ -116,7 +137,7 @@
                     @endif
                 </td>
                 <td style="width: 15%;"><strong>Tipe Permintaan</strong></td>
-                <td style="width: 35%;">: {{ $request->request_type === 'ATK' ? 'Alat Tulis Kantor (ATK)' : (($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga (RT)' : 'Semua Tipe') }}</td>
+                <td style="width: 35%;">: {{ $request->request_type === 'ATK' ? 'Alat Tulis Kantor (ATK)' : (($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga (RT)' : 'Semua Tipe (Dipisah)') }}</td>
             </tr>
             <tr>
                 <td><strong>Status Approval</strong></td>
@@ -133,35 +154,100 @@
         </table>
     </div>
 
-    <!-- Data Table -->
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th style="width: 8%;" class="text-center">No</th>
-                <th>Nama Barang</th>
-                <th style="width: 20%;" class="text-center">Satuan</th>
-                <th style="width: 20%;" class="text-center">Total Kebutuhan (Qty)</th>
-                <th style="width: 15%;" class="text-center">Jumlah Pengajuan</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($aggregatedItems as $index => $item)
+    @php
+        $showAtk = ($request->request_type === 'all' || empty($request->request_type) || $request->request_type === 'ATK');
+        $showHousehold = ($request->request_type === 'all' || empty($request->request_type) || $request->request_type === 'Rumah Tangga');
+    @endphp
+
+    <!-- SECTION 1: REKAP ATK -->
+    @if($showAtk)
+        <div class="section-header section-atk">
+            1. Rekap Total Kebutuhan Alat Tulis Kantor (ATK)
+        </div>
+
+        <table class="data-table">
+            <thead>
                 <tr>
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td style="font-weight: bold;">{{ $item['name'] }}</td>
-                    <td class="text-center">{{ $item['unit'] }}</td>
-                    <td class="text-center" style="font-size: 12px; font-weight: bold; color: #007bff;">{{ $item['total_qty'] }}</td>
-                    <td class="text-center">{{ $item['request_count'] }}x pengajuan</td>
+                    <th style="width: 8%;" class="text-center">No</th>
+                    <th>Nama Barang ATK</th>
+                    <th style="width: 18%;" class="text-center">Satuan</th>
+                    <th style="width: 22%;" class="text-center">Total Kebutuhan (Qty)</th>
+                    <th style="width: 20%;" class="text-center">Frekuensi Pengajuan</th>
                 </tr>
-            @empty
+            </thead>
+            <tbody>
+                @php $totalAtkQty = 0; @endphp
+                @forelse($atkAggregatedItems as $index => $item)
+                    @php $totalAtkQty += $item['total_qty']; @endphp
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td style="font-weight: bold;">{{ $item['name'] }}</td>
+                        <td class="text-center">{{ $item['unit'] }}</td>
+                        <td class="text-center" style="font-size: 11px; font-weight: bold; color: #1d4ed8;">{{ $item['total_qty'] }}</td>
+                        <td class="text-center">{{ $item['request_count'] }}x pengajuan</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center" style="padding: 15px; color: #999;">
+                            Tidak ada data kebutuhan ATK ditemukan sesuai kriteria filter.
+                        </td>
+                    </tr>
+                @endforelse
+                @if(count($atkAggregatedItems) > 0)
+                    <tr class="table-summary-row">
+                        <td colspan="3" class="text-right">TOTAL KEBUTUHAN ATK ({{ count($atkAggregatedItems) }} Jenis Barang):</td>
+                        <td class="text-center" style="font-size: 12px; color: #1d4ed8;">{{ $totalAtkQty }}</td>
+                        <td></td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
+    @endif
+
+    <!-- SECTION 2: REKAP RUMAH TANGGA -->
+    @if($showHousehold)
+        <div class="section-header section-household">
+            {{ $showAtk ? '2.' : '1.' }} Rekap Total Kebutuhan Rumah Tangga (RT)
+        </div>
+
+        <table class="data-table">
+            <thead>
                 <tr>
-                    <td colspan="5" class="text-center" style="padding: 20px; color: #999;">
-                        Tidak ada data barang ditemukan sesuai kriteria filter.
-                    </td>
+                    <th style="width: 8%;" class="text-center">No</th>
+                    <th>Nama Barang Rumah Tangga</th>
+                    <th style="width: 18%;" class="text-center">Satuan</th>
+                    <th style="width: 22%;" class="text-center">Total Kebutuhan (Qty)</th>
+                    <th style="width: 20%;" class="text-center">Frekuensi Pengajuan</th>
                 </tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @php $totalHouseholdQty = 0; @endphp
+                @forelse($householdAggregatedItems as $index => $item)
+                    @php $totalHouseholdQty += $item['total_qty']; @endphp
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td style="font-weight: bold;">{{ $item['name'] }}</td>
+                        <td class="text-center">{{ $item['unit'] }}</td>
+                        <td class="text-center" style="font-size: 11px; font-weight: bold; color: #d97706;">{{ $item['total_qty'] }}</td>
+                        <td class="text-center">{{ $item['request_count'] }}x pengajuan</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center" style="padding: 15px; color: #999;">
+                            Tidak ada data kebutuhan Rumah Tangga ditemukan sesuai kriteria filter.
+                        </td>
+                    </tr>
+                @endforelse
+                @if(count($householdAggregatedItems) > 0)
+                    <tr class="table-summary-row">
+                        <td colspan="3" class="text-right">TOTAL KEBUTUHAN RUMAH TANGGA ({{ count($householdAggregatedItems) }} Jenis Barang):</td>
+                        <td class="text-center" style="font-size: 12px; color: #d97706;">{{ $totalHouseholdQty }}</td>
+                        <td></td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
+    @endif
 
     <div class="footer">
         Rekap Total Kebutuhan Barang - {{ \App\Helpers\SettingsHelper::get('app_name', 'HelpDesk Pro') }}
