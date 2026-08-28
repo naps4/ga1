@@ -883,13 +883,22 @@ class AtkRequestController extends Controller
 
     public function print(AtkRequest $atkRequest)
     {
-        $atkRequest->load(['user', 'approver', 'managerApprover']);
+        $atkRequest->load(['user', 'approver', 'managerApprover', 'items']);
         
-        // Formulir HANYA mencetak item yang sudah berstatus 'Disetujui'
-        $items = $atkRequest->items()->where('status_approval', 'Disetujui')->get();
+        // Ambil item yang disetujui. Jika belum ada status 'Disetujui' secara spesifik (misal formulir baru diajukan),
+        // ambil semua item yang tidak ditolak agar formulir tetap dapat dicetak.
+        $items = $atkRequest->items->filter(function($item) {
+            return $item->status_approval === 'Disetujui';
+        });
 
         if ($items->count() === 0) {
-            return back()->with('error', 'Formulir belum dapat dicetak karena belum ada barang yang disetujui.');
+            $items = $atkRequest->items->filter(function($item) {
+                return $item->status_approval !== 'Ditolak';
+            });
+        }
+
+        if ($items->count() === 0) {
+            return back()->with('error', 'Formulir tidak dapat dicetak karena tidak ada barang yang dapat dicetak.');
         }
         
         $itemsMap = $items->where('is_custom', false)->keyBy('item_name')->toArray();
