@@ -154,8 +154,13 @@
                         <tr>
                             <td>
                                 <strong class="text-primary">
-                                    {{ ($req->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($req->id, 4, '0', STR_PAD_LEFT) }}
+                                    {{ $req->formatted_doc_number }}
                                 </strong>
+                                @if($req->revision_number > 0)
+                                    <span class="badge badge-warning text-dark font-weight-bold ml-1" style="font-size: 10px;">
+                                        Rev. {{ $req->revision_number }}
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 @if(($req->request_type ?? 'ATK') === 'Rumah Tangga')
@@ -225,7 +230,7 @@
                                     @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']) && $isOwner)
                                         <button class="btn btn-sm btn-danger btn-delete" style="border-radius:.45rem;"
                                             data-id="{{ $req->id }}" 
-                                            data-name="{{ ($req->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($req->id, 4, '0', STR_PAD_LEFT) }}" title="Hapus">
+                                            data-name="{{ $req->formatted_doc_number }}" title="Hapus">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                         <form id="delete-form-{{ $req->id }}" action="{{ route('atk-requests.destroy', $req) }}" method="POST" class="d-none">

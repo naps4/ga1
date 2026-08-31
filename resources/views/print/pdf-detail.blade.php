@@ -169,7 +169,12 @@
             @forelse($requests as $index => $req)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td><strong>{{ $req->request_type === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($req->id, 4, '0', STR_PAD_LEFT) }}</strong></td>
+                    <td>
+                        <strong>{{ $req->formatted_doc_number }}</strong>
+                        @if($req->revision_number > 0)
+                            <br><small style="color: #d97706; font-size: 8px;">(Rev. {{ $req->revision_number }})</small>
+                        @endif
+                    </td>
                     <td>
                         @if($req->request_type === 'Rumah Tangga')
                             Rumah Tangga
@@ -186,6 +191,9 @@
                                 <li>
                                     {{ $item->item_name }} 
                                     <strong>({{ $item->quantity }} {{ $item->unit }})</strong>
+                                    @if($item->is_revised)
+                                        <span style="color: #d97706; font-weight: bold; font-size: 8.5px;">[Direvisi]</span>
+                                    @endif
                                     @if($item->description)
                                         <span style="color: #666; font-style: italic;"> - {{ $item->description }}</span>
                                     @endif
@@ -193,6 +201,7 @@
                             @endforeach
                         </ul>
                     </td>
+
                     <td class="text-center">
                         <span class="badge 
                             @if($req->status_approval === 'Disetujui') badge-success

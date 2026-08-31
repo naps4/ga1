@@ -343,7 +343,7 @@ class AtkRequestController extends Controller
 
     public function show(AtkRequest $atkRequest)
     {
-        $atkRequest->load('user', 'approver', 'items');
+        $atkRequest->load(['user', 'approver', 'managerApprover', 'parent', 'revisions', 'items.originalItem']);
         return view('atk-requests.show', compact('atkRequest'));
     }
 
@@ -398,9 +398,133 @@ class AtkRequestController extends Controller
 
         $action         = $request->input('action', 'draft');
         $status         = ($action === 'submit') ? 'Menunggu Persetujuan Manager' : 'Draft';
-        $wasRejected    = ($atkRequest->status_approval === 'Ditolak/Revisi');
+        $wasRejected    = ($atkRequest->status_approval === 'Ditolak/Revisi' || $atkRequest->items()->where('status_approval', 'Ditolak')->exists());
 
-        DB::transaction(function () use ($request, $atkRequest, $status, $wasRejected) {
+        // Jika dokumen berstatus ditolak atau memiliki item ditolak dan disubmit ulang, BUAT DOKUMEN REVISI BARU
+        if ($wasRejected && $status === 'Menunggu Persetujuan Manager') {
+            $newRequest = null;
+            DB::transaction(function () use ($request, $atkRequest, $status, &$newRequest) {
+                $root = $atkRequest->getRootParent();
+                $maxRev = AtkRequest::where('parent_id', $root->id)->orWhere('id', $root->id)->max('revision_number');
+                $nextRevNum = ($maxRev ?? 0) + 1;
+
+                $newRequest = AtkRequest::create([
+                    'user_id'           => auth()->id(),
+                    'parent_id'         => $root->id,
+                    'revision_number'   => $nextRevNum,
+                    'request_type'      => $request->request_type,
+                    'nama'              => $request->nama,
+                    'divisi'            => $request->divisi,
+                    'periode'           => $request->periode,
+                    'tanggal_pengajuan' => $request->tanggal_pengajuan,
+                    'status_approval'   => $status,
+                    'revision_note'     => "Revisi pengajuan dari {$atkRequest->formatted_doc_number}",
+                ]);
+
+                // Simpan Standard Items
+                if ($request->has('items')) {
+                    foreach ($request->items as $itemKey => $itemData) {
+                        $qty = intval($itemData['qty'] ?? 0);
+                        if ($qty > 0) {
+                            $itemName = $itemData['name'] ?? $itemKey;
+                            $options = $itemData['options'] ?? [];
+                            $desc = is_array($options) ? implode(', ', $options) : $options;
+                            if (!empty($itemData['custom_option'])) {
+                                $desc = $desc ? ($desc !== '' ? $desc . ', ' . $itemData['custom_option'] : $itemData['custom_option']) : $desc;
+                            }
+
+                            $oldItem = $atkRequest->items->first(function($i) use ($itemName) {
+                                return strtolower(trim($i->item_name)) === strtolower(trim($itemName));
+                            });
+
+                            $isRevised = false;
+                            $prevQty = null;
+                            $prevDesc = null;
+                            $origId = null;
+
+                            if ($oldItem) {
+                                $origId = $oldItem->id;
+                                if ($oldItem->status_approval === 'Ditolak' || $oldItem->quantity != $qty || $oldItem->description != $desc) {
+                                    $isRevised = true;
+                                    $prevQty = $oldItem->quantity;
+                                    $prevDesc = $oldItem->description;
+                                }
+                            }
+
+                            AtkRequestItem::create([
+                                'atk_request_id'      => $newRequest->id,
+                                'item_name'           => $itemName,
+                                'unit'                => $itemData['unit'] ?? 'Pcs',
+                                'description'         => $desc,
+                                'quantity'            => $qty,
+                                'is_custom'           => false,
+                                'status_approval'     => 'Pending',
+                                'is_revised'          => $isRevised,
+                                'previous_quantity'   => $prevQty,
+                                'previous_description'=> $prevDesc,
+                                'original_item_id'    => $origId,
+                            ]);
+                        }
+                    }
+                }
+
+                // Simpan Custom Items
+                if ($request->has('custom_items')) {
+                    foreach ($request->custom_items as $index => $cItem) {
+                        $qty = intval($cItem['qty'] ?? 0);
+                        if (!empty($cItem['name']) && $qty > 0) {
+                            $attachmentPath = $cItem['existing_attachment'] ?? null;
+                            if ($request->hasFile("custom_items.{$index}.attachment")) {
+                                $file = $request->file("custom_items.{$index}.attachment");
+                                if ($file->isValid()) {
+                                    $fileName = time() . '_' . $file->getClientOriginalName();
+                                    $attachmentPath = $file->storeAs('atk-attachments', $fileName, 'public');
+                                }
+                            }
+
+                            $oldCustom = $atkRequest->items->where('is_custom', true)->first(function($i) use ($cItem) {
+                                return strtolower(trim($i->item_name)) === strtolower(trim($cItem['name']));
+                            });
+
+                            $isRevised = false;
+                            $prevQty = null;
+                            $prevDesc = null;
+                            $origId = null;
+
+                            if ($oldCustom) {
+                                $origId = $oldCustom->id;
+                                if ($oldCustom->status_approval === 'Ditolak' || $oldCustom->quantity != $qty) {
+                                    $isRevised = true;
+                                    $prevQty = $oldCustom->quantity;
+                                    $prevDesc = $oldCustom->description;
+                                }
+                            }
+
+                            AtkRequestItem::create([
+                                'atk_request_id'      => $newRequest->id,
+                                'item_name'           => $cItem['name'],
+                                'unit'                => $cItem['unit'] ?? 'Pcs',
+                                'description'         => $cItem['desc'] ?? null,
+                                'quantity'            => $qty,
+                                'is_custom'           => true,
+                                'attachment'          => $attachmentPath,
+                                'status_approval'     => 'Pending',
+                                'is_revised'          => $isRevised,
+                                'previous_quantity'   => $prevQty,
+                                'previous_description'=> $prevDesc,
+                                'original_item_id'    => $origId,
+                            ]);
+                        }
+                    }
+                }
+            });
+
+            $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';
+            return redirect()->route('atk-requests.show', $newRequest->id)->with('success', "Pengajuan revisi {$typeName} ({$newRequest->formatted_doc_number}) berhasil dibuat dan diajukan ke Manager.");
+        }
+
+        // Jika bukan penolakan (misal Draft diedit), update langsung pada dokumen yang sama
+        DB::transaction(function () use ($request, $atkRequest, $status) {
             $updateData = [
                 'request_type'     => $request->request_type,
                 'nama'             => $request->nama,
@@ -410,8 +534,6 @@ class AtkRequestController extends Controller
                 'status_approval'  => $status,
             ];
 
-            // Jika diajukan ulang ke Manager, bersihkan semua jejak persetujuan sebelumnya
-            // agar Manager & Admin GA bisa mereview ulang seluruh item.
             if ($status === 'Menunggu Persetujuan Manager') {
                 $updateData['manager_approved_by'] = null;
                 $updateData['manager_approved_at'] = null;
@@ -423,7 +545,7 @@ class AtkRequestController extends Controller
 
             $atkRequest->update($updateData);
 
-            // Clear old items (selalu hapus dan buat ulang agar status_approval = Pending)
+            // Clear old items
             $atkRequest->items()->delete();
 
             // Save Standard Items
@@ -480,11 +602,7 @@ class AtkRequestController extends Controller
         });
 
         $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';
-        if ($wasRejected && $status === 'Menunggu Persetujuan Manager') {
-            $msg = "Permintaan {$typeName} berhasil direvisi dan diajukan ulang.";
-        } else {
-            $msg = ($status === 'Draft') ? "Draft permintaan {$typeName} berhasil diperbarui." : "Permintaan {$typeName} berhasil diajukan.";
-        }
+        $msg = ($status === 'Draft') ? "Draft permintaan {$typeName} berhasil diperbarui." : "Permintaan {$typeName} berhasil diajukan.";
         return redirect()->route('atk-requests.index')->with('success', $msg);
     }
 
@@ -547,12 +665,10 @@ class AtkRequestController extends Controller
                 })->count();
 
                 if ($pendingCount > 0) {
-                    // Still has items waiting for review -> Keep status as 'Menunggu Persetujuan Manager'
                     $atkRequest->update([
                         'manager_notes' => $request->manager_notes,
                     ]);
                 } else {
-                    // All items reviewed -> Move to Admin GA if any approved, or Reject if all rejected
                     $newStatus = $approvedCount > 0 ? 'Menunggu Persetujuan Admin GA' : 'Ditolak/Revisi';
                     
                     $atkRequest->update([
@@ -733,28 +849,70 @@ class AtkRequestController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $item = AtkRequestItem::where('atk_request_id', $atkRequest->id)->findOrFail($request->item_id);
+        $itemToRevise = AtkRequestItem::where('atk_request_id', $atkRequest->id)->findOrFail($request->item_id);
 
-        DB::transaction(function () use ($atkRequest, $item, $request) {
-            $item->update([
-                'quantity' => $request->quantity,
-                'description' => $request->description ?? $item->description,
-                'status_approval' => 'Pending',
+        $newRequest = null;
+
+        DB::transaction(function () use ($atkRequest, $itemToRevise, $request, &$newRequest) {
+            $root = $atkRequest->getRootParent();
+            $maxRev = AtkRequest::where('parent_id', $root->id)->orWhere('id', $root->id)->max('revision_number');
+            $nextRevNum = ($maxRev ?? 0) + 1;
+
+            $newRequest = AtkRequest::create([
+                'user_id'           => $atkRequest->user_id,
+                'parent_id'         => $root->id,
+                'revision_number'   => $nextRevNum,
+                'request_type'      => $atkRequest->request_type,
+                'nama'              => $atkRequest->nama,
+                'divisi'            => $atkRequest->divisi,
+                'periode'           => $atkRequest->periode,
+                'tanggal_pengajuan' => now()->format('Y-m-d'),
+                'status_approval'   => 'Menunggu Persetujuan Manager',
+                'revision_note'     => "Revisi barang: {$itemToRevise->item_name} dari {$atkRequest->formatted_doc_number}",
             ]);
 
-            // Reset request status back to Menunggu Persetujuan Manager so Manager can re-review
-            $atkRequest->update([
-                'status_approval' => 'Menunggu Persetujuan Manager',
-                'manager_approved_by' => null,
-                'manager_approved_at' => null,
-                'approved_by' => null,
-                'approved_at' => null,
-            ]);
+            // Salin seluruh item ke dokumen baru
+            foreach ($atkRequest->items as $item) {
+                if ($item->id == $itemToRevise->id) {
+                    AtkRequestItem::create([
+                        'atk_request_id'       => $newRequest->id,
+                        'item_name'            => $item->item_name,
+                        'unit'                 => $item->unit,
+                        'description'          => $request->description ?? $item->description,
+                        'quantity'             => $request->quantity,
+                        'is_custom'            => $item->is_custom,
+                        'attachment'           => $item->attachment,
+                        'status_approval'      => 'Pending',
+                        'is_revised'           => true,
+                        'previous_quantity'    => $item->quantity,
+                        'previous_description' => $item->description,
+                        'original_item_id'     => $item->id,
+                        'notes'                => $item->notes ? 'Catatan sebelumnya: ' . $item->notes : null,
+                    ]);
+                } else {
+                    AtkRequestItem::create([
+                        'atk_request_id'       => $newRequest->id,
+                        'item_name'            => $item->item_name,
+                        'unit'                 => $item->unit,
+                        'description'          => $item->description,
+                        'quantity'             => $item->quantity,
+                        'is_custom'            => $item->is_custom,
+                        'attachment'           => $item->attachment,
+                        'status_approval'      => 'Pending',
+                        'is_revised'           => false,
+                        'previous_quantity'    => null,
+                        'previous_description' => null,
+                        'original_item_id'     => $item->id,
+                        'notes'                => null,
+                    ]);
+                }
+            }
         });
 
         return response()->json([
             'success' => true,
-            'message' => "Item \"{$item->item_name}\" berhasil direvisi menjadi Qty {$request->quantity} dan diajukan ulang ke Manager.",
+            'message' => "Pengajuan revisi baru ({$newRequest->formatted_doc_number}) berhasil dibuat dengan item \"{$itemToRevise->item_name}\" (Qty {$request->quantity}) dan diajukan ulang ke Manager.",
+            'redirect_url' => route('atk-requests.show', $newRequest->id),
         ]);
     }
 
@@ -773,33 +931,73 @@ class AtkRequestController extends Controller
             'items.*.description' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($atkRequest, $request) {
-            foreach ($request->items as $itemData) {
-                $item = AtkRequestItem::where('atk_request_id', $atkRequest->id)->find($itemData['id']);
-                if ($item) {
-                    $item->update([
-                        'quantity' => $itemData['quantity'],
-                        'description' => $itemData['description'] ?? $item->description,
-                        'status_approval' => 'Pending',
+        $newRequest = null;
+
+        DB::transaction(function () use ($atkRequest, $request, &$newRequest) {
+            $root = $atkRequest->getRootParent();
+            $maxRev = AtkRequest::where('parent_id', $root->id)->orWhere('id', $root->id)->max('revision_number');
+            $nextRevNum = ($maxRev ?? 0) + 1;
+
+            $newRequest = AtkRequest::create([
+                'user_id'           => $atkRequest->user_id,
+                'parent_id'         => $root->id,
+                'revision_number'   => $nextRevNum,
+                'request_type'      => $atkRequest->request_type,
+                'nama'              => $atkRequest->nama,
+                'divisi'            => $atkRequest->divisi,
+                'periode'           => $atkRequest->periode,
+                'tanggal_pengajuan' => now()->format('Y-m-d'),
+                'status_approval'   => 'Menunggu Persetujuan Manager',
+                'revision_note'     => "Revisi seluruh barang yang ditolak dari {$atkRequest->formatted_doc_number}",
+            ]);
+
+            $revisedMap = collect($request->items)->keyBy('id');
+
+            foreach ($atkRequest->items as $item) {
+                if ($revisedMap->has($item->id)) {
+                    $rData = $revisedMap->get($item->id);
+                    AtkRequestItem::create([
+                        'atk_request_id'       => $newRequest->id,
+                        'item_name'            => $item->item_name,
+                        'unit'                 => $item->unit,
+                        'description'          => $rData['description'] ?? $item->description,
+                        'quantity'             => $rData['quantity'],
+                        'is_custom'            => $item->is_custom,
+                        'attachment'           => $item->attachment,
+                        'status_approval'      => 'Pending',
+                        'is_revised'           => true,
+                        'previous_quantity'    => $item->quantity,
+                        'previous_description' => $item->description,
+                        'original_item_id'     => $item->id,
+                        'notes'                => $item->notes ? 'Catatan sebelumnya: ' . $item->notes : null,
+                    ]);
+                } else {
+                    AtkRequestItem::create([
+                        'atk_request_id'       => $newRequest->id,
+                        'item_name'            => $item->item_name,
+                        'unit'                 => $item->unit,
+                        'description'          => $item->description,
+                        'quantity'             => $item->quantity,
+                        'is_custom'            => $item->is_custom,
+                        'attachment'           => $item->attachment,
+                        'status_approval'      => 'Pending',
+                        'is_revised'           => false,
+                        'previous_quantity'    => null,
+                        'previous_description' => null,
+                        'original_item_id'     => $item->id,
+                        'notes'                => null,
                     ]);
                 }
             }
-
-            // Reset request status back to Menunggu Persetujuan Manager
-            $atkRequest->update([
-                'status_approval' => 'Menunggu Persetujuan Manager',
-                'manager_approved_by' => null,
-                'manager_approved_at' => null,
-                'approved_by' => null,
-                'approved_at' => null,
-            ]);
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'Seluruh item yang ditolak berhasil direvisi dan diajukan ulang ke Manager.',
+            'message' => 'Pengajuan revisi baru (' . $newRequest->formatted_doc_number . ') berhasil dibuat dan diajukan ulang ke Manager.',
+            'redirect_url' => route('atk-requests.show', $newRequest->id),
         ]);
     }
+
 
     public function updateNotes(Request $request, AtkRequest $atkRequest)
     {

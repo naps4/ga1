@@ -18,7 +18,7 @@
             <div class="card shadow-sm border-0 rounded-4 mb-4">
                 <div class="card-header bg-white border-bottom border-light">
                     <h3 class="card-title text-primary font-weight-bold" id="form-title">
-                        <i class="fas fa-edit mr-2"></i>Edit Pengajuan Permintaan
+                        <i class="fas fa-edit mr-2"></i>{{ ($atkRequest->status_approval === 'Ditolak/Revisi' || $atkRequest->items->where('status_approval', 'Ditolak')->count() > 0) ? 'Revisi Pengajuan ' . $atkRequest->formatted_doc_number : 'Edit Pengajuan Permintaan' }}
                     </h3>
                 </div>
                 <div class="card-body">
@@ -42,8 +42,13 @@
                                     @endif
                                 </div>
                             @endforeach
+                            <hr class="my-2">
+                            <div class="small text-muted font-italic">
+                                <i class="fas fa-info-circle text-primary mr-1"></i> Dokumen baru (Revisi) akan otomatis dibuat dan diajukan ulang ke Manager setelah Anda menekan tombol Simpan &amp; Ajukan.
+                            </div>
                         </div>
                     @endif
+
 
                     <div class="row">
                         <div class="col-md-3">

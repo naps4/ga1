@@ -1,6 +1,6 @@
 @extends('layouts.print')
 
-@section('title', (($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT-' : 'ATK-') . str_pad($atkRequest->id, 4, '0', STR_PAD_LEFT))
+@section('title', $atkRequest->formatted_doc_number)
 
 @section('custom_header')
     <!-- Override the default kop surat to match the scanned paper form -->
@@ -99,7 +99,11 @@
             <td style="width: 38%; border: 1.5px solid #000; padding: 6px; font-family: Arial, sans-serif;">
                 <table style="width: 100%; border-collapse: collapse; border: none; table-layout: fixed;">
                     <tr style="font-size: 10px; height: 14px;">
-                        <td style="width: 55%; padding: 0; border: none;">Tanggal Pengajuan Barang</td>
+                        <td style="width: 55%; padding: 0; border: none;">No. Dokumen</td>
+                        <td style="width: 45%; padding: 0; border: none;">: <strong>{{ $atkRequest->formatted_doc_number }}</strong></td>
+                    </tr>
+                    <tr style="font-size: 10px; height: 14px;">
+                        <td style="width: 55%; padding: 0; border: none;">Tanggal Pengajuan</td>
                         <td style="width: 45%; padding: 0; border: none;">:
                             {{ $atkRequest->tanggal_pengajuan->format('d/m/Y') }}</td>
                     </tr>
@@ -120,6 +124,7 @@
             </td>
         </tr>
     </table>
+
 
     <!-- Title -->
     <div style="text-align: center; margin-top: 15px; margin-bottom: 15px;">

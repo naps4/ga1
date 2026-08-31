@@ -56,13 +56,77 @@ Route::get('/dashboard', function () {
             ->whereNotIn('status', ['Selesai', 'Ditolak'])->count();
         $viewData['recentWO'] = \App\Models\WorkOrder::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')->take(5)->get();
+
+        // Work Order yang butuh konfirmasi serah terima & rating dari User
+        $viewData['pendingHandoverWOs'] = \App\Models\WorkOrder::where('user_id', $user->id)
+            ->where('status', 'Menunggu Serah Terima')
+            ->where(function($q) {
+                $q->whereDoesntHave('handover')
+                  ->orWhereHas('handover', fn($hq) => $hq->whereNull('accepted_by_user_at'));
+            })
+            ->with(['handover', 'assignedEngineer'])
+            ->get();
+
+        // ATK / Rumah Tangga Stats & Notifications untuk Client
+        $viewData['myAtkTotal'] = \App\Models\AtkRequest::where('user_id', $user->id)->count();
+        $viewData['myAtkActive'] = \App\Models\AtkRequest::where('user_id', $user->id)
+            ->whereNotIn('status_approval', ['Disetujui'])->count();
+            
+        // Pengajuan ditolak atau memiliki item ditolak yang belum dibuatkan revisi
+        $viewData['rejectedAtkList'] = \App\Models\AtkRequest::where('user_id', $user->id)
+            ->where(function($q) {
+                $q->where('status_approval', 'Ditolak/Revisi')
+                  ->orWhereHas('items', function($iq) {
+                      $iq->where('status_approval', 'Ditolak');
+                  });
+            })
+            ->whereDoesntHave('revisions')
+            ->with(['items', 'parent'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        // Pengajuan revisi yang sedang berjalan
+        $viewData['inProgressRevisions'] = \App\Models\AtkRequest::where('user_id', $user->id)
+            ->where('revision_number', '>', 0)
+            ->whereIn('status_approval', ['Menunggu Persetujuan Manager', 'Menunggu Persetujuan Admin GA'])
+            ->with(['items', 'parent'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        $viewData['recentAtk'] = \App\Models\AtkRequest::where('user_id', $user->id)
+            ->with(['items', 'parent'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
     } elseif ($user->isDeveloper()) {
         $viewData['myTasks'] = \App\Models\WorkOrder::where('assigned_engineer_id', $user->id)
             ->whereNotIn('status', ['Selesai'])->count();
         $viewData['pendingChecks'] = \App\Models\WorkOrder::where('assigned_engineer_id', $user->id)
             ->where('status', 'Pengecekan Engineer')->count();
+        $viewData['activeWork'] = \App\Models\WorkOrder::where('assigned_engineer_id', $user->id)
+            ->whereIn('status', ['Sedang Dikerjakan', 'Menunggu Pengadaan Material'])->count();
+
+        // Tugas Pengecekan Lapangan yang harus diinput/direvisi Teknisi
+        $viewData['pendingCheckTasks'] = \App\Models\WorkOrder::where('assigned_engineer_id', $user->id)
+            ->where('status', 'Pengecekan Engineer')
+            ->with('user')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        // Pekerjaan yang sedang berjalan atau siap dikerjakan
+        $viewData['workingTasks'] = \App\Models\WorkOrder::where('assigned_engineer_id', $user->id)
+            ->whereIn('status', ['Sedang Dikerjakan', 'Menunggu Pengadaan Material'])
+            ->with(['user', 'fpuRequest'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
         $viewData['recentTasks'] = \App\Models\WorkOrder::where('assigned_engineer_id', $user->id)
-            ->orderBy('updated_at', 'desc')->take(5)->get();
+            ->with('user')
+            ->orderBy('updated_at', 'desc')
+            ->take(6)
+            ->get();
+
     } elseif ($user->isAdmin() || $user->isSuperAdmin()) {
         $viewData['totalWO'] = \App\Models\WorkOrder::count();
         $viewData['pendingAssignment'] = \App\Models\WorkOrder::where('status', 'Menunggu Penugasan')->count();
@@ -70,6 +134,46 @@ Route::get('/dashboard', function () {
         
         $viewData['pendingFpu'] = \App\Models\FpuRequest::whereIn('status_approval', ['Menunggu Verifikasi HRGA', 'Menunggu Admin GA'])->count();
         $viewData['recentWO'] = \App\Models\WorkOrder::orderBy('created_at', 'desc')->take(5)->get();
+
+        // Take Action Work Order untuk Admin:
+        // 1. WO Baru Menunggu Penugasan Teknisi
+        $viewData['pendingAssignmentWOs'] = \App\Models\WorkOrder::where('status', 'Menunggu Penugasan')
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 2. Hasil Pengecekan Teknisi Menunggu Approval Admin
+        $viewData['pendingCheckApprovalWOs'] = \App\Models\WorkOrder::where('status', 'Pengecekan Engineer')
+            ->whereNotNull('check_result')
+            ->where('is_check_approved', false)
+            ->with(['user', 'assignedEngineer', 'fpuRequest.materials'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        // 3. Menunggu Berita Acara Serah Terima
+        $viewData['pendingHandoverPrepWOs'] = \App\Models\WorkOrder::where('status', 'Menunggu Serah Terima')
+            ->where(function($q) {
+                $q->whereDoesntHave('handover')
+                  ->orWhereHas('handover', fn($hq) => $hq->whereNull('prepared_by'));
+            })
+            ->with(['user', 'assignedEngineer'])
+            ->get();
+
+        $viewData['engineers'] = \App\Models\User::whereIn('role', ['developer', 'engineer'])->get();
+
+        // ATK / Rumah Tangga Stats untuk Admin GA
+        $viewData['pendingAtkGA'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Admin GA')->count();
+        $viewData['pendingAtkHandover'] = \App\Models\AtkRequest::where('status_approval', 'Disetujui')->whereNull('diberikan_pada')->count();
+        $viewData['pendingRevisionAtkGA'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Admin GA')
+            ->where('revision_number', '>', 0)
+            ->with(['items', 'user', 'parent'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+        $viewData['recentAtk'] = \App\Models\AtkRequest::with(['user', 'parent', 'items'])
+            ->orderBy('updated_at', 'desc')
+            ->take(5)
+            ->get();
+
 
         // Security Checkpoint Stats untuk Admin
         $viewData['totalAreas'] = \App\Models\SecurityCheckpoint::count();
@@ -101,10 +205,19 @@ Route::get('/dashboard', function () {
     } elseif ($user->isManager()) {
         $viewData['pendingManagerAtk'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')->count();
         $viewData['totalManagerAtkApproved'] = \App\Models\AtkRequest::where('manager_approved_by', $user->id)->count();
-        $viewData['recentAtkRequests'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')
+        
+        // Dokumen revisi baru yang masuk dan butuh approval Manager
+        $viewData['pendingRevisionAtkList'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')
+            ->where('revision_number', '>', 0)
+            ->with(['items', 'user', 'parent'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        $viewData['recentAtkRequests'] = \App\Models\AtkRequest::with(['user', 'parent', 'items'])
+            ->where('status_approval', 'Menunggu Persetujuan Manager')
             ->orWhere('manager_approved_by', $user->id)
             ->orderBy('updated_at', 'desc')
-            ->take(5)
+            ->take(6)
             ->get();
 
         // Security Checkpoint Stats untuk Manager

@@ -39,7 +39,10 @@
         <div class="card shadow-sm border-0 rounded-4 mb-4">
             <div class="card-header bg-white border-bottom border-light d-flex justify-content-between align-items-center">
                 <h3 class="card-title text-primary font-weight-bold mb-0">
-                    <i class="fas fa-file-alt mr-2"></i>Detail Permintaan {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'Rumah Tangga' : 'ATK' }} - {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT' : 'ATK' }}-{{ str_pad($atkRequest->id, 4, '0', STR_PAD_LEFT) }}
+                    <i class="fas fa-file-alt mr-2"></i>Detail Permintaan {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'Rumah Tangga' : 'ATK' }} - {{ $atkRequest->formatted_doc_number }}
+                    @if($atkRequest->revision_number > 0)
+                        <span class="badge badge-warning text-dark font-weight-bold ml-2 shadow-sm" style="font-size: 0.75rem;"><i class="fas fa-history mr-1"></i> Revisi Ke-{{ $atkRequest->revision_number }}</span>
+                    @endif
                 </h3>
                 <div>
                     @php
@@ -76,6 +79,32 @@
             </div>
             
             <div class="card-body">
+                @if($atkRequest->parent_id && $atkRequest->parent)
+                    <div class="alert alert-warning border-0 rounded-4 p-3 mb-3 d-flex align-items-center justify-content-between shadow-sm" style="background-color: #fffbeb; border-left: 4px solid #f59e0b !important;">
+                        <div>
+                            <i class="fas fa-info-circle text-warning mr-1"></i> <strong>Pengajuan Revisi:</strong> Ini adalah pengajuan revisi ke-{{ $atkRequest->revision_number }} dari dokumen <a href="{{ route('atk-requests.show', $atkRequest->parent_id) }}" class="font-weight-bold text-primary">{{ $atkRequest->parent->formatted_doc_number }}</a>.
+                            @if($atkRequest->revision_note)
+                                <div class="text-sm text-muted mt-1 font-italic">{{ $atkRequest->revision_note }}</div>
+                            @endif
+                        </div>
+                        <a href="{{ route('atk-requests.show', $atkRequest->parent_id) }}" class="btn btn-outline-warning btn-sm text-dark font-weight-bold rounded-pill">
+                            <i class="fas fa-external-link-alt mr-1"></i> Dokumen Asal
+                        </a>
+                    </div>
+                @endif
+
+                @if($atkRequest->revisions && $atkRequest->revisions->count() > 0)
+                    @php $latestRev = $atkRequest->revisions->sortByDesc('revision_number')->first(); @endphp
+                    <div class="alert alert-info border-0 rounded-4 p-3 mb-3 d-flex align-items-center justify-content-between shadow-sm" style="background-color: #eff6ff; border-left: 4px solid #3b82f6 !important;">
+                        <div>
+                            <i class="fas fa-history text-primary mr-1"></i> <strong>Dokumen Ini Telah Direvisi:</strong> Dokumen revisi terbaru adalah <a href="{{ route('atk-requests.show', $latestRev->id) }}" class="font-weight-bold text-primary">{{ $latestRev->formatted_doc_number }}</a> (Status: <span class="badge badge-info">{{ $latestRev->status_approval }}</span>).
+                        </div>
+                        <a href="{{ route('atk-requests.show', $latestRev->id) }}" class="btn btn-primary btn-sm rounded-pill font-weight-bold shadow-sm">
+                            <i class="fas fa-arrow-right mr-1"></i> Buka Revisi
+                        </a>
+                    </div>
+                @endif
+
                 <!-- Metadata table -->
                 <div class="row mb-3">
                     <div class="col-md-6">
@@ -123,11 +152,11 @@
                                 <th style="width: 5%;" class="text-center">No</th>
                                 <th>Nama Barang</th>
                                 <th style="width: 10%;" class="text-center">Satuan</th>
-                                <th style="width: 18%;">Spesifikasi</th>
-                                <th style="width: 8%;" class="text-center">Qty</th>
+                                <th style="width: 20%;">Spesifikasi</th>
+                                <th style="width: 12%;" class="text-center">Qty</th>
                                 @if($isApprovalMode)
                                     <th style="width: 27%;" class="text-center">Tindakan</th>
-                                    <th style="width: 20%;">Catatan Item</th>
+                                    <th style="width: 18%;">Catatan Item</th>
                                 @elseif($showItemStatus)
                                     <th style="width: 15%;" class="text-center">Status Item</th>
                                     <th style="width: 18%;">Catatan Item</th>
@@ -141,12 +170,31 @@
                             @foreach($atkRequest->items->where('is_custom', false) as $item)
                                 <tr>
                                     <td class="text-center align-middle">{{ $no++ }}</td>
-                                    <td class="font-weight-600 align-middle">{{ $item->item_name }}</td>
+                                    <td class="font-weight-600 align-middle">
+                                        {{ $item->item_name }}
+                                        @if($item->is_revised)
+                                            <span class="badge badge-warning text-dark font-weight-bold ml-1" title="Item telah disesuaikan/direvisi"><i class="fas fa-history"></i> Direvisi</span>
+                                        @endif
+                                    </td>
                                     <td class="text-center align-middle">
                                         <span class="badge badge-secondary">{{ $item->unit }}</span>
                                     </td>
-                                    <td class="align-middle text-muted">{{ $item->description ?? '-' }}</td>
-                                    <td class="text-center align-middle font-weight-bold">{{ $item->quantity }}</td>
+                                    <td class="align-middle text-muted">
+                                        {{ $item->description ?? '-' }}
+                                        @if($item->is_revised && $item->previous_description && $item->previous_description !== $item->description)
+                                            <div class="small text-muted font-italic mt-1" style="font-size: 11px;">
+                                                <i class="fas fa-info-circle text-info mr-1"></i> Spek sebelumnya: <span class="text-secondary">{{ $item->previous_description }}</span>
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <span class="font-weight-bold {{ $item->is_revised ? 'text-primary' : '' }}" style="font-size: 1.05rem;">{{ $item->quantity }}</span>
+                                        @if($item->is_revised && $item->previous_quantity !== null)
+                                            <div class="small text-muted" style="font-size: 10.5px;" title="Jumlah sebelum revisi">
+                                                <del class="text-danger font-weight-bold">{{ $item->previous_quantity }}</del> &rarr; <span class="text-success font-weight-bold">{{ $item->quantity }}</span>
+                                            </div>
+                                        @endif
+                                    </td>
                                     
                                     @if($isApprovalMode)
                                         <td class="text-center align-middle">
@@ -198,12 +246,22 @@
                                 @foreach($atkRequest->items->where('is_custom', true) as $item)
                                     <tr>
                                         <td class="text-center align-middle">{{ $no++ }}</td>
-                                        <td class="font-weight-600 align-middle text-danger">{{ $item->item_name }}</td>
+                                        <td class="font-weight-600 align-middle text-danger">
+                                            {{ $item->item_name }}
+                                            @if($item->is_revised)
+                                                <span class="badge badge-warning text-dark font-weight-bold ml-1" title="Item telah disesuaikan/direvisi"><i class="fas fa-history"></i> Direvisi</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center align-middle">
                                             <span class="badge badge-secondary">{{ $item->unit }}</span>
                                         </td>
                                         <td class="align-middle text-muted">
                                             {{ $item->description ?? '-' }}
+                                            @if($item->is_revised && $item->previous_description && $item->previous_description !== $item->description)
+                                                <div class="small text-muted font-italic mt-1" style="font-size: 11px;">
+                                                    <i class="fas fa-info-circle text-info mr-1"></i> Spek sebelumnya: <span class="text-secondary">{{ $item->previous_description }}</span>
+                                                </div>
+                                            @endif
                                             @if($item->attachment)
                                                 <br>
                                                 <a href="{{ asset('storage/' . $item->attachment) }}" target="_blank" class="badge badge-success mt-1">
@@ -211,7 +269,14 @@
                                                 </a>
                                             @endif
                                         </td>
-                                        <td class="text-center align-middle font-weight-bold">{{ $item->quantity }}</td>
+                                        <td class="text-center align-middle">
+                                            <span class="font-weight-bold {{ $item->is_revised ? 'text-primary' : '' }}" style="font-size: 1.05rem;">{{ $item->quantity }}</span>
+                                            @if($item->is_revised && $item->previous_quantity !== null)
+                                                <div class="small text-muted" style="font-size: 10.5px;" title="Jumlah sebelum revisi">
+                                                    <del class="text-danger font-weight-bold">{{ $item->previous_quantity }}</del> &rarr; <span class="text-success font-weight-bold">{{ $item->quantity }}</span>
+                                                </div>
+                                            @endif
+                                        </td>
                                         
                                         @if($isApprovalMode)
                                             <td class="text-center align-middle">
@@ -256,6 +321,7 @@
                         </tbody>
                     </table>
                 </div>
+
 
                 @if($isApprovalMode)
                     <div class="card p-4 bg-light rounded-4 mt-4 border-0 shadow-sm">
@@ -689,6 +755,7 @@
             success: function(response) {
                 if (response.success) {
                     $('#reviseRejectedItemsModal').modal('hide');
+                    var redirectUrl = response.redirect_url || window.location.href;
                     if (window.Swal) {
                         Swal.fire({
                             icon: 'success',
@@ -696,11 +763,11 @@
                             text: response.message,
                             timer: 2000
                         }).then(function() {
-                            window.location.reload();
+                            window.location.href = redirectUrl;
                         });
                     } else {
                         alert(response.message);
-                        window.location.reload();
+                        window.location.href = redirectUrl;
                     }
                 }
             },
@@ -737,6 +804,7 @@
             success: function(response) {
                 if (response.success) {
                     $('#reviseItemModal').modal('hide');
+                    var redirectUrl = response.redirect_url || window.location.href;
                     if (window.Swal) {
                         Swal.fire({
                             icon: 'success',
@@ -744,11 +812,11 @@
                             text: response.message,
                             timer: 2000
                         }).then(function() {
-                            window.location.reload();
+                            window.location.href = redirectUrl;
                         });
                     } else {
                         alert(response.message);
-                        window.location.reload();
+                        window.location.href = redirectUrl;
                     }
                 }
             },
@@ -758,6 +826,7 @@
             }
         });
     }
+
 
     function submitSingleItemApproval(itemId, status, labelElement) {
         var $btnGroup = $(labelElement).closest('.btn-group-toggle');

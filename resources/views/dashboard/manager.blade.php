@@ -11,6 +11,80 @@
 
 <section class="content">
     <div class="container-fluid">
+        {{-- PEMBERITAHUAN PENGAJUAN REVISI BARU MENUNGGU PERSETUJUAN --}}
+        @if(isset($pendingRevisionAtkList) && $pendingRevisionAtkList->count() > 0)
+            <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 5px solid #f59e0b !important;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center mr-3 shadow-sm" style="width: 44px; height: 44px;">
+                            <i class="fas fa-history fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="font-weight-bold text-dark mb-0">Pemberitahuan: Ada {{ $pendingRevisionAtkList->count() }} Pengajuan Revisi Baru Menunggu Persetujuan Anda</h5>
+                            <small class="text-muted">Staf pemohon telah memperbaiki item pengajuan yang sebelumnya ditolak dan mengajukan ulang untuk dievaluasi kembali.</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        @foreach($pendingRevisionAtkList as $revReq)
+                            <div class="col-md-6 mb-3">
+                                <div class="card border rounded-3 bg-white shadow-none h-100" style="border-color: #fde68a !important;">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <strong class="text-primary font-weight-bold" style="font-size: 1rem;">
+                                                    <i class="fas fa-file-alt mr-1"></i> {{ $revReq->formatted_doc_number }}
+                                                </strong>
+                                                <span class="badge badge-warning text-dark ml-1 font-weight-bold">Revisi Ke-{{ $revReq->revision_number }}</span>
+                                            </div>
+                                            <span class="badge badge-secondary">{{ $revReq->request_type }}</span>
+                                        </div>
+
+                                        <div class="small text-muted mb-2">
+                                            <div><i class="fas fa-user mr-1"></i> Pemohon: <strong>{{ $revReq->nama }}</strong> ({{ $revReq->divisi }})</div>
+                                            <div><i class="fas fa-calendar mr-1"></i> Periode: <strong>{{ $revReq->periode }}</strong></div>
+                                            @if($revReq->parent)
+                                                <div><i class="fas fa-link mr-1"></i> Dokumen Asal: <strong>{{ $revReq->parent->formatted_doc_number }}</strong></div>
+                                            @endif
+                                        </div>
+
+                                        @php
+                                            $revisedItems = $revReq->items->where('is_revised', true);
+                                        @endphp
+                                        @if($revisedItems->count() > 0)
+                                            <div class="p-2 mb-2 rounded small" style="background-color: #fffbeb; border: 1px dashed #fcd34d;">
+                                                <strong>Item yang disesuaikan pemohon:</strong>
+                                                <ul class="pl-3 mb-0 mt-1">
+                                                    @foreach($revisedItems as $revItem)
+                                                        <li>
+                                                            <strong>{{ $revItem->item_name }}</strong>: 
+                                                            @if($revItem->previous_quantity)
+                                                                <del class="text-danger">{{ $revItem->previous_quantity }}</del> &rarr;
+                                                            @endif
+                                                            <span class="text-success font-weight-bold">{{ $revItem->quantity }} {{ $revItem->unit }}</span>
+                                                            @if($revItem->description)
+                                                                <span class="text-muted font-italic">({{ $revItem->description }})</span>
+                                                            @endif
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endif
+
+                                        <div class="d-flex justify-content-end align-items-center mt-3 pt-2 border-top">
+                                            <a href="{{ route('atk-requests.show', $revReq->id) }}" class="btn btn-warning btn-sm text-dark font-weight-bold rounded-pill px-4 shadow-sm">
+                                                <i class="fas fa-check-circle mr-1"></i> Evaluasi &amp; Setujui
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- Quick Stats Widgets -->
         <div class="row">
             <!-- Pending Manager Approvals -->
@@ -137,7 +211,7 @@
         <div class="card shadow-sm border-0 rounded-4 mt-3">
             <div class="card-header bg-white border-bottom border-light py-3 d-flex align-items-center justify-content-between">
                 <h3 class="card-title text-primary m-0 font-weight-bold">
-                    <i class="fas fa-clipboard-list mr-1"></i> Kesimpulan Permintaan ATK
+                    <i class="fas fa-clipboard-list mr-1"></i> Kesimpulan Permintaan ATK / Rumah Tangga
                 </h3>
                 <a href="{{ route('atk-requests.index') }}" class="btn btn-sm btn-primary rounded-pill px-3">
                     Lihat Semua
@@ -160,8 +234,14 @@
                             @forelse($recentAtkRequests ?? [] as $req)
                                 <tr>
                                     <td class="py-3 px-4 font-weight-bold">
-                                        {{ (($req->request_type ?? 'ATK') === 'Rumah Tangga' ? 'RT-' : 'ATK-') . str_pad($req->id, 4, '0', STR_PAD_LEFT) }}
+                                        {{ $req->formatted_doc_number }}
+                                        @if($req->revision_number > 0)
+                                            <span class="badge badge-warning text-dark font-weight-bold ml-1" style="font-size: 10px;">
+                                                Rev. {{ $req->revision_number }}
+                                            </span>
+                                        @endif
                                     </td>
+
                                     <td class="py-3">{{ $req->nama }}</td>
                                     <td class="py-3"><span class="badge badge-secondary rounded-pill px-2 py-1">{{ $req->divisi }}</span></td>
                                     <td class="py-3">{{ $req->periode }}</td>
@@ -180,7 +260,7 @@
                                     </td>
                                     <td class="py-3 px-4 text-right">
                                         @if($req->status_approval === 'Menunggu Persetujuan Manager')
-                                            <a href="{{ route('atk-requests.show', $req->id) }}" class="btn btn-sm btn-warning rounded-pill px-3 shadow-xs">
+                                            <a href="{{ route('atk-requests.show', $req->id) }}" class="btn btn-sm btn-warning rounded-pill px-3 shadow-xs font-weight-bold">
                                                 <i class="fas fa-edit mr-1"></i> Tinjau
                                             </a>
                                         @else
@@ -202,6 +282,7 @@
                     </table>
                 </div>
             </div>
+        </div>
         <!-- Security Shift & Penugasan Keseluruhan -->
         <div class="card shadow-sm border-0 rounded-4 mt-4">
             <div class="card-header bg-white border-bottom border-light py-3 d-flex align-items-center justify-content-between">
