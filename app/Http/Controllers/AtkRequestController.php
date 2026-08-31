@@ -140,6 +140,197 @@ class AtkRequestController extends Controller
         ->toArray();
     }
 
+    /**
+     * Get item-to-category mapping dictionary
+     */
+    private function getItemCategoryMap(): array
+    {
+        $map = [];
+        try {
+            $dbItems = \App\Models\AtkItem::with('category')->get();
+            if ($dbItems->count() > 0) {
+                foreach ($dbItems as $item) {
+                    $map[trim(strtolower($item->name))] = $item->category->name ?? 'Lain-lain';
+                }
+            }
+        } catch (\Exception $e) {
+            // fallback
+        }
+
+        if (empty($map)) {
+            foreach (self::$standardItems as $item) {
+                $map[trim(strtolower($item['name']))] = $item['category'] ?? 'Lain-lain';
+            }
+            foreach (self::$householdItems as $item) {
+                $map[trim(strtolower($item['name']))] = $item['category'] ?? 'Lain-lain';
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Compute aggregated items and departmental breakdown for a given collection of requests
+     */
+    private function computeAggregations($requests): array
+    {
+        $catMap = $this->getItemCategoryMap();
+
+        // 1. ATK Data Containers
+        $atkItemsFlat = [];
+        $atkDeptList = [];
+        
+        // 2. Household Data Containers
+        $householdItemsFlat = [];
+        $householdDeptList = [];
+
+        foreach ($requests as $req) {
+            $isHousehold = ($req->request_type === 'Rumah Tangga');
+            $rawDept = trim($req->divisi ?: ($req->user->company ?? $req->user->department ?? 'Umum'));
+            $dept = $rawDept ?: 'Umum';
+
+            if ($isHousehold) {
+                if (!in_array($dept, $householdDeptList)) {
+                    $householdDeptList[] = $dept;
+                }
+            } else {
+                if (!in_array($dept, $atkDeptList)) {
+                    $atkDeptList[] = $dept;
+                }
+            }
+
+            foreach ($req->items as $item) {
+                if ($item->status_approval === 'Ditolak') {
+                    continue;
+                }
+
+                $key = trim(strtolower($item->item_name)) . '_' . trim(strtolower($item->unit));
+                $category = $item->is_custom ? 'Barang Khusus / Custom' : ($catMap[trim(strtolower($item->item_name))] ?? 'Lain-lain');
+
+                if ($isHousehold) {
+                    if (!isset($householdItemsFlat[$key])) {
+                        $householdItemsFlat[$key] = [
+                            'name' => $item->item_name,
+                            'unit' => $item->unit,
+                            'category' => $category,
+                            'is_custom' => (bool)$item->is_custom,
+                            'total_qty' => 0,
+                            'request_count' => 0,
+                            'dept_quantities' => [],
+                        ];
+                    }
+                    $householdItemsFlat[$key]['total_qty'] += $item->quantity;
+                    $householdItemsFlat[$key]['request_count'] += 1;
+                    $householdItemsFlat[$key]['dept_quantities'][$dept] = ($householdItemsFlat[$key]['dept_quantities'][$dept] ?? 0) + $item->quantity;
+                } else {
+                    if (!isset($atkItemsFlat[$key])) {
+                        $atkItemsFlat[$key] = [
+                            'name' => $item->item_name,
+                            'unit' => $item->unit,
+                            'category' => $category,
+                            'is_custom' => (bool)$item->is_custom,
+                            'total_qty' => 0,
+                            'request_count' => 0,
+                            'dept_quantities' => [],
+                        ];
+                    }
+                    $atkItemsFlat[$key]['total_qty'] += $item->quantity;
+                    $atkItemsFlat[$key]['request_count'] += 1;
+                    $atkItemsFlat[$key]['dept_quantities'][$dept] = ($atkItemsFlat[$key]['dept_quantities'][$dept] ?? 0) + $item->quantity;
+                }
+            }
+        }
+
+        sort($atkDeptList, SORT_NATURAL | SORT_FLAG_CASE);
+        sort($householdDeptList, SORT_NATURAL | SORT_FLAG_CASE);
+
+        // Group ATK by Category and calculate subtotals
+        $atkByCategory = [];
+        $atkGrandTotalQty = 0;
+        $atkDeptGrandTotals = array_fill_keys($atkDeptList, 0);
+
+        usort($atkItemsFlat, function($a, $b) {
+            if ($a['category'] === $b['category']) {
+                return strcmp($a['name'], $b['name']);
+            }
+            return strcmp($a['category'], $b['category']);
+        });
+
+        foreach ($atkItemsFlat as $item) {
+            $cat = $item['category'];
+            if (!isset($atkByCategory[$cat])) {
+                $atkByCategory[$cat] = [
+                    'category_name' => $cat,
+                    'items' => [],
+                    'subtotal_qty' => 0,
+                    'dept_subtotals' => array_fill_keys($atkDeptList, 0),
+                ];
+            }
+            $atkByCategory[$cat]['items'][] = $item;
+            $atkByCategory[$cat]['subtotal_qty'] += $item['total_qty'];
+            $atkGrandTotalQty += $item['total_qty'];
+
+            foreach ($item['dept_quantities'] as $d => $q) {
+                if (isset($atkByCategory[$cat]['dept_subtotals'][$d])) {
+                    $atkByCategory[$cat]['dept_subtotals'][$d] += $q;
+                }
+                if (isset($atkDeptGrandTotals[$d])) {
+                    $atkDeptGrandTotals[$d] += $q;
+                }
+            }
+        }
+
+        // Group Household by Category and calculate subtotals
+        $householdByCategory = [];
+        $householdGrandTotalQty = 0;
+        $householdDeptGrandTotals = array_fill_keys($householdDeptList, 0);
+
+        usort($householdItemsFlat, function($a, $b) {
+            if ($a['category'] === $b['category']) {
+                return strcmp($a['name'], $b['name']);
+            }
+            return strcmp($a['category'], $b['category']);
+        });
+
+        foreach ($householdItemsFlat as $item) {
+            $cat = $item['category'];
+            if (!isset($householdByCategory[$cat])) {
+                $householdByCategory[$cat] = [
+                    'category_name' => $cat,
+                    'items' => [],
+                    'subtotal_qty' => 0,
+                    'dept_subtotals' => array_fill_keys($householdDeptList, 0),
+                ];
+            }
+            $householdByCategory[$cat]['items'][] = $item;
+            $householdByCategory[$cat]['subtotal_qty'] += $item['total_qty'];
+            $householdGrandTotalQty += $item['total_qty'];
+
+            foreach ($item['dept_quantities'] as $d => $q) {
+                if (isset($householdByCategory[$cat]['dept_subtotals'][$d])) {
+                    $householdByCategory[$cat]['dept_subtotals'][$d] += $q;
+                }
+                if (isset($householdDeptGrandTotals[$d])) {
+                    $householdDeptGrandTotals[$d] += $q;
+                }
+            }
+        }
+
+        return [
+            'atkItemsFlat' => $atkItemsFlat,
+            'atkByCategory' => $atkByCategory,
+            'atkDeptList' => $atkDeptList,
+            'atkGrandTotalQty' => $atkGrandTotalQty,
+            'atkDeptGrandTotals' => $atkDeptGrandTotals,
+
+            'householdItemsFlat' => $householdItemsFlat,
+            'householdByCategory' => $householdByCategory,
+            'householdDeptList' => $householdDeptList,
+            'householdGrandTotalQty' => $householdGrandTotalQty,
+            'householdDeptGrandTotals' => $householdDeptGrandTotals,
+        ];
+    }
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -189,49 +380,12 @@ class AtkRequestController extends Controller
 
         $requests = $query->orderBy('tanggal_pengajuan', 'desc')->get();
 
-        // Calculate aggregated items separated by request_type (ATK vs Rumah Tangga)
-        $atkAggregatedItems = [];
-        $householdAggregatedItems = [];
+        // Calculate aggregated items separated by category & department
+        $aggregations = $this->computeAggregations($requests);
 
-        foreach ($requests as $req) {
-            $isHousehold = ($req->request_type === 'Rumah Tangga');
-            foreach ($req->items as $item) {
-                $key = trim(strtolower($item->item_name)) . '_' . trim(strtolower($item->unit));
-                if ($isHousehold) {
-                    if (!isset($householdAggregatedItems[$key])) {
-                        $householdAggregatedItems[$key] = [
-                            'name' => $item->item_name,
-                            'unit' => $item->unit,
-                            'total_qty' => 0,
-                            'request_count' => 0,
-                        ];
-                    }
-                    $householdAggregatedItems[$key]['total_qty'] += $item->quantity;
-                    $householdAggregatedItems[$key]['request_count'] += 1;
-                } else {
-                    if (!isset($atkAggregatedItems[$key])) {
-                        $atkAggregatedItems[$key] = [
-                            'name' => $item->item_name,
-                            'unit' => $item->unit,
-                            'total_qty' => 0,
-                            'request_count' => 0,
-                        ];
-                    }
-                    $atkAggregatedItems[$key]['total_qty'] += $item->quantity;
-                    $atkAggregatedItems[$key]['request_count'] += 1;
-                }
-            }
-        }
-
-        usort($atkAggregatedItems, function($a, $b) {
-            return $b['total_qty'] <=> $a['total_qty'];
-        });
-
-        usort($householdAggregatedItems, function($a, $b) {
-            return $b['total_qty'] <=> $a['total_qty'];
-        });
-
-        return view('atk-requests.index', compact('requests', 'atkAggregatedItems', 'householdAggregatedItems'));
+        return view('atk-requests.index', array_merge([
+            'requests' => $requests,
+        ], $aggregations));
     }
 
     public function create()
@@ -1161,58 +1315,98 @@ class AtkRequestController extends Controller
 
         \App\Helpers\SettingsHelper::configureDompdf();
 
-        // Check the export mode: aggregated/grouped items vs detailed transaction list
-        if ($request->get('mode') === 'aggregation') {
-            $atkAggregatedItems = [];
-            $householdAggregatedItems = [];
+        $aggregations = $this->computeAggregations($requests);
 
-            foreach ($requests as $req) {
-                $isHousehold = ($req->request_type === 'Rumah Tangga');
-                foreach ($req->items as $item) {
-                    $key = trim(strtolower($item->item_name)) . '_' . trim(strtolower($item->unit));
-                    if ($isHousehold) {
-                        if (!isset($householdAggregatedItems[$key])) {
-                            $householdAggregatedItems[$key] = [
-                                'name' => $item->item_name,
-                                'unit' => $item->unit,
-                                'total_qty' => 0,
-                                'request_count' => 0,
-                            ];
-                        }
-                        $householdAggregatedItems[$key]['total_qty'] += $item->quantity;
-                        $householdAggregatedItems[$key]['request_count'] += 1;
-                    } else {
-                        if (!isset($atkAggregatedItems[$key])) {
-                            $atkAggregatedItems[$key] = [
-                                'name' => $item->item_name,
-                                'unit' => $item->unit,
-                                'total_qty' => 0,
-                                'request_count' => 0,
-                            ];
-                        }
-                        $atkAggregatedItems[$key]['total_qty'] += $item->quantity;
-                        $atkAggregatedItems[$key]['request_count'] += 1;
-                    }
-                }
-            }
+        // 1. Mode Departmental Matrix Recap (Rekap Per Departemen)
+        if ($request->get('mode') === 'department') {
+            $targetType = ($request->get('type') === 'household' || $request->get('type') === 'Rumah Tangga' || $request->get('request_type') === 'Rumah Tangga') ? 'Rumah Tangga' : 'ATK';
+            
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.pdf-department', array_merge([
+                'requests' => $requests,
+                'request' => $request,
+                'targetType' => $targetType,
+            ], $aggregations))->setPaper('a4', 'landscape');
 
-            // Sort by quantity descending
-            usort($atkAggregatedItems, function($a, $b) {
-                return $b['total_qty'] <=> $a['total_qty'];
-            });
-
-            usort($householdAggregatedItems, function($a, $b) {
-                return $b['total_qty'] <=> $a['total_qty'];
-            });
-
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.pdf-aggregation', compact('atkAggregatedItems', 'householdAggregatedItems', 'request'))
-                      ->setPaper('a4', 'portrait');
-            return $pdf->download('Rekap-Kebutuhan-Barang-' . now()->format('Y-m-d') . '.pdf');
+            $prefix = ($targetType === 'Rumah Tangga') ? 'Rekap-Distribusi-Rumah-Tangga-' : 'Rekap-Distribusi-ATK-';
+            return $pdf->download($prefix . now()->format('Y-m-d') . '.pdf');
         }
 
-        // Default: Detailed list
+        // 2. Mode Aggregated / Total Recap (Rekap Total Kebutuhan)
+        if ($request->get('mode') === 'aggregation') {
+            $targetType = $request->get('type');
+            if (!$targetType && $request->filled('request_type')) {
+                $targetType = $request->request_type;
+            }
+            if (!$targetType) {
+                $targetType = 'all';
+            }
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.pdf-aggregation', array_merge([
+                'requests' => $requests,
+                'request' => $request,
+                'targetType' => $targetType,
+            ], $aggregations))->setPaper('a4', 'portrait');
+
+            if ($targetType === 'ATK') {
+                $filename = 'Rekap-Total-ATK-' . now()->format('Y-m-d') . '.pdf';
+            } elseif ($targetType === 'Rumah Tangga' || $targetType === 'household') {
+                $filename = 'Rekap-Total-Rumah-Tangga-' . now()->format('Y-m-d') . '.pdf';
+            } else {
+                $filename = 'Rekap-Total-Kebutuhan-Barang-' . now()->format('Y-m-d') . '.pdf';
+            }
+
+            return $pdf->download($filename);
+        }
+
+        // 3. Default Mode: Detailed transaction list
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.pdf-detail', compact('requests', 'request'))
                   ->setPaper('a4', 'landscape');
         return $pdf->download('Laporan-Permintaan-Barang-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        // Only Admin, Super Admin, and Manager can export Excel
+        if (!auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin() && !auth()->user()->isManager()) {
+            abort(403);
+        }
+
+        $query = AtkRequest::with(['items', 'user', 'approver']);
+
+        // 1. Filter Tanggal Pengajuan
+        if ($request->filled('start_date')) {
+            $query->whereDate('tanggal_pengajuan', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('tanggal_pengajuan', '<=', $request->end_date);
+        }
+
+        // 2. Filter Tipe Permintaan
+        if ($request->filled('request_type') && $request->request_type !== 'all') {
+            $query->where('request_type', $request->request_type);
+        }
+
+        // 3. Filter Status Approval
+        if ($request->filled('status_approval') && $request->status_approval !== 'all') {
+            $query->where('status_approval', $request->status_approval);
+        }
+
+        // 4. Filter Divisi
+        if ($request->filled('divisi')) {
+            $query->where('divisi', 'like', '%' . $request->divisi . '%');
+        }
+
+        // 5. Filter Item Tertentu
+        if ($request->filled('item_name')) {
+            $query->whereHas('items', function($q) use ($request) {
+                $q->where('item_name', 'like', '%' . $request->item_name . '%');
+            });
+        }
+
+        $requests = $query->orderBy('tanggal_pengajuan', 'desc')->get();
+        $aggregations = $this->computeAggregations($requests);
+
+        $filename = 'Rekapitulasi-Kebutuhan-Barang-' . now()->format('Y-m-d') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\AtkRecapExport($aggregations, $request), $filename);
     }
 }

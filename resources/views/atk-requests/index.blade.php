@@ -102,9 +102,6 @@
                         <div class="col-md-2 col-sm-6 mb-2">
                             <label class="small font-weight-bold text-muted">Divisi</label>
                             <input type="text" name="divisi" class="form-control form-control-sm" placeholder="Nama divisi..." value="{{ request('divisi') }}" style="border-radius: 0.5rem;">
-                        </div>
-                    </div>
-                    
                     <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap" style="gap: .5rem;">
                         <div>
                             <button type="submit" class="btn btn-primary btn-sm shadow-sm px-3" style="border-radius: 0.5rem;">
@@ -115,18 +112,53 @@
                             </a>
                         </div>
                         
-                        <div class="d-flex" style="gap: .5rem;">
+                        <div class="d-flex flex-wrap" style="gap: .5rem;">
+                            <!-- Modal Button 1: Rekap Total -->
                             <button type="button" class="btn btn-info btn-sm text-white shadow-sm px-3" data-toggle="modal" data-target="#modalRekapTotal" style="border-radius: 0.5rem;">
-                                <i class="fas fa-list-alt mr-1"></i> Lihat Rekap Total
+                                <i class="fas fa-boxes mr-1"></i> Rekap Total (Kategori)
                             </button>
 
-                            <button type="button" onclick="exportPdf('detail')" class="btn btn-danger btn-sm shadow-sm px-3" style="border-radius: 0.5rem;">
-                                <i class="fas fa-file-pdf mr-1"></i> Ekspor PDF (Detail)
+                            <!-- Modal Button 2: Rekap Per Departemen -->
+                            <button type="button" class="btn btn-teal btn-sm text-white shadow-sm px-3" data-toggle="modal" data-target="#modalRekapDepartemen" style="border-radius: 0.5rem; background-color: #0d9488;">
+                                <i class="fas fa-sitemap mr-1"></i> Rekap Per Departemen
                             </button>
-                            
-                            <button type="button" onclick="exportPdf('aggregation')" class="btn btn-warning btn-sm text-dark shadow-sm px-3" style="border-radius: 0.5rem;">
-                                <i class="fas fa-boxes mr-1"></i> Ekspor PDF (Total Kebutuhan)
-                            </button>
+
+                            <!-- Dropdown Export Menu -->
+                            <div class="dropdown">
+                                <button class="btn btn-danger btn-sm dropdown-toggle shadow-sm px-3" type="button" id="dropdownExportMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border-radius: 0.5rem;">
+                                    <i class="fas fa-file-export mr-1"></i> Ekspor Laporan
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right shadow-lg border-0" aria-labelledby="dropdownExportMenu" style="border-radius: 0.75rem; min-width: 250px; font-size: 0.88rem;">
+                                    <h6 class="dropdown-header text-primary font-weight-bold"><i class="fas fa-file-pdf mr-1 text-danger"></i> Rekap Total (PDF)</h6>
+                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('aggregation', 'ATK')">
+                                        <i class="fas fa-pencil-alt text-primary mr-2"></i> Rekap Total ATK (PDF)
+                                    </a>
+                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('aggregation', 'Rumah Tangga')">
+                                        <i class="fas fa-home text-warning mr-2"></i> Rekap Total Rumah Tangga (PDF)
+                                    </a>
+                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('aggregation', 'all')">
+                                        <i class="fas fa-boxes text-info mr-2"></i> Rekap Total Keseluruhan (PDF)
+                                    </a>
+
+                                    <div class="dropdown-divider"></div>
+                                    <h6 class="dropdown-header text-success font-weight-bold"><i class="fas fa-sitemap mr-1 text-teal" style="color:#0d9488;"></i> Distribusi Departemen (PDF Landscape)</h6>
+                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('department', 'ATK')">
+                                        <i class="fas fa-building text-primary mr-2"></i> Matriks Departemen ATK (PDF)
+                                    </a>
+                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('department', 'Rumah Tangga')">
+                                        <i class="fas fa-warehouse text-warning mr-2"></i> Matriks Dept Rumah Tangga (PDF)
+                                    </a>
+
+                                    <div class="dropdown-divider"></div>
+                                    <h6 class="dropdown-header text-dark font-weight-bold"><i class="fas fa-file-alt mr-1 text-secondary"></i> Laporan Lainnya</h6>
+                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('detail')">
+                                        <i class="fas fa-list text-secondary mr-2"></i> Laporan Detail Transaksi (PDF)
+                                    </a>
+                                    <a class="dropdown-item py-2 bg-light font-weight-bold text-success" href="javascript:void(0)" onclick="exportExcel()">
+                                        <i class="fas fa-file-excel text-success mr-2"></i> Unduh Rekap Lengkap (Excel .xlsx)
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -256,13 +288,13 @@
 </div>
 
 @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin() || auth()->user()->isManager())
-{{-- Modal Rekap Total Kebutuhan Barang --}}
+{{-- MODAL 1: REKAP TOTAL KEBUTUHAN BARANG (DIKELOMPOKKAN PER KATEGORI) --}}
 <div class="modal fade" id="modalRekapTotal" tabindex="-1" role="dialog" aria-labelledby="modalRekapTotalTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content" style="border-radius: 0.8rem; overflow: hidden;">
             <div class="modal-header bg-light border-bottom">
                 <h5 class="modal-title font-weight-bold text-dark" id="modalRekapTotalTitle">
-                    <i class="fas fa-boxes text-primary mr-2"></i>Rekap Total Kebutuhan Barang
+                    <i class="fas fa-boxes text-primary mr-2"></i>Rekap Total Kebutuhan Barang (Per Kategori)
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -270,66 +302,83 @@
             </div>
             <div class="modal-body p-4">
                 <div class="alert alert-info py-2 px-3 small rounded-pill mb-3">
-                    <i class="fas fa-info-circle mr-1"></i> Rekap ini dihitung berdasarkan filter pencarian yang aktif pada daftar permintaan di atas.
+                    <i class="fas fa-info-circle mr-1"></i> Data rekapitulasi di bawah ini terpisah per kategori barang dan dihitung berdasarkan filter aktif.
                 </div>
 
                 {{-- Nav Tabs --}}
-                <ul class="nav nav-pills mb-3 nav-fill" id="rekapTab" role="tablist">
+                <ul class="nav nav-pills mb-3 nav-fill" id="rekapTotalTab" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active font-weight-bold shadow-sm" id="atk-rekap-tab" data-toggle="pill" href="#pills-atk-rekap" role="tab" aria-controls="pills-atk-rekap" aria-selected="true" style="border-radius: 0.5rem;">
+                        <a class="nav-link active font-weight-bold shadow-sm" id="atk-total-tab" data-toggle="pill" href="#pills-atk-total" role="tab" aria-controls="pills-atk-total" aria-selected="true" style="border-radius: 0.5rem;">
                             <i class="fas fa-pencil-alt mr-1"></i> ATK (Alat Tulis Kantor)
-                            <span class="badge badge-primary ml-1">{{ count($atkAggregatedItems ?? []) }}</span>
+                            <span class="badge badge-primary ml-1">{{ $atkGrandTotalQty ?? 0 }} Qty</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link font-weight-bold shadow-sm" id="household-rekap-tab" data-toggle="pill" href="#pills-household-rekap" role="tab" aria-controls="pills-household-rekap" aria-selected="false" style="border-radius: 0.5rem;">
+                        <a class="nav-link font-weight-bold shadow-sm" id="household-total-tab" data-toggle="pill" href="#pills-household-total" role="tab" aria-controls="pills-household-total" aria-selected="false" style="border-radius: 0.5rem;">
                             <i class="fas fa-home mr-1"></i> Rumah Tangga (RT)
-                            <span class="badge badge-warning text-dark ml-1">{{ count($householdAggregatedItems ?? []) }}</span>
+                            <span class="badge badge-warning text-dark ml-1">{{ $householdGrandTotalQty ?? 0 }} Qty</span>
                         </a>
                     </li>
                 </ul>
 
                 {{-- Tab Content --}}
-                <div class="tab-content" id="rekapTabContent">
+                <div class="tab-content" id="rekapTotalTabContent">
                     {{-- Tab ATK --}}
-                    <div class="tab-pane fade show active" id="pills-atk-rekap" role="tabpanel" aria-labelledby="atk-rekap-tab">
-                        <div class="table-responsive style-scroll" style="max-height: 400px;">
-                            <table class="table table-bordered table-striped table-hover mb-0">
+                    <div class="tab-pane fade show active" id="pills-atk-total" role="tabpanel" aria-labelledby="atk-total-tab">
+                        <div class="table-responsive style-scroll" style="max-height: 420px;">
+                            <table class="table table-bordered table-hover mb-0">
                                 <thead class="bg-primary text-white">
                                     <tr>
-                                        <th style="width: 50px;" class="text-center">No</th>
+                                        <th style="width: 45px;" class="text-center">No</th>
                                         <th>Nama Barang ATK</th>
-                                        <th style="width: 120px;" class="text-center">Satuan</th>
-                                        <th style="width: 150px;" class="text-center">Total Qty</th>
-                                        <th style="width: 140px;" class="text-center">Pengajuan</th>
+                                        <th style="width: 110px;" class="text-center">Satuan</th>
+                                        <th style="width: 140px;" class="text-center">Total Kebutuhan</th>
+                                        <th style="width: 130px;" class="text-center">Frekuensi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @php $totalAtkModalQty = 0; @endphp
-                                    @forelse($atkAggregatedItems ?? [] as $index => $item)
-                                        @php $totalAtkModalQty += $item['total_qty']; @endphp
-                                        <tr>
-                                            <td class="text-center">{{ $index + 1 }}</td>
-                                            <td class="font-weight-bold">{{ $item['name'] }}</td>
-                                            <td class="text-center"><span class="badge badge-light border">{{ $item['unit'] }}</span></td>
-                                            <td class="text-center">
-                                                <span class="badge badge-primary px-2 py-1" style="font-size: 0.85rem;">{{ $item['total_qty'] }}</span>
+                                    @php $noAtk = 1; @endphp
+                                    @forelse($atkByCategory ?? [] as $catName => $catData)
+                                        <tr class="bg-light font-weight-bold text-primary">
+                                            <td colspan="5">
+                                                <i class="fas fa-folder-open mr-1"></i> Kategori: {{ $catName }}
+                                                <span class="badge badge-light border ml-1 font-weight-normal text-muted">{{ count($catData['items']) }} jenis</span>
                                             </td>
-                                            <td class="text-center small text-muted">{{ $item['request_count'] }}x diajukan</td>
+                                        </tr>
+                                        @foreach($catData['items'] as $item)
+                                            <tr>
+                                                <td class="text-center text-muted">{{ $noAtk++ }}</td>
+                                                <td class="font-weight-600">
+                                                    {{ $item['name'] }}
+                                                    @if($item['is_custom'])
+                                                        <span class="badge badge-danger ml-1" style="font-size: 9px;">Custom</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center"><span class="badge badge-light border">{{ $item['unit'] }}</span></td>
+                                                <td class="text-center">
+                                                    <span class="badge badge-primary px-2.5 py-1" style="font-size: 0.85rem;">{{ $item['total_qty'] }}</span>
+                                                </td>
+                                                <td class="text-center small text-muted">{{ $item['request_count'] }}x diajukan</td>
+                                            </tr>
+                                        @endforeach
+                                        <tr class="bg-light" style="font-size: 0.85rem;">
+                                            <td colspan="3" class="text-right font-weight-bold text-muted">Subtotal {{ $catName }}:</td>
+                                            <td class="text-center font-weight-bold text-primary">{{ $catData['subtotal_qty'] }}</td>
+                                            <td></td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="5" class="text-center py-4 text-muted">
-                                                Tidak ada data barang ATK pada filter saat ini.
+                                                Tidak ada data kebutuhan ATK pada filter saat ini.
                                             </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
-                                @if(!empty($atkAggregatedItems) && count($atkAggregatedItems) > 0)
-                                    <tfoot class="bg-light font-weight-bold">
+                                @if(($atkGrandTotalQty ?? 0) > 0)
+                                    <tfoot class="bg-primary text-white font-weight-bold">
                                         <tr>
-                                            <td colspan="3" class="text-right">Total Kebutuhan ATK:</td>
-                                            <td class="text-center text-primary" style="font-size: 1rem;">{{ $totalAtkModalQty }}</td>
+                                            <td colspan="3" class="text-right">GRAND TOTAL KEBUTUHAN ATK:</td>
+                                            <td class="text-center" style="font-size: 1.05rem;">{{ $atkGrandTotalQty }}</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -339,44 +388,61 @@
                     </div>
 
                     {{-- Tab Rumah Tangga --}}
-                    <div class="tab-pane fade" id="pills-household-rekap" role="tabpanel" aria-labelledby="household-rekap-tab">
-                        <div class="table-responsive style-scroll" style="max-height: 400px;">
-                            <table class="table table-bordered table-striped table-hover mb-0">
+                    <div class="tab-pane fade" id="pills-household-total" role="tabpanel" aria-labelledby="household-total-tab">
+                        <div class="table-responsive style-scroll" style="max-height: 420px;">
+                            <table class="table table-bordered table-hover mb-0">
                                 <thead class="bg-warning text-white">
                                     <tr>
-                                        <th style="width: 50px;" class="text-center">No</th>
+                                        <th style="width: 45px;" class="text-center">No</th>
                                         <th>Nama Barang Rumah Tangga</th>
-                                        <th style="width: 120px;" class="text-center">Satuan</th>
-                                        <th style="width: 150px;" class="text-center">Total Qty</th>
-                                        <th style="width: 140px;" class="text-center">Pengajuan</th>
+                                        <th style="width: 110px;" class="text-center">Satuan</th>
+                                        <th style="width: 140px;" class="text-center">Total Kebutuhan</th>
+                                        <th style="width: 130px;" class="text-center">Frekuensi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @php $totalRtModalQty = 0; @endphp
-                                    @forelse($householdAggregatedItems ?? [] as $index => $item)
-                                        @php $totalRtModalQty += $item['total_qty']; @endphp
-                                        <tr>
-                                            <td class="text-center">{{ $index + 1 }}</td>
-                                            <td class="font-weight-bold">{{ $item['name'] }}</td>
-                                            <td class="text-center"><span class="badge badge-light border">{{ $item['unit'] }}</span></td>
-                                            <td class="text-center">
-                                                <span class="badge badge-warning text-dark px-2 py-1" style="font-size: 0.85rem;">{{ $item['total_qty'] }}</span>
+                                    @php $noRt = 1; @endphp
+                                    @forelse($householdByCategory ?? [] as $catName => $catData)
+                                        <tr class="bg-light font-weight-bold text-warning">
+                                            <td colspan="5">
+                                                <i class="fas fa-folder-open mr-1"></i> Kategori: {{ $catName }}
+                                                <span class="badge badge-light border ml-1 font-weight-normal text-muted">{{ count($catData['items']) }} jenis</span>
                                             </td>
-                                            <td class="text-center small text-muted">{{ $item['request_count'] }}x diajukan</td>
+                                        </tr>
+                                        @foreach($catData['items'] as $item)
+                                            <tr>
+                                                <td class="text-center text-muted">{{ $noRt++ }}</td>
+                                                <td class="font-weight-600">
+                                                    {{ $item['name'] }}
+                                                    @if($item['is_custom'])
+                                                        <span class="badge badge-danger ml-1" style="font-size: 9px;">Custom</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center"><span class="badge badge-light border">{{ $item['unit'] }}</span></td>
+                                                <td class="text-center">
+                                                    <span class="badge badge-warning text-dark px-2.5 py-1" style="font-size: 0.85rem;">{{ $item['total_qty'] }}</span>
+                                                </td>
+                                                <td class="text-center small text-muted">{{ $item['request_count'] }}x diajukan</td>
+                                            </tr>
+                                        @endforeach
+                                        <tr class="bg-light" style="font-size: 0.85rem;">
+                                            <td colspan="3" class="text-right font-weight-bold text-muted">Subtotal {{ $catName }}:</td>
+                                            <td class="text-center font-weight-bold text-warning">{{ $catData['subtotal_qty'] }}</td>
+                                            <td></td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="5" class="text-center py-4 text-muted">
-                                                Tidak ada data barang Rumah Tangga pada filter saat ini.
+                                                Tidak ada data kebutuhan Rumah Tangga pada filter saat ini.
                                             </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
-                                @if(!empty($householdAggregatedItems) && count($householdAggregatedItems) > 0)
-                                    <tfoot class="bg-light font-weight-bold">
+                                @if(($householdGrandTotalQty ?? 0) > 0)
+                                    <tfoot class="bg-warning text-dark font-weight-bold">
                                         <tr>
-                                            <td colspan="3" class="text-right">Total Kebutuhan Rumah Tangga:</td>
-                                            <td class="text-center text-warning" style="font-size: 1rem;">{{ $totalRtModalQty }}</td>
+                                            <td colspan="3" class="text-right">GRAND TOTAL KEBUTUHAN RUMAH TANGGA:</td>
+                                            <td class="text-center" style="font-size: 1.05rem;">{{ $householdGrandTotalQty }}</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -386,11 +452,255 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer bg-light">
-                <button type="button" onclick="exportPdf('aggregation')" class="btn btn-warning btn-sm text-dark font-weight-bold" style="border-radius: 0.5rem;">
-                    <i class="fas fa-file-pdf mr-1"></i> Cetak Rekap (PDF)
+            <div class="modal-footer bg-light d-flex justify-content-between">
+                <div>
+                    <button type="button" onclick="exportPdf('aggregation', 'ATK')" class="btn btn-outline-primary btn-sm rounded-pill font-weight-bold mr-1">
+                        <i class="fas fa-file-pdf mr-1"></i> Cetak Rekap ATK
+                    </button>
+                    <button type="button" onclick="exportPdf('aggregation', 'Rumah Tangga')" class="btn btn-outline-warning text-dark btn-sm rounded-pill font-weight-bold">
+                        <i class="fas fa-file-pdf mr-1"></i> Cetak Rekap RT
+                    </button>
+                </div>
+                <div>
+                    <button type="button" onclick="exportExcel()" class="btn btn-success btn-sm rounded-pill font-weight-bold mr-1">
+                        <i class="fas fa-file-excel mr-1"></i> Unduh Excel
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL 2: REKAP PER DEPARTEMEN / MATRIKS DISTRIBUSI --}}
+<div class="modal fade" id="modalRekapDepartemen" tabindex="-1" role="dialog" aria-labelledby="modalRekapDepartemenTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 0.8rem; overflow: hidden;">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title font-weight-bold text-dark" id="modalRekapDepartemenTitle">
+                    <i class="fas fa-sitemap mr-2" style="color: #0d9488;"></i>Rekapitulasi Kebutuhan Per Departemen (Matriks Distribusi & Purchasing)
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal" style="border-radius: 0.5rem;">Tutup</button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-teal py-2 px-3 small rounded-pill mb-3" style="background-color: #ccfbf1; color: #115e59;">
+                    <i class="fas fa-info-circle mr-1"></i> Matriks ini memudahkan tim <strong>Purchasing</strong> saat memesan dan tim <strong>GA</strong> dalam mendistribusikan barang ke tiap divisi secara akurat.
+                </div>
+
+                {{-- Nav Tabs --}}
+                <ul class="nav nav-pills mb-3 nav-fill" id="rekapDeptTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active font-weight-bold shadow-sm" id="atk-dept-tab" data-toggle="pill" href="#pills-atk-dept" role="tab" aria-controls="pills-atk-dept" aria-selected="true" style="border-radius: 0.5rem;">
+                            <i class="fas fa-pencil-alt mr-1"></i> Distribusi ATK Per Divisi
+                            <span class="badge badge-primary ml-1">{{ count($atkDeptList ?? []) }} Divisi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link font-weight-bold shadow-sm" id="household-dept-tab" data-toggle="pill" href="#pills-household-dept" role="tab" aria-controls="pills-household-dept" aria-selected="false" style="border-radius: 0.5rem;">
+                            <i class="fas fa-home mr-1"></i> Distribusi Rumah Tangga (RT) Per Divisi
+                            <span class="badge badge-warning text-dark ml-1">{{ count($householdDeptList ?? []) }} Divisi</span>
+                        </a>
+                    </li>
+                </ul>
+
+                {{-- Tab Content --}}
+                <div class="tab-content" id="rekapDeptTabContent">
+                    {{-- Tab 1: ATK Matrix --}}
+                    <div class="tab-pane fade show active" id="pills-atk-dept" role="tabpanel" aria-labelledby="atk-dept-tab">
+                        <div class="table-responsive style-scroll" style="max-height: 440px;">
+                            <table class="table table-bordered table-sm table-hover mb-0" style="font-size: 0.85rem;">
+                                <thead class="bg-primary text-white">
+                                    <tr>
+                                        <th style="width: 35px;" class="text-center" rowspan="2">No</th>
+                                        <th style="min-width: 180px;" rowspan="2">Nama Barang ATK</th>
+                                        <th style="width: 80px;" class="text-center" rowspan="2">Satuan</th>
+                                        @if(count($atkDeptList ?? []) > 0)
+                                            <th colspan="{{ count($atkDeptList) }}" class="text-center bg-dark" style="background-color: #1e3a8a !important; font-size: 0.8rem;">
+                                                RINCIAN KEBUTUHAN PER DEPARTEMEN / DIVISI
+                                            </th>
+                                        @endif
+                                        <th style="width: 110px;" class="text-center" rowspan="2">TOTAL</th>
+                                    </tr>
+                                    @if(count($atkDeptList ?? []) > 0)
+                                        <tr>
+                                            @foreach($atkDeptList as $dept)
+                                                <th class="text-center text-nowrap" style="background-color: #2563eb; font-size: 0.78rem; min-width: 85px;">
+                                                    {{ $dept }}
+                                                </th>
+                                            @endforeach
+                                        </tr>
+                                    @endif
+                                </thead>
+                                <tbody>
+                                    @php $noDeptAtk = 1; @endphp
+                                    @forelse($atkByCategory ?? [] as $catName => $catData)
+                                        <tr class="bg-light font-weight-bold text-primary">
+                                            <td colspan="{{ 3 + count($atkDeptList ?? []) + 1 }}">
+                                                <i class="fas fa-folder-open mr-1"></i> Kategori: {{ $catName }}
+                                            </td>
+                                        </tr>
+                                        @foreach($catData['items'] as $item)
+                                            <tr>
+                                                <td class="text-center text-muted">{{ $noDeptAtk++ }}</td>
+                                                <td class="font-weight-600">
+                                                    {{ $item['name'] }}
+                                                    @if($item['is_custom'])
+                                                        <span class="badge badge-danger ml-1" style="font-size: 8px;">Custom</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center"><span class="badge badge-light border">{{ $item['unit'] }}</span></td>
+                                                
+                                                @foreach($atkDeptList as $dept)
+                                                    @php $qty = $item['dept_quantities'][$dept] ?? 0; @endphp
+                                                    <td class="text-center {{ $qty > 0 ? 'font-weight-bold text-dark bg-white' : 'text-muted' }}" style="{{ $qty > 0 ? 'background-color: #eff6ff !important;' : '' }}">
+                                                        {{ $qty > 0 ? $qty : '-' }}
+                                                    </td>
+                                                @endforeach
+
+                                                <td class="text-center font-weight-bold text-primary" style="font-size: 0.9rem;">
+                                                    {{ $item['total_qty'] }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                        <tr class="bg-light" style="font-size: 0.82rem;">
+                                            <td colspan="3" class="text-right font-weight-bold text-muted">Subtotal {{ $catName }}:</td>
+                                            @foreach($atkDeptList as $dept)
+                                                <td class="text-center font-weight-bold text-primary">
+                                                    {{ ($catData['dept_subtotals'][$dept] ?? 0) > 0 ? $catData['dept_subtotals'][$dept] : '-' }}
+                                                </td>
+                                            @endforeach
+                                            <td class="text-center font-weight-bold text-primary">{{ $catData['subtotal_qty'] }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="{{ 3 + count($atkDeptList ?? []) + 1 }}" class="text-center py-4 text-muted">
+                                                Tidak ada data permintaan ATK ditemukan.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                                @if(($atkGrandTotalQty ?? 0) > 0)
+                                    <tfoot class="bg-primary text-white font-weight-bold">
+                                        <tr>
+                                            <td colspan="3" class="text-right">GRAND TOTAL:</td>
+                                            @foreach($atkDeptList as $dept)
+                                                <td class="text-center">{{ ($atkDeptGrandTotals[$dept] ?? 0) > 0 ? $atkDeptGrandTotals[$dept] : '-' }}</td>
+                                            @endforeach
+                                            <td class="text-center" style="font-size: 1rem;">{{ $atkGrandTotalQty }}</td>
+                                        </tr>
+                                    </tfoot>
+                                @endif
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- Tab 2: Household Matrix --}}
+                    <div class="tab-pane fade" id="pills-household-dept" role="tabpanel" aria-labelledby="household-dept-tab">
+                        <div class="table-responsive style-scroll" style="max-height: 440px;">
+                            <table class="table table-bordered table-sm table-hover mb-0" style="font-size: 0.85rem;">
+                                <thead class="bg-warning text-dark">
+                                    <tr>
+                                        <th style="width: 35px;" class="text-center" rowspan="2">No</th>
+                                        <th style="min-width: 180px;" rowspan="2">Nama Barang Rumah Tangga</th>
+                                        <th style="width: 80px;" class="text-center" rowspan="2">Satuan</th>
+                                        @if(count($householdDeptList ?? []) > 0)
+                                            <th colspan="{{ count($householdDeptList) }}" class="text-center text-white bg-dark" style="background-color: #92400e !important; font-size: 0.8rem;">
+                                                RINCIAN KEBUTUHAN PER DEPARTEMEN / DIVISI
+                                            </th>
+                                        @endif
+                                        <th style="width: 110px;" class="text-center" rowspan="2">TOTAL</th>
+                                    </tr>
+                                    @if(count($householdDeptList ?? []) > 0)
+                                        <tr>
+                                            @foreach($householdDeptList as $dept)
+                                                <th class="text-center text-nowrap text-white" style="background-color: #d97706; font-size: 0.78rem; min-width: 85px;">
+                                                    {{ $dept }}
+                                                </th>
+                                            @endforeach
+                                        </tr>
+                                    @endif
+                                </thead>
+                                <tbody>
+                                    @php $noDeptRt = 1; @endphp
+                                    @forelse($householdByCategory ?? [] as $catName => $catData)
+                                        <tr class="bg-light font-weight-bold text-warning">
+                                            <td colspan="{{ 3 + count($householdDeptList ?? []) + 1 }}">
+                                                <i class="fas fa-folder-open mr-1"></i> Kategori: {{ $catName }}
+                                            </td>
+                                        </tr>
+                                        @foreach($catData['items'] as $item)
+                                            <tr>
+                                                <td class="text-center text-muted">{{ $noDeptRt++ }}</td>
+                                                <td class="font-weight-600">
+                                                    {{ $item['name'] }}
+                                                    @if($item['is_custom'])
+                                                        <span class="badge badge-danger ml-1" style="font-size: 8px;">Custom</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center"><span class="badge badge-light border">{{ $item['unit'] }}</span></td>
+                                                
+                                                @foreach($householdDeptList as $dept)
+                                                    @php $qty = $item['dept_quantities'][$dept] ?? 0; @endphp
+                                                    <td class="text-center {{ $qty > 0 ? 'font-weight-bold text-dark' : 'text-muted' }}" style="{{ $qty > 0 ? 'background-color: #fef3c7 !important;' : '' }}">
+                                                        {{ $qty > 0 ? $qty : '-' }}
+                                                    </td>
+                                                @endforeach
+
+                                                <td class="text-center font-weight-bold text-warning" style="font-size: 0.9rem;">
+                                                    {{ $item['total_qty'] }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                        <tr class="bg-light" style="font-size: 0.82rem;">
+                                            <td colspan="3" class="text-right font-weight-bold text-muted">Subtotal {{ $catName }}:</td>
+                                            @foreach($householdDeptList as $dept)
+                                                <td class="text-center font-weight-bold text-warning">
+                                                    {{ ($catData['dept_subtotals'][$dept] ?? 0) > 0 ? $catData['dept_subtotals'][$dept] : '-' }}
+                                                </td>
+                                            @endforeach
+                                            <td class="text-center font-weight-bold text-warning">{{ $catData['subtotal_qty'] }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="{{ 3 + count($householdDeptList ?? []) + 1 }}" class="text-center py-4 text-muted">
+                                                Tidak ada data permintaan Rumah Tangga ditemukan.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                                @if(($householdGrandTotalQty ?? 0) > 0)
+                                    <tfoot class="bg-warning text-dark font-weight-bold">
+                                        <tr>
+                                            <td colspan="3" class="text-right">GRAND TOTAL:</td>
+                                            @foreach($householdDeptList as $dept)
+                                                <td class="text-center">{{ ($householdDeptGrandTotals[$dept] ?? 0) > 0 ? $householdDeptGrandTotals[$dept] : '-' }}</td>
+                                            @endforeach
+                                            <td class="text-center" style="font-size: 1rem;">{{ $householdGrandTotalQty }}</td>
+                                        </tr>
+                                    </tfoot>
+                                @endif
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light d-flex justify-content-between">
+                <div>
+                    <button type="button" onclick="exportPdf('department', 'ATK')" class="btn btn-outline-primary btn-sm rounded-pill font-weight-bold mr-1">
+                        <i class="fas fa-file-pdf mr-1"></i> Cetak Matriks ATK (PDF)
+                    </button>
+                    <button type="button" onclick="exportPdf('department', 'Rumah Tangga')" class="btn btn-outline-warning text-dark btn-sm rounded-pill font-weight-bold">
+                        <i class="fas fa-file-pdf mr-1"></i> Cetak Matriks RT (PDF)
+                    </button>
+                </div>
+                <div>
+                    <button type="button" onclick="exportExcel()" class="btn btn-success btn-sm rounded-pill font-weight-bold mr-1">
+                        <i class="fas fa-file-excel mr-1"></i> Unduh Excel
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-dismiss="modal">Tutup</button>
+                </div>
             </div>
         </div>
     </div>
@@ -422,9 +732,33 @@ document.querySelectorAll('.btn-delete').forEach(function(btn) {
     });
 });
 
-function exportPdf(mode) {
+function exportPdf(mode, type = null) {
     const form = document.getElementById('filterForm');
-    const formData = new FormData(form);
+    const formData = form ? new FormData(form) : new FormData();
+    const params = new URLSearchParams();
+    
+    for (const [key, value] of formData.entries()) {
+        if (value && key !== 'request_type') {
+            params.append(key, value);
+        }
+    }
+    params.append('mode', mode);
+    if (type) {
+        params.append('type', type);
+        params.append('request_type', type);
+    } else {
+        const reqType = form ? form.elements['request_type']?.value : null;
+        if (reqType) {
+            params.append('request_type', reqType);
+        }
+    }
+    
+    window.location.href = "{{ route('atk-requests.export-pdf') }}?" + params.toString();
+}
+
+function exportExcel() {
+    const form = document.getElementById('filterForm');
+    const formData = form ? new FormData(form) : new FormData();
     const params = new URLSearchParams();
     
     for (const [key, value] of formData.entries()) {
@@ -432,9 +766,8 @@ function exportPdf(mode) {
             params.append(key, value);
         }
     }
-    params.append('mode', mode);
     
-    window.location.href = "{{ route('atk-requests.export-pdf') }}?" + params.toString();
+    window.location.href = "{{ route('atk-requests.export-excel') }}?" + params.toString();
 }
 </script>
 @endpush

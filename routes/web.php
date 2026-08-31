@@ -334,6 +334,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Rute Permintaan ATK (Alat Tulis Kantor)
     Route::get('atk-requests-export/pdf', [\App\Http\Controllers\AtkRequestController::class, 'exportPdf'])->name('atk-requests.export-pdf');
+    Route::get('atk-requests-export/excel', [\App\Http\Controllers\AtkRequestController::class, 'exportExcel'])->name('atk-requests.export-excel');
     Route::resource('atk-requests', \App\Http\Controllers\AtkRequestController::class);
     Route::post('atk-requests/{atkRequest}/approve', [\App\Http\Controllers\AtkRequestController::class, 'approve'])->name('atk-requests.approve');
     Route::post('atk-requests/{atkRequest}/approve-item', [\App\Http\Controllers\AtkRequestController::class, 'approveItem'])->name('atk-requests.approve-item');
