@@ -57,205 +57,205 @@
             </div>
         </div>
 
-        {{-- 1. PEMBERITAHUAN WORK ORDER: MENUNGGU PENUGASAN TEKNISI --}}
-        @if(isset($pendingAssignmentWOs) && $pendingAssignmentWOs->count() > 0)
-            <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-left: 5px solid #ef4444 !important;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center mr-3 shadow-sm" style="width: 44px; height: 44px;">
-                            <i class="fas fa-user-plus fa-lg"></i>
-                        </div>
-                        <div>
-                            <h5 class="font-weight-bold text-danger mb-0">Tindakan Admin: {{ $pendingAssignmentWOs->count() }} Work Order Baru Menunggu Penugasan</h5>
-                            <small class="text-muted">Permintaan perbaikan/pekerjaan dari pemohon telah masuk dan memerlukan penunjukan teknisi pelaksana.</small>
-                        </div>
-                    </div>
+        {{-- ACTION NOTIFICATIONS ROW (SEBARIS DENGAN UKURAN PROPORSIONAL) --}}
+        @php
+            $hasPendingAssign = isset($pendingAssignmentWOs) && $pendingAssignmentWOs->count() > 0;
+            $hasPendingCheck = isset($pendingCheckApprovalWOs) && $pendingCheckApprovalWOs->count() > 0;
+            $hasPendingHandover = isset($pendingHandoverPrepWOs) && $pendingHandoverPrepWOs->count() > 0;
+            $hasPendingRevGA = isset($pendingRevisionAtkGA) && $pendingRevisionAtkGA->count() > 0;
+            $totalActionCards = ($hasPendingAssign ? 1 : 0) + ($hasPendingCheck ? 1 : 0) + ($hasPendingHandover ? 1 : 0) + ($hasPendingRevGA ? 1 : 0);
+            $cardColClass = ($totalActionCards > 1) ? 'col-lg-6 col-12' : 'col-12';
+        @endphp
 
-                    <div class="row">
-                        @foreach($pendingAssignmentWOs as $unassignedWO)
-                            <div class="col-md-6 mb-3">
-                                <div class="card border rounded-3 bg-white shadow-none h-100" style="border-color: #fca5a5 !important;">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <strong class="text-danger font-weight-bold" style="font-size: 1rem;">
-                                                <i class="fas fa-tools mr-1"></i> #WO-{{ str_pad($unassignedWO->id, 4, '0', STR_PAD_LEFT) }}
-                                            </strong>
-                                            <span class="badge badge-danger">Belum Ditugaskan</span>
+        @if($totalActionCards > 0)
+            <div class="row mb-2">
+                {{-- 1. PEMBERITAHUAN WORK ORDER: MENUNGGU PENUGASAN TEKNISI --}}
+                @if($hasPendingAssign)
+                    <div class="{{ $cardColClass }} mb-4">
+                        <div class="card border-0 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-left: 5px solid #ef4444 !important;">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center mr-3 shadow-sm flex-shrink-0" style="width: 42px; height: 42px;">
+                                            <i class="fas fa-user-plus fa-lg"></i>
                                         </div>
-
-                                        <p class="text-dark small mb-2 text-truncate" title="{{ $unassignedWO->description }}">
-                                            <strong>Keluhan:</strong> {{ $unassignedWO->description }}
-                                        </p>
-
-                                        <div class="small text-muted mb-2">
-                                            <div><i class="fas fa-user mr-1"></i> Pemohon: <strong>{{ $unassignedWO->user->name ?? '-' }}</strong> ({{ $unassignedWO->department }})</div>
-                                            <div><i class="fas fa-clock mr-1"></i> Diajukan: {{ $unassignedWO->created_at->diffForHumans() }}</div>
-                                        </div>
-
-                                        <div class="d-flex justify-content-end align-items-center pt-2 border-top">
-                                            <a href="{{ route('work-orders.show', $unassignedWO->id) }}" class="btn btn-danger btn-sm rounded-pill px-3 font-weight-bold shadow-sm">
-                                                <i class="fas fa-user-check mr-1"></i> Tugaskan Teknisi
-                                            </a>
+                                        <div>
+                                            <h6 class="font-weight-bold text-danger mb-0" style="font-size: 1.05rem;">Penugasan Teknisi ({{ $pendingAssignmentWOs->count() }})</h6>
+                                            <small class="text-muted">Work Order baru menunggu penunjukan teknisi.</small>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        @endif
 
-        {{-- 2. PEMBERITAHUAN WORK ORDER: HASIL PENGECEKAN TEKNISI (FORM B) MENUNGGU APPROVAL --}}
-        @if(isset($pendingCheckApprovalWOs) && $pendingCheckApprovalWOs->count() > 0)
-            <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 5px solid #f59e0b !important;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center mr-3 shadow-sm" style="width: 44px; height: 44px;">
-                            <i class="fas fa-clipboard-check fa-lg"></i>
-                        </div>
-                        <div>
-                            <h5 class="font-weight-bold text-dark mb-0">Tindakan Admin: {{ $pendingCheckApprovalWOs->count() }} Hasil Cek Teknisi (Form B) Menunggu Approval</h5>
-                            <small class="text-muted">Teknisi telah menyelesaikan investigasi lapangan dan mengajukan analisa/kebutuhan material untuk diverifikasi.</small>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        @foreach($pendingCheckApprovalWOs as $chkWO)
-                            <div class="col-md-6 mb-3">
-                                <div class="card border rounded-3 bg-white shadow-none h-100" style="border-color: #fde68a !important;">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <strong class="text-primary font-weight-bold" style="font-size: 1rem;">
-                                                <i class="fas fa-clipboard-list mr-1"></i> #WO-{{ str_pad($chkWO->id, 4, '0', STR_PAD_LEFT) }}
-                                            </strong>
-                                            <span class="badge badge-warning text-dark">Menunggu Approval Cek</span>
-                                        </div>
-
-                                        <div class="small text-muted mb-2">
-                                            <div><i class="fas fa-user-ninja mr-1"></i> Teknisi: <strong>{{ $chkWO->assignedEngineer->name ?? '-' }}</strong></div>
-                                            <div><i class="fas fa-building mr-1"></i> Lokasi: {{ $chkWO->department }}</div>
-                                        </div>
-
-                                        @if($chkWO->check_result)
-                                            <div class="p-2 mb-2 rounded small bg-light text-dark font-italic">
-                                                <strong>Hasil Cek:</strong> "{{ $chkWO->check_result }}"
+                                    <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                                        @foreach($pendingAssignmentWOs as $unassignedWO)
+                                            <div class="card border rounded-3 bg-white shadow-none mb-2" style="border-color: #fca5a5 !important;">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-danger font-weight-bold">
+                                                            <i class="fas fa-tools mr-1"></i> #WO-{{ str_pad($unassignedWO->id, 4, '0', STR_PAD_LEFT) }}
+                                                        </strong>
+                                                        <span class="badge badge-danger" style="font-size: 10px;">Belum Ditugaskan</span>
+                                                    </div>
+                                                    <p class="text-dark small mb-1.5 text-truncate" title="{{ $unassignedWO->description }}">
+                                                        <strong>Keluhan:</strong> {{ $unassignedWO->description }}
+                                                    </p>
+                                                    <div class="d-flex justify-content-between align-items-center small text-muted">
+                                                        <span><i class="fas fa-user mr-1"></i> {{ $unassignedWO->user->name ?? '-' }} ({{ $unassignedWO->department }})</span>
+                                                        <a href="{{ route('work-orders.show', $unassignedWO->id) }}" class="btn btn-danger btn-xs rounded-pill px-2.5 font-weight-bold shadow-xs">
+                                                            <i class="fas fa-user-check mr-1"></i> Tugaskan
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        @endif
-
-                                        <div class="d-flex justify-content-end align-items-center pt-2 border-top">
-                                            <a href="{{ route('work-orders.show', $chkWO->id) }}" class="btn btn-warning btn-sm text-dark font-weight-bold rounded-pill px-3 shadow-sm">
-                                                <i class="fas fa-check-circle mr-1"></i> Review &amp; Setujui Form B
-                                            </a>
-                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        {{-- 3. PEMBERITAHUAN WORK ORDER: MENUNGGU PENYIAPAN BERITA ACARA SERAH TERIMA --}}
-        @if(isset($pendingHandoverPrepWOs) && $pendingHandoverPrepWOs->count() > 0)
-            <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-left: 5px solid #10b981 !important;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mr-3 shadow-sm" style="width: 44px; height: 44px;">
-                            <i class="fas fa-file-signature fa-lg"></i>
-                        </div>
-                        <div>
-                            <h5 class="font-weight-bold text-success mb-0">Tindakan Admin: {{ $pendingHandoverPrepWOs->count() }} Pekerjaan Selesai Menunggu Berita Acara (Form D)</h5>
-                            <small class="text-muted">Teknisi telah menyelesaikan perbaikan. Silakan buat Berita Acara Serah Terima untuk diserahkan ke user.</small>
                         </div>
                     </div>
+                @endif
 
-                    <div class="row">
-                        @foreach($pendingHandoverPrepWOs as $hoWO)
-                            <div class="col-md-6 mb-3">
-                                <div class="card border rounded-3 bg-white shadow-none h-100" style="border-color: #6ee7b7 !important;">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <strong class="text-dark font-weight-bold">
-                                                #WO-{{ str_pad($hoWO->id, 4, '0', STR_PAD_LEFT) }}
-                                            </strong>
-                                            <span class="badge badge-success">Siap Serah Terima</span>
+                {{-- 2. PEMBERITAHUAN WORK ORDER: HASIL PENGECEKAN TEKNISI (FORM B) MENUNGGU APPROVAL --}}
+                @if($hasPendingCheck)
+                    <div class="{{ $cardColClass }} mb-4">
+                        <div class="card border-0 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 5px solid #f59e0b !important;">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center mr-3 shadow-sm flex-shrink-0" style="width: 42px; height: 42px;">
+                                            <i class="fas fa-clipboard-check fa-lg"></i>
                                         </div>
-
-                                        <p class="text-dark small mb-2 text-truncate">
-                                            <strong>Pekerjaan:</strong> {{ $hoWO->description }}
-                                        </p>
-
-                                        <div class="small text-muted mb-2">
-                                            <div><i class="fas fa-user mr-1"></i> Pemohon: <strong>{{ $hoWO->user->name ?? '-' }}</strong></div>
-                                            <div><i class="fas fa-user-ninja mr-1"></i> Teknisi: <strong>{{ $hoWO->assignedEngineer->name ?? '-' }}</strong></div>
-                                        </div>
-
-                                        <div class="d-flex justify-content-end align-items-center pt-2 border-top">
-                                            <a href="{{ route('handovers.show', $hoWO->id) }}" class="btn btn-success btn-sm rounded-pill px-3 font-weight-bold shadow-sm">
-                                                <i class="fas fa-edit mr-1"></i> Siapkan Berita Acara
-                                            </a>
+                                        <div>
+                                            <h6 class="font-weight-bold text-dark mb-0" style="font-size: 1.05rem;">Approval Hasil Cek Form B ({{ $pendingCheckApprovalWOs->count() }})</h6>
+                                            <small class="text-muted">Teknisi telah menyelesaikan pengecekan &amp; kebutuhan material.</small>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        @endif
 
-        {{-- 4. PEMBERITAHUAN PENGAJUAN REVISI ATK/RT MENUNGGU VERIFIKASI ADMIN GA --}}
-        @if(isset($pendingRevisionAtkGA) && $pendingRevisionAtkGA->count() > 0)
-            <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 5px solid #2563eb !important;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-3 shadow-sm" style="width: 44px; height: 44px;">
-                            <i class="fas fa-history fa-lg"></i>
-                        </div>
-                        <div>
-                            <h5 class="font-weight-bold text-primary mb-0">Pemberitahuan: Ada {{ $pendingRevisionAtkGA->count() }} Dokumen Revisi ATK/RT Siap Diverifikasi GA</h5>
-                            <small class="text-muted">Dokumen revisi ini telah disetujui oleh Manager Operasional dan sekarang memerlukan evaluasi akhir dari Admin GA.</small>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        @foreach($pendingRevisionAtkGA as $revGA)
-                            <div class="col-md-6 mb-3">
-                                <div class="card border rounded-3 bg-white shadow-none h-100" style="border-color: #bfdbfe !important;">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <div>
-                                                <strong class="text-primary font-weight-bold" style="font-size: 1rem;">
-                                                    <i class="fas fa-file-invoice mr-1"></i> {{ $revGA->formatted_doc_number }}
-                                                </strong>
-                                                <span class="badge badge-warning text-dark ml-1 font-weight-bold">Revisi Ke-{{ $revGA->revision_number }}</span>
+                                    <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                                        @foreach($pendingCheckApprovalWOs as $chkWO)
+                                            <div class="card border rounded-3 bg-white shadow-none mb-2" style="border-color: #fde68a !important;">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-primary font-weight-bold">
+                                                            <i class="fas fa-clipboard-list mr-1"></i> #WO-{{ str_pad($chkWO->id, 4, '0', STR_PAD_LEFT) }}
+                                                        </strong>
+                                                        <span class="badge badge-warning text-dark" style="font-size: 10px;">Menunggu Approval</span>
+                                                    </div>
+                                                    <div class="small text-muted mb-1">
+                                                        <i class="fas fa-user-ninja mr-1"></i> Teknisi: <strong>{{ $chkWO->assignedEngineer->name ?? '-' }}</strong> &bull; Lokasi: {{ $chkWO->department }}
+                                                    </div>
+                                                    @if($chkWO->check_result)
+                                                        <div class="p-1.5 px-2 mb-2 rounded small bg-light text-dark font-italic" style="font-size: 11px;">
+                                                            <strong>Hasil Cek:</strong> "{{ $chkWO->check_result }}"
+                                                        </div>
+                                                    @endif
+                                                    <div class="d-flex justify-content-end">
+                                                        <a href="{{ route('work-orders.show', $chkWO->id) }}" class="btn btn-warning btn-xs text-dark font-weight-bold rounded-pill px-3 shadow-xs">
+                                                            <i class="fas fa-check-circle mr-1"></i> Review &amp; Setujui Form B
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <span class="badge badge-secondary">{{ $revGA->request_type }}</span>
-                                        </div>
-
-                                        <div class="small text-muted mb-2">
-                                            <div><i class="fas fa-user mr-1"></i> Pemohon: <strong>{{ $revGA->nama }}</strong> ({{ $revGA->divisi }})</div>
-                                            <div><i class="fas fa-calendar mr-1"></i> Periode: <strong>{{ $revGA->periode }}</strong></div>
-                                            @if($revGA->parent)
-                                                <div><i class="fas fa-link mr-1"></i> Asal Dokumen: <strong>{{ $revGA->parent->formatted_doc_number }}</strong></div>
-                                            @endif
-                                        </div>
-
-                                        <div class="d-flex justify-content-end align-items-center mt-3 pt-2 border-top">
-                                            <a href="{{ route('atk-requests.show', $revGA->id) }}" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm font-weight-bold">
-                                                <i class="fas fa-check-double mr-1"></i> Verifikasi GA
-                                            </a>
-                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
+
+                {{-- 3. PEMBERITAHUAN WORK ORDER: MENUNGGU PENYIAPAN BERITA ACARA SERAH TERIMA --}}
+                @if($hasPendingHandover)
+                    <div class="{{ $cardColClass }} mb-4">
+                        <div class="card border-0 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-left: 5px solid #10b981 !important;">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mr-3 shadow-sm flex-shrink-0" style="width: 42px; height: 42px;">
+                                            <i class="fas fa-file-signature fa-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="font-weight-bold text-success mb-0" style="font-size: 1.05rem;">Penyiapan Berita Acara Form D ({{ $pendingHandoverPrepWOs->count() }})</h6>
+                                            <small class="text-muted">Pekerjaan selesai, siap diserahterimakan ke pemohon.</small>
+                                        </div>
+                                    </div>
+
+                                    <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                                        @foreach($pendingHandoverPrepWOs as $hoWO)
+                                            <div class="card border rounded-3 bg-white shadow-none mb-2" style="border-color: #6ee7b7 !important;">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-dark font-weight-bold">
+                                                            <i class="fas fa-tools mr-1"></i> #WO-{{ str_pad($hoWO->id, 4, '0', STR_PAD_LEFT) }}
+                                                        </strong>
+                                                        <span class="badge badge-success" style="font-size: 10px;">Siap Serah Terima</span>
+                                                    </div>
+                                                    <p class="text-dark small mb-1 text-truncate" title="{{ $hoWO->description }}">
+                                                        <strong>Pekerjaan:</strong> {{ $hoWO->description }}
+                                                    </p>
+                                                    <div class="small text-muted mb-2">
+                                                        <i class="fas fa-user mr-1"></i> Pemohon: <strong>{{ $hoWO->user->name ?? '-' }}</strong> &bull; Teknisi: {{ $hoWO->assignedEngineer->name ?? '-' }}
+                                                    </div>
+                                                    <div class="d-flex justify-content-end">
+                                                        <a href="{{ route('handovers.show', $hoWO->id) }}" class="btn btn-success btn-xs rounded-pill px-3 font-weight-bold shadow-xs">
+                                                            <i class="fas fa-edit mr-1"></i> Siapkan Berita Acara
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- 4. PEMBERITAHUAN PENGAJUAN REVISI ATK/RT MENUNGGU VERIFIKASI ADMIN GA --}}
+                @if($hasPendingRevGA)
+                    <div class="{{ $cardColClass }} mb-4">
+                        <div class="card border-0 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 5px solid #2563eb !important;">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-3 shadow-sm flex-shrink-0" style="width: 42px; height: 42px;">
+                                            <i class="fas fa-history fa-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="font-weight-bold text-primary mb-0" style="font-size: 1.05rem;">Verifikasi Revisi ATK/RT ({{ $pendingRevisionAtkGA->count() }})</h6>
+                                            <small class="text-muted">Telah disetujui Manager, menunggu verifikasi akhir GA.</small>
+                                        </div>
+                                    </div>
+
+                                    <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                                        @foreach($pendingRevisionAtkGA as $revGA)
+                                            <div class="card border rounded-3 bg-white shadow-none mb-2" style="border-color: #bfdbfe !important;">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-primary font-weight-bold">
+                                                            <i class="fas fa-file-invoice mr-1"></i> {{ $revGA->formatted_doc_number }}
+                                                        </strong>
+                                                        <span class="badge badge-warning text-dark ml-1 font-weight-bold" style="font-size: 10px;">Rev. {{ $revGA->revision_number }}</span>
+                                                    </div>
+                                                    <div class="small text-muted mb-2">
+                                                        <div><i class="fas fa-user mr-1"></i> Pemohon: <strong>{{ $revGA->nama }}</strong> ({{ $revGA->divisi }}) &bull; Periode: {{ $revGA->periode }}</div>
+                                                    </div>
+                                                    <div class="d-flex justify-content-end">
+                                                        <a href="{{ route('atk-requests.show', $revGA->id) }}" class="btn btn-primary btn-xs rounded-pill px-3 font-weight-bold shadow-xs">
+                                                            <i class="fas fa-check-double mr-1"></i> Verifikasi GA
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         @endif
+
 
         <!-- Security Checkpoint Summary Row -->
         <div class="row">

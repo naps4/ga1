@@ -71,127 +71,139 @@
             </div>
         </div>
 
-        {{-- PEMBERITAHUAN WORK ORDER SELESAI - KONFIRMASI SERAH TERIMA & RATING --}}
-        @if(isset($pendingHandoverWOs) && $pendingHandoverWOs->count() > 0)
-            <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-left: 5px solid #10b981 !important;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mr-3 shadow-sm" style="width: 44px; height: 44px;">
-                            <i class="fas fa-clipboard-check fa-lg"></i>
-                        </div>
-                        <div>
-                            <h5 class="font-weight-bold text-success mb-0">Pekerjaan Selesai: Konfirmasi Serah Terima &amp; Penilaian</h5>
-                            <small class="text-muted">Teknisi telah menyelesaikan pekerjaan untuk <strong>{{ $pendingHandoverWOs->count() }}</strong> Work Order Anda. Silakan periksa hasil pekerjaan dan berikan penilaian.</small>
-                        </div>
-                    </div>
+        {{-- ACTION NOTIFICATIONS ROW (SEBARIS DENGAN UKURAN PROPORSIONAL) --}}
+        @php
+            $hasClientHandover = isset($pendingHandoverWOs) && $pendingHandoverWOs->count() > 0;
+            $hasClientRejectedAtk = isset($rejectedAtkList) && $rejectedAtkList->count() > 0;
+            $totalClientAlerts = ($hasClientHandover ? 1 : 0) + ($hasClientRejectedAtk ? 1 : 0);
+            $clientColClass = ($totalClientAlerts > 1) ? 'col-lg-6 col-12' : 'col-12';
+        @endphp
 
-                    <div class="row">
-                        @foreach($pendingHandoverWOs as $woItem)
-                            <div class="col-md-6 mb-3">
-                                <div class="card border rounded-3 bg-white shadow-none h-100" style="border-color: #6ee7b7 !important;">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <strong class="text-dark font-weight-bold" style="font-size: 1rem;">
-                                                <i class="fas fa-tools text-primary mr-1"></i> #WO-{{ str_pad($woItem->id, 4, '0', STR_PAD_LEFT) }}
-                                            </strong>
-                                            <span class="badge badge-success">Menunggu Konfirmasi Anda</span>
+        @if($totalClientAlerts > 0)
+            <div class="row mb-2">
+                {{-- PEMBERITAHUAN WORK ORDER SELESAI - KONFIRMASI SERAH TERIMA & RATING --}}
+                @if($hasClientHandover)
+                    <div class="{{ $clientColClass }} mb-4">
+                        <div class="card border-0 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-left: 5px solid #10b981 !important;">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mr-3 shadow-sm flex-shrink-0" style="width: 42px; height: 42px;">
+                                            <i class="fas fa-clipboard-check fa-lg"></i>
                                         </div>
+                                        <div>
+                                            <h6 class="font-weight-bold text-success mb-0" style="font-size: 1.05rem;">Serah Terima &amp; Rating ({{ $pendingHandoverWOs->count() }})</h6>
+                                            <small class="text-muted">Pekerjaan selesai, mohon konfirmasi &amp; berikan rating.</small>
+                                        </div>
+                                    </div>
 
-                                        <p class="text-dark small mb-2 text-truncate" title="{{ $woItem->description }}">
-                                            <strong>Keluhan/Pekerjaan:</strong> {{ $woItem->description }}
-                                        </p>
+                                    <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                                        @foreach($pendingHandoverWOs as $woItem)
+                                            <div class="card border rounded-3 bg-white shadow-none mb-2" style="border-color: #6ee7b7 !important;">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-dark font-weight-bold">
+                                                            <i class="fas fa-tools text-primary mr-1"></i> #WO-{{ str_pad($woItem->id, 4, '0', STR_PAD_LEFT) }}
+                                                        </strong>
+                                                        <span class="badge badge-success" style="font-size: 10px;">Menunggu Konfirmasi</span>
+                                                    </div>
 
-                                        <div class="small text-muted mb-3">
-                                            <div><i class="fas fa-user-ninja mr-1"></i> Teknisi Pelaksana: <strong>{{ $woItem->assignedEngineer->name ?? '-' }}</strong></div>
-                                            @if($woItem->engineer_report)
-                                                <div class="mt-1 font-italic text-dark bg-light p-2 rounded small">
-                                                    <strong>Laporan Teknisi:</strong> "{{ $woItem->engineer_report }}"
+                                                    <p class="text-dark small mb-1.5 text-truncate" title="{{ $woItem->description }}">
+                                                        <strong>Keluhan:</strong> {{ $woItem->description }}
+                                                    </p>
+
+                                                    <div class="small text-muted mb-2">
+                                                        <i class="fas fa-user-ninja mr-1"></i> Teknisi: <strong>{{ $woItem->assignedEngineer->name ?? '-' }}</strong>
+                                                        @if($woItem->engineer_report)
+                                                            <div class="mt-1 font-italic text-dark bg-light p-1.5 px-2 rounded small" style="font-size: 11px;">
+                                                                "{{ $woItem->engineer_report }}"
+                                                            </div>
+                                                        @endif
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-end align-items-center pt-2 border-top">
+                                                        <a href="{{ route('handovers.show', $woItem->id) }}" class="btn btn-success btn-xs rounded-pill px-3 font-weight-bold shadow-xs">
+                                                            <i class="fas fa-star mr-1"></i> Konfirmasi &amp; Beri Rating
+                                                        </a>
+                                                    </div>
                                                 </div>
-                                            @endif
-                                        </div>
-
-                                        <div class="d-flex justify-content-end align-items-center pt-2 border-top">
-                                            <a href="{{ route('handovers.show', $woItem->id) }}" class="btn btn-success btn-sm rounded-pill px-3 font-weight-bold shadow-sm">
-                                                <i class="fas fa-star mr-1"></i> Konfirmasi &amp; Beri Rating
-                                            </a>
-                                        </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        {{-- 2. ALERT PEMBERITAHUAN REVISI ATK / RUMAH TANGGA --}}
-        @if(isset($rejectedAtkList) && $rejectedAtkList->count() > 0)
-            <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, #fffbeb 0%, #fef2f2 100%); border-left: 5px solid #ef4444 !important;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center mr-3 shadow-sm" style="width: 44px; height: 44px;">
-                            <i class="fas fa-exclamation-triangle fa-lg"></i>
-                        </div>
-                        <div>
-                            <h5 class="font-weight-bold text-danger mb-0">Pemberitahuan Revisi Permintaan Barang</h5>
-                            <small class="text-muted">Terdapat <strong>{{ $rejectedAtkList->count() }}</strong> pengajuan yang ditolak atau membutuhkan revisi sebelum dapat diproses lebih lanjut.</small>
                         </div>
                     </div>
+                @endif
 
-                    <div class="row">
-                        @foreach($rejectedAtkList as $rejReq)
-                            <div class="col-md-6 mb-3">
-                                <div class="card border rounded-3 bg-white shadow-none h-100" style="border-color: #fca5a5 !important;">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <div>
-                                                <strong class="text-danger font-weight-bold" style="font-size: 1rem;">
-                                                    <i class="fas fa-file-invoice mr-1"></i> {{ $rejReq->formatted_doc_number }}
-                                                </strong>
-                                                <span class="badge badge-secondary ml-1 small">{{ $rejReq->request_type }}</span>
-                                            </div>
-                                            <span class="badge badge-danger">Ditolak / Perlu Revisi</span>
+                {{-- 2. ALERT PEMBERITAHUAN REVISI ATK / RUMAH TANGGA --}}
+                @if($hasClientRejectedAtk)
+                    <div class="{{ $clientColClass }} mb-4">
+                        <div class="card border-0 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #fffbeb 0%, #fef2f2 100%); border-left: 5px solid #ef4444 !important;">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center mr-3 shadow-sm flex-shrink-0" style="width: 42px; height: 42px;">
+                                            <i class="fas fa-exclamation-triangle fa-lg"></i>
                                         </div>
+                                        <div>
+                                            <h6 class="font-weight-bold text-danger mb-0" style="font-size: 1.05rem;">Revisi Permintaan Barang ({{ $rejectedAtkList->count() }})</h6>
+                                            <small class="text-muted">Pengajuan barang ditolak/memerlukan revisi.</small>
+                                        </div>
+                                    </div>
 
-                                        @php
-                                            $evalNotes = $rejReq->manager_notes ?? $rejReq->notes;
-                                            $rejectedItems = $rejReq->items->where('status_approval', 'Ditolak');
-                                        @endphp
+                                    <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                                        @foreach($rejectedAtkList as $rejReq)
+                                            <div class="card border rounded-3 bg-white shadow-none mb-2" style="border-color: #fca5a5 !important;">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <div>
+                                                            <strong class="text-danger font-weight-bold">
+                                                                <i class="fas fa-file-invoice mr-1"></i> {{ $rejReq->formatted_doc_number }}
+                                                            </strong>
+                                                            <span class="badge badge-secondary ml-1" style="font-size: 10px;">{{ $rejReq->request_type }}</span>
+                                                        </div>
+                                                        <span class="badge badge-danger" style="font-size: 10px;">Perlu Revisi</span>
+                                                    </div>
 
-                                        @if($evalNotes)
-                                            <div class="p-2 mb-2 rounded small text-danger font-italic" style="background-color: #fff1f2; border-left: 3px solid #f87171;">
-                                                <i class="fas fa-comment-dots mr-1"></i> "{{ $evalNotes }}"
-                                            </div>
-                                        @endif
+                                                    @php
+                                                        $evalNotes = $rejReq->manager_notes ?? $rejReq->notes;
+                                                        $rejectedItems = $rejReq->items->where('status_approval', 'Ditolak');
+                                                    @endphp
 
-                                        @if($rejectedItems->count() > 0)
-                                            <div class="small text-muted mb-2">
-                                                <strong>Item yang ditolak:</strong>
-                                                <ul class="pl-3 mb-0 mt-1">
-                                                    @foreach($rejectedItems as $rItem)
-                                                        <li>
-                                                            <strong>{{ $rItem->item_name }}</strong> (Qty: {{ $rItem->quantity }} {{ $rItem->unit }})
-                                                            @if($rItem->notes)
-                                                                <span class="text-danger font-italic">- {{ $rItem->notes }}</span>
+                                                    @if($evalNotes)
+                                                        <div class="p-1.5 px-2 mb-2 rounded small text-danger font-italic" style="background-color: #fff1f2; border-left: 3px solid #f87171; font-size: 11px;">
+                                                            <i class="fas fa-comment-dots mr-1"></i> "{{ $evalNotes }}"
+                                                        </div>
+                                                    @endif
+
+                                                    @if($rejectedItems->count() > 0)
+                                                        <div class="small text-muted mb-2" style="font-size: 11px;">
+                                                            <strong>Item ditolak:</strong>
+                                                            @foreach($rejectedItems->take(2) as $rItem)
+                                                                <span>&bull; {{ $rItem->item_name }} ({{ $rItem->quantity }} {{ $rItem->unit }})</span>
+                                                            @endforeach
+                                                            @if($rejectedItems->count() > 2)
+                                                                <span> (+{{ $rejectedItems->count() - 2 }} lainnya)</span>
                                                             @endif
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
-                                        @endif
+                                                        </div>
+                                                    @endif
 
-                                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                                            <small class="text-muted"><i class="fas fa-calendar-alt mr-1"></i> Periode: {{ $rejReq->periode }}</small>
-                                            <a href="{{ route('atk-requests.show', $rejReq->id) }}" class="btn btn-warning btn-sm text-dark font-weight-bold rounded-pill px-3 shadow-sm">
-                                                <i class="fas fa-edit mr-1"></i> Buka &amp; Revisi
-                                            </a>
-                                        </div>
+                                                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                                                        <small class="text-muted"><i class="fas fa-calendar-alt mr-1"></i> {{ $rejReq->periode }}</small>
+                                                        <a href="{{ route('atk-requests.show', $rejReq->id) }}" class="btn btn-warning btn-xs text-dark font-weight-bold rounded-pill px-3 shadow-xs">
+                                                            <i class="fas fa-edit mr-1"></i> Buka &amp; Revisi
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
         @endif
 

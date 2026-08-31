@@ -60,113 +60,128 @@
             </div>
         </div>
 
-        {{-- 2. ACTION SECTION: TUGAS PENGECEKAN LAPANGAN (FORM B) --}}
-        @if(isset($pendingCheckTasks) && $pendingCheckTasks->count() > 0)
-            <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 5px solid #f59e0b !important;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center mr-3 shadow-sm" style="width: 44px; height: 44px;">
-                            <i class="fas fa-clipboard-list fa-lg"></i>
-                        </div>
-                        <div>
-                            <h5 class="font-weight-bold text-dark mb-0">Tugas Baru: Pengecekan Lapangan &amp; Form B Menunggu Anda</h5>
-                            <small class="text-muted">Ada <strong>{{ $pendingCheckTasks->count() }}</strong> tiket Work Order yang ditugaskan kepada Anda dan memerlukan investigasi/input hasil pengecekan.</small>
-                        </div>
-                    </div>
+        {{-- ACTION NOTIFICATIONS ROW (SEBARIS DENGAN UKURAN PROPORSIONAL) --}}
+        @php
+            $hasDevCheck = isset($pendingCheckTasks) && $pendingCheckTasks->count() > 0;
+            $hasDevWork = isset($workingTasks) && $workingTasks->count() > 0;
+            $totalDevAlerts = ($hasDevCheck ? 1 : 0) + ($hasDevWork ? 1 : 0);
+            $devColClass = ($totalDevAlerts > 1) ? 'col-lg-6 col-12' : 'col-12';
+        @endphp
 
-                    <div class="row">
-                        @foreach($pendingCheckTasks as $chkTask)
-                            <div class="col-md-6 mb-3">
-                                <div class="card border rounded-3 bg-white shadow-none h-100" style="border-color: #fde68a !important;">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <strong class="text-primary font-weight-bold" style="font-size: 1rem;">
-                                                <i class="fas fa-wrench mr-1"></i> #WO-{{ str_pad($chkTask->id, 4, '0', STR_PAD_LEFT) }}
-                                            </strong>
-                                            @if($chkTask->rejection_note)
-                                                <span class="badge badge-danger">Perlu Revisi Pengecekan</span>
-                                            @else
-                                                <span class="badge badge-warning text-dark">Belum Dicek</span>
-                                            @endif
+        @if($totalDevAlerts > 0)
+            <div class="row mb-2">
+                {{-- 1. ACTION SECTION: TUGAS PENGECEKAN LAPANGAN (FORM B) --}}
+                @if($hasDevCheck)
+                    <div class="{{ $devColClass }} mb-4">
+                        <div class="card border-0 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 5px solid #f59e0b !important;">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center mr-3 shadow-sm flex-shrink-0" style="width: 42px; height: 42px;">
+                                            <i class="fas fa-clipboard-list fa-lg"></i>
                                         </div>
-
-                                        <p class="text-dark small mb-2 font-weight-600">
-                                            {{ $chkTask->description }}
-                                        </p>
-
-                                        <div class="small text-muted mb-2">
-                                            <div><i class="fas fa-user mr-1"></i> Pemohon: <strong>{{ $chkTask->user->name ?? '-' }}</strong> ({{ $chkTask->department }})</div>
-                                            <div><i class="fas fa-clock mr-1"></i> Masuk: {{ $chkTask->created_at->diffForHumans() }}</div>
+                                        <div>
+                                            <h6 class="font-weight-bold text-dark mb-0" style="font-size: 1.05rem;">Pengecekan Lapangan ({{ $pendingCheckTasks->count() }})</h6>
+                                            <small class="text-muted">Investigasi &amp; input kebutuhan Form B.</small>
                                         </div>
+                                    </div>
 
-                                        @if($chkTask->rejection_note)
-                                            <div class="p-2 mb-2 rounded small text-danger font-italic" style="background-color: #fef2f2; border: 1px dashed #fca5a5;">
-                                                <strong>Catatan Revisi Admin:</strong> "{{ $chkTask->rejection_note }}"
+                                    <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                                        @foreach($pendingCheckTasks as $chkTask)
+                                            <div class="card border rounded-3 bg-white shadow-none mb-2" style="border-color: #fde68a !important;">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-primary font-weight-bold">
+                                                            <i class="fas fa-wrench mr-1"></i> #WO-{{ str_pad($chkTask->id, 4, '0', STR_PAD_LEFT) }}
+                                                        </strong>
+                                                        @if($chkTask->rejection_note)
+                                                            <span class="badge badge-danger" style="font-size: 10px;">Perlu Revisi</span>
+                                                        @else
+                                                            <span class="badge badge-warning text-dark" style="font-size: 10px;">Belum Dicek</span>
+                                                        @endif
+                                                    </div>
+
+                                                    <p class="text-dark small mb-1.5 font-weight-600 text-truncate" title="{{ $chkTask->description }}">
+                                                        {{ $chkTask->description }}
+                                                    </p>
+
+                                                    <div class="small text-muted mb-2">
+                                                        <i class="fas fa-user mr-1"></i> Pemohon: <strong>{{ $chkTask->user->name ?? '-' }}</strong> ({{ $chkTask->department }})
+                                                    </div>
+
+                                                    @if($chkTask->rejection_note)
+                                                        <div class="p-1.5 px-2 mb-2 rounded small text-danger font-italic" style="background-color: #fef2f2; border: 1px dashed #fca5a5; font-size: 11px;">
+                                                            <strong>Revisi Admin:</strong> "{{ $chkTask->rejection_note }}"
+                                                        </div>
+                                                    @endif
+
+                                                    <div class="d-flex justify-content-end align-items-center pt-2 border-top">
+                                                        <a href="{{ route('work-orders.show', $chkTask->id) }}" class="btn btn-warning btn-xs text-dark font-weight-bold rounded-pill px-3 shadow-xs">
+                                                            <i class="fas fa-edit mr-1"></i> {{ $chkTask->rejection_note ? 'Perbaiki Form B' : 'Input Form B' }}
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        @endif
-
-                                        <div class="d-flex justify-content-end align-items-center pt-2 border-top">
-                                            <a href="{{ route('work-orders.show', $chkTask->id) }}" class="btn btn-warning btn-sm text-dark font-weight-bold rounded-pill px-3 shadow-sm">
-                                                <i class="fas fa-edit mr-1"></i> {{ $chkTask->rejection_note ? 'Perbaiki Form B' : 'Input Hasil Cek (Form B)' }}
-                                            </a>
-                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        {{-- 3. ACTION SECTION: PEKERJAAN YANG SEDANG BERJALAN --}}
-        @if(isset($workingTasks) && $workingTasks->count() > 0)
-            <div class="card border-0 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 5px solid #2563eb !important;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-3 shadow-sm" style="width: 44px; height: 44px;">
-                            <i class="fas fa-cogs fa-lg"></i>
-                        </div>
-                        <div>
-                            <h5 class="font-weight-bold text-primary mb-0">Pekerjaan Siap Dikerjakan &amp; Pelaporan</h5>
-                            <small class="text-muted">Terdapat <strong>{{ $workingTasks->count() }}</strong> pekerjaan yang sedang berjalan. Tambahkan progress pekerjaan atau kirim laporan penyelesaian.</small>
                         </div>
                     </div>
+                @endif
 
-                    <div class="row">
-                        @foreach($workingTasks as $workTask)
-                            <div class="col-md-6 mb-3">
-                                <div class="card border rounded-3 bg-white shadow-none h-100" style="border-color: #bfdbfe !important;">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <strong class="text-dark font-weight-bold">
-                                                #WO-{{ str_pad($workTask->id, 4, '0', STR_PAD_LEFT) }}
-                                            </strong>
-                                            <span class="badge badge-info">{{ $workTask->status }}</span>
+                {{-- 2. ACTION SECTION: PEKERJAAN YANG SEDANG BERJALAN --}}
+                @if($hasDevWork)
+                    <div class="{{ $devColClass }} mb-4">
+                        <div class="card border-0 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 5px solid #2563eb !important;">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-3 shadow-sm flex-shrink-0" style="width: 42px; height: 42px;">
+                                            <i class="fas fa-cogs fa-lg"></i>
                                         </div>
-
-                                        <p class="text-dark small mb-2 text-truncate" title="{{ $workTask->description }}">
-                                            <strong>Pekerjaan:</strong> {{ $workTask->description }}
-                                        </p>
-
-                                        <div class="small text-muted mb-2">
-                                            <div><i class="fas fa-building mr-1"></i> Dept: {{ $workTask->department }}</div>
-                                            @if($workTask->fpuRequest)
-                                                <div><i class="fas fa-file-invoice mr-1"></i> Status FPU: <span class="badge badge-light border">{{ $workTask->fpuRequest->status_approval }}</span></div>
-                                            @endif
+                                        <div>
+                                            <h6 class="font-weight-bold text-primary mb-0" style="font-size: 1.05rem;">Pekerjaan Berjalan &amp; Laporan ({{ $workingTasks->count() }})</h6>
+                                            <small class="text-muted">Update progress atau kirim laporan akhir.</small>
                                         </div>
+                                    </div>
 
-                                        <div class="d-flex justify-content-end align-items-center pt-2 border-top">
-                                            <a href="{{ route('work-orders.show', $workTask->id) }}" class="btn btn-primary btn-sm rounded-pill px-3 font-weight-bold shadow-sm">
-                                                <i class="fas fa-tasks mr-1"></i> Update Progress / Laporan
-                                            </a>
-                                        </div>
+                                    <div style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                                        @foreach($workingTasks as $workTask)
+                                            <div class="card border rounded-3 bg-white shadow-none mb-2" style="border-color: #bfdbfe !important;">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-dark font-weight-bold">
+                                                            #WO-{{ str_pad($workTask->id, 4, '0', STR_PAD_LEFT) }}
+                                                        </strong>
+                                                        <span class="badge badge-info" style="font-size: 10px;">{{ $workTask->status }}</span>
+                                                    </div>
+
+                                                    <p class="text-dark small mb-1.5 text-truncate" title="{{ $workTask->description }}">
+                                                        <strong>Pekerjaan:</strong> {{ $workTask->description }}
+                                                    </p>
+
+                                                    <div class="small text-muted mb-2">
+                                                        <i class="fas fa-building mr-1"></i> Dept: {{ $workTask->department }}
+                                                        @if($workTask->fpuRequest)
+                                                            &bull; FPU: <span class="badge badge-light border" style="font-size: 10px;">{{ $workTask->fpuRequest->status_approval }}</span>
+                                                        @endif
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-end align-items-center pt-2 border-top">
+                                                        <a href="{{ route('work-orders.show', $workTask->id) }}" class="btn btn-primary btn-xs rounded-pill px-3 font-weight-bold shadow-xs">
+                                                            <i class="fas fa-tasks mr-1"></i> Update Progress
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
         @endif
 
