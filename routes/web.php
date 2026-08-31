@@ -206,7 +206,16 @@ Route::get('/dashboard', function () {
         $viewData['pendingManagerAtk'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')->count();
         $viewData['totalManagerAtkApproved'] = \App\Models\AtkRequest::where('manager_approved_by', $user->id)->count();
         
-        // Dokumen revisi baru yang masuk dan butuh approval Manager
+        // Dokumen pengajuan baru yang masuk pertama kali dan butuh approval Manager
+        $viewData['pendingNewAtkList'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')
+            ->where(function($q) {
+                $q->whereNull('revision_number')->orWhere('revision_number', 0);
+            })
+            ->with(['items', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Dokumen revisi yang diajukan ulang dan butuh approval Manager
         $viewData['pendingRevisionAtkList'] = \App\Models\AtkRequest::where('status_approval', 'Menunggu Persetujuan Manager')
             ->where('revision_number', '>', 0)
             ->with(['items', 'user', 'parent'])
