@@ -102,8 +102,11 @@
                         <div class="col-md-2 col-sm-6 mb-2">
                             <label class="small font-weight-bold text-muted">Divisi</label>
                             <input type="text" name="divisi" class="form-control form-control-sm" placeholder="Nama divisi..." value="{{ request('divisi') }}" style="border-radius: 0.5rem;">
-                    <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap" style="gap: .5rem;">
-                        <div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top flex-wrap" style="gap: .5rem;">
+                        <div class="d-flex align-items-center" style="gap: .5rem;">
                             <button type="submit" class="btn btn-primary btn-sm shadow-sm px-3" style="border-radius: 0.5rem;">
                                 <i class="fas fa-filter mr-1"></i> Filter
                             </button>
@@ -112,7 +115,7 @@
                             </a>
                         </div>
                         
-                        <div class="d-flex flex-wrap" style="gap: .5rem;">
+                        <div class="d-flex align-items-center flex-wrap" style="gap: .5rem;">
                             <!-- Modal Button 1: Rekap Total -->
                             <button type="button" class="btn btn-info btn-sm text-white shadow-sm px-3" data-toggle="modal" data-target="#modalRekapTotal" style="border-radius: 0.5rem;">
                                 <i class="fas fa-boxes mr-1"></i> Rekap Total (Kategori)
@@ -125,37 +128,37 @@
 
                             <!-- Dropdown Export Menu -->
                             <div class="dropdown">
-                                <button class="btn btn-danger btn-sm dropdown-toggle shadow-sm px-3" type="button" id="dropdownExportMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border-radius: 0.5rem;">
+                                <button class="btn btn-danger btn-sm dropdown-toggle shadow-sm px-3" type="button" id="dropdownExportMenu" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false" style="border-radius: 0.5rem;">
                                     <i class="fas fa-file-export mr-1"></i> Ekspor Laporan
                                 </button>
-                                <div class="dropdown-menu dropdown-menu-right shadow-lg border-0" aria-labelledby="dropdownExportMenu" style="border-radius: 0.75rem; min-width: 250px; font-size: 0.88rem;">
-                                    <h6 class="dropdown-header text-primary font-weight-bold"><i class="fas fa-file-pdf mr-1 text-danger"></i> Rekap Total (PDF)</h6>
-                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('aggregation', 'ATK')">
-                                        <i class="fas fa-pencil-alt text-primary mr-2"></i> Rekap Total ATK (PDF)
+                                <div class="dropdown-menu dropdown-menu-right shadow-lg border-0 mt-1" aria-labelledby="dropdownExportMenu" style="border-radius: 0.75rem; min-width: 260px; font-size: 0.85rem; z-index: 1050;">
+                                    <h6 class="dropdown-header text-primary font-weight-bold py-1" style="font-size: 0.78rem;"><i class="fas fa-file-pdf mr-1 text-danger"></i> Rekap Total Kebutuhan (PDF)</h6>
+                                    <a class="dropdown-item py-1.5" href="javascript:void(0)" onclick="exportPdf('aggregation', 'ATK')">
+                                        <i class="fas fa-pencil-alt text-primary mr-2"></i> Rekap Total ATK
                                     </a>
-                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('aggregation', 'Rumah Tangga')">
-                                        <i class="fas fa-home text-warning mr-2"></i> Rekap Total Rumah Tangga (PDF)
+                                    <a class="dropdown-item py-1.5" href="javascript:void(0)" onclick="exportPdf('aggregation', 'Rumah Tangga')">
+                                        <i class="fas fa-home text-warning mr-2"></i> Rekap Total Rumah Tangga
                                     </a>
-                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('aggregation', 'all')">
-                                        <i class="fas fa-boxes text-info mr-2"></i> Rekap Total Keseluruhan (PDF)
-                                    </a>
-
-                                    <div class="dropdown-divider"></div>
-                                    <h6 class="dropdown-header text-success font-weight-bold"><i class="fas fa-sitemap mr-1 text-teal" style="color:#0d9488;"></i> Distribusi Departemen (PDF Landscape)</h6>
-                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('department', 'ATK')">
-                                        <i class="fas fa-building text-primary mr-2"></i> Matriks Departemen ATK (PDF)
-                                    </a>
-                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('department', 'Rumah Tangga')">
-                                        <i class="fas fa-warehouse text-warning mr-2"></i> Matriks Dept Rumah Tangga (PDF)
+                                    <a class="dropdown-item py-1.5" href="javascript:void(0)" onclick="exportPdf('aggregation', 'all')">
+                                        <i class="fas fa-boxes text-info mr-2"></i> Rekap Total Keseluruhan
                                     </a>
 
-                                    <div class="dropdown-divider"></div>
-                                    <h6 class="dropdown-header text-dark font-weight-bold"><i class="fas fa-file-alt mr-1 text-secondary"></i> Laporan Lainnya</h6>
-                                    <a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportPdf('detail')">
+                                    <div class="dropdown-divider my-1"></div>
+                                    <h6 class="dropdown-header text-success font-weight-bold py-1" style="font-size: 0.78rem;"><i class="fas fa-sitemap mr-1 text-teal" style="color:#0d9488;"></i> Distribusi Departemen (PDF Landscape)</h6>
+                                    <a class="dropdown-item py-1.5" href="javascript:void(0)" onclick="exportPdf('department', 'ATK')">
+                                        <i class="fas fa-building text-primary mr-2"></i> Matriks Departemen ATK
+                                    </a>
+                                    <a class="dropdown-item py-1.5" href="javascript:void(0)" onclick="exportPdf('department', 'Rumah Tangga')">
+                                        <i class="fas fa-warehouse text-warning mr-2"></i> Matriks Dept Rumah Tangga
+                                    </a>
+
+                                    <div class="dropdown-divider my-1"></div>
+                                    <h6 class="dropdown-header text-dark font-weight-bold py-1" style="font-size: 0.78rem;"><i class="fas fa-file-alt mr-1 text-secondary"></i> Laporan Lainnya</h6>
+                                    <a class="dropdown-item py-1.5" href="javascript:void(0)" onclick="exportPdf('detail')">
                                         <i class="fas fa-list text-secondary mr-2"></i> Laporan Detail Transaksi (PDF)
                                     </a>
-                                    <a class="dropdown-item py-2 bg-light font-weight-bold text-success" href="javascript:void(0)" onclick="exportExcel()">
-                                        <i class="fas fa-file-excel text-success mr-2"></i> Unduh Rekap Lengkap (Excel .xlsx)
+                                    <a class="dropdown-item py-1.5 font-weight-bold text-success" style="background-color: #f0fdf4;" href="javascript:void(0)" onclick="exportExcel()">
+                                        <i class="fas fa-file-excel text-success mr-2"></i> Unduh Rekap Lengkap (Excel)
                                     </a>
                                 </div>
                             </div>
