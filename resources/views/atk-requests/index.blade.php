@@ -5,6 +5,36 @@
     <li class="breadcrumb-item active">Permintaan</li>
 @endsection
 
+@push('styles')
+<style>
+    .atk-row-parent {
+        cursor: pointer;
+        transition: background-color 0.15s ease-in-out;
+    }
+    .atk-row-parent:hover {
+        background-color: #f8fafc !important;
+    }
+    .atk-row-parent.expanded {
+        background-color: #eff6ff !important;
+    }
+    .chevron-toggle-icon {
+        display: inline-block;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease-in-out;
+        font-size: 0.75rem;
+        width: 16px;
+        text-align: center;
+    }
+    .atk-row-parent.expanded .chevron-toggle-icon {
+        transform: rotate(90deg);
+        color: #2563eb !important;
+    }
+    .atk-item-details-row td {
+        background-color: #f8fafc !important;
+        border-top: none !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="row">
     <div class="col-12">
@@ -186,16 +216,21 @@
                     </thead>
                     <tbody>
                         @forelse($requests as $req)
-                        <tr>
+                        <tr class="atk-row-parent" data-target="#items-collapse-{{ $req->id }}" title="Klik baris ini untuk melihat rincian barang">
                             <td>
-                                <strong class="text-primary">
-                                    {{ $req->formatted_doc_number }}
-                                </strong>
-                                @if($req->revision_number > 0)
-                                    <span class="badge badge-warning text-dark font-weight-bold ml-1" style="font-size: 10px;">
-                                        Rev. {{ $req->revision_number }}
-                                    </span>
-                                @endif
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-chevron-right text-muted chevron-toggle-icon mr-1.5" id="chevron-{{ $req->id }}"></i>
+                                    <div>
+                                        <strong class="text-primary font-weight-bold">
+                                            {{ $req->formatted_doc_number }}
+                                        </strong>
+                                        @if($req->revision_number > 0)
+                                            <span class="badge badge-warning text-dark font-weight-bold ml-1" style="font-size: 10px;">
+                                                Rev. {{ $req->revision_number }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
                             <td>
                                 @if(($req->request_type ?? 'ATK') === 'Rumah Tangga')
@@ -241,7 +276,7 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="d-flex" style="gap:.25rem;">
+                                <div class="d-flex align-items-center" style="gap:.25rem;">
                                     <a href="{{ route('atk-requests.show', $req) }}" class="btn btn-sm btn-light border" style="border-radius:.45rem;" title="Detail"><i class="fas fa-eye"></i></a>
                                     
                                     @php
@@ -263,7 +298,7 @@
                                     <a href="{{ route('atk-requests.print', $req) }}" target="_blank" class="btn btn-sm btn-info text-white" style="border-radius:.45rem;" title="Cetak"><i class="fas fa-print"></i></a>
                                     
                                     @if(in_array($req->status_approval, ['Draft', 'Ditolak/Revisi', 'Menunggu Persetujuan Manager']) && $isOwner)
-                                        <button class="btn btn-sm btn-danger btn-delete" style="border-radius:.45rem;"
+                                        <button type="button" class="btn btn-sm btn-danger btn-delete" style="border-radius:.45rem;"
                                             data-id="{{ $req->id }}" 
                                             data-name="{{ $req->formatted_doc_number }}" title="Hapus">
                                             <i class="fas fa-trash"></i>
@@ -271,6 +306,121 @@
                                         <form id="delete-form-{{ $req->id }}" action="{{ route('atk-requests.destroy', $req) }}" method="POST" class="d-none">
                                             @csrf @method('DELETE')
                                         </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+
+                        {{-- Dropdown Detail Row --}}
+                        <tr class="collapse atk-item-details-row" id="items-collapse-{{ $req->id }}">
+                            <td colspan="9" class="p-0 border-0">
+                                <div class="p-3 my-2 mx-3 bg-white rounded-4 shadow-sm border" style="border-left: 4px solid #3b82f6 !important;">
+                                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom flex-wrap" style="gap: .5rem;">
+                                        <div class="d-flex align-items-center flex-wrap" style="gap: .5rem;">
+                                            <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">
+                                                <i class="fas fa-boxes text-primary mr-1"></i> Rincian Barang Diminta:
+                                            </span>
+                                            <span class="badge badge-light border text-muted px-2 py-1" style="font-size: 11px;">
+                                                Total: <strong>{{ $req->items->count() }} item</strong>
+                                            </span>
+                                            @if($req->items->count() > 0)
+                                                @php
+                                                    $appCount = $req->items->where('status_approval', 'Disetujui')->count();
+                                                    $rejCount = $req->items->where('status_approval', 'Ditolak')->count();
+                                                    $penCount = $req->items->filter(fn($i) => $i->status_approval === 'Pending' || empty($i->status_approval))->count();
+                                                @endphp
+                                                <span class="badge badge-success px-2 py-1 font-weight-normal" style="font-size: 11px;"><i class="fas fa-check mr-1"></i>{{ $appCount }} Disetujui</span>
+                                                <span class="badge badge-danger px-2 py-1 font-weight-normal" style="font-size: 11px;"><i class="fas fa-times mr-1"></i>{{ $rejCount }} Ditolak</span>
+                                                <span class="badge badge-warning text-dark px-2 py-1 font-weight-normal" style="font-size: 11px;"><i class="fas fa-hourglass-half mr-1"></i>{{ $penCount }} Pending</span>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <a href="{{ route('atk-requests.show', $req) }}" class="btn btn-xs btn-primary font-weight-bold rounded-pill px-3 py-1 shadow-sm">
+                                                <i class="fas fa-external-link-alt mr-1"></i> Buka Detail Dokumen &rarr;
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    @if($req->items->count() > 0)
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered table-hover mb-0" style="font-size: 0.82rem;">
+                                                <thead class="bg-light text-muted">
+                                                    <tr>
+                                                        <th style="width: 40px;" class="text-center">No</th>
+                                                        <th>Nama Barang</th>
+                                                        <th style="width: 90px;" class="text-center">Satuan</th>
+                                                        <th style="width: 25%;">Spesifikasi</th>
+                                                        <th style="width: 80px;" class="text-center">Qty</th>
+                                                        <th style="width: 120px;" class="text-center">Status Item</th>
+                                                        <th>Catatan Item</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($req->items as $iIndex => $item)
+                                                        <tr>
+                                                            <td class="text-center align-middle">{{ $iIndex + 1 }}</td>
+                                                            <td class="font-weight-600 align-middle {{ $item->is_custom ? 'text-danger' : '' }}">
+                                                                {{ $item->item_name }}
+                                                                @if($item->is_custom)
+                                                                    <span class="badge badge-danger text-white ml-1" style="font-size: 9px;">Khusus</span>
+                                                                @endif
+                                                                @if($item->is_revised)
+                                                                    <span class="badge badge-warning text-dark font-weight-bold ml-1" style="font-size: 9px;"><i class="fas fa-history"></i> Revisi</span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="text-center align-middle">
+                                                                <span class="badge badge-secondary">{{ $item->unit }}</span>
+                                                            </td>
+                                                            <td class="align-middle text-muted">
+                                                                {{ $item->description ?? '-' }}
+                                                                @if($item->is_revised && $item->previous_description && $item->previous_description !== $item->description)
+                                                                    <div class="small text-muted font-italic" style="font-size: 10px;">
+                                                                        Spek awal: {{ $item->previous_description }}
+                                                                    </div>
+                                                                @endif
+                                                            </td>
+                                                            <td class="text-center align-middle font-weight-bold">
+                                                                {{ $item->quantity }}
+                                                                @if($item->is_revised && $item->previous_quantity !== null)
+                                                                    <div class="small text-muted" style="font-size: 10px;">
+                                                                        <del class="text-danger">{{ $item->previous_quantity }}</del> &rarr; <span class="text-success">{{ $item->quantity }}</span>
+                                                                    </div>
+                                                                @endif
+                                                            </td>
+                                                            <td class="text-center align-middle">
+                                                                @if($item->status_approval === 'Disetujui')
+                                                                    <span class="badge badge-success px-2 py-0.5"><i class="fas fa-check mr-1"></i>Disetujui</span>
+                                                                @elseif($item->status_approval === 'Ditolak')
+                                                                    <span class="badge badge-danger px-2 py-0.5"><i class="fas fa-times mr-1"></i>Ditolak</span>
+                                                                @else
+                                                                    <span class="badge badge-warning text-dark px-2 py-0.5"><i class="fas fa-hourglass-half mr-1"></i>Pending</span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="align-middle text-muted small">{{ $item->notes ?? '-' }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @else
+                                        <div class="text-center py-2 text-muted small">
+                                            <i class="fas fa-info-circle mr-1"></i> Belum ada rincian item pada dokumen pengajuan ini.
+                                        </div>
+                                    @endif
+
+                                    @if($req->manager_notes || $req->notes)
+                                        <div class="mt-2 pt-2 border-top small d-flex flex-wrap" style="gap: 1rem;">
+                                            @if($req->manager_notes)
+                                                <div class="text-muted">
+                                                    <strong class="text-dark"><i class="fas fa-comment text-warning mr-1"></i> Catatan Manager:</strong> {{ $req->manager_notes }}
+                                                </div>
+                                            @endif
+                                            @if($req->notes)
+                                                <div class="text-muted">
+                                                    <strong class="text-dark"><i class="fas fa-comment text-info mr-1"></i> Catatan Admin GA:</strong> {{ $req->notes }}
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endif
                                 </div>
                             </td>
@@ -713,6 +863,27 @@
 
 @push('scripts')
 <script>
+// Click handler for table row accordion collapse
+$(document).on('click', '.atk-row-parent', function(e) {
+    // Abaikan klik pada tombol aksi, link, form, input, atau dropdown
+    if ($(e.target).closest('a, button, input, select, .dropdown, form, label').length) {
+        return;
+    }
+    var targetId = $(this).data('target');
+    var $target = $(targetId);
+    $target.collapse('toggle');
+});
+
+$(document).on('show.bs.collapse', '.atk-item-details-row', function() {
+    var rowId = $(this).attr('id');
+    $('[data-target="#' + rowId + '"]').addClass('expanded');
+});
+
+$(document).on('hide.bs.collapse', '.atk-item-details-row', function() {
+    var rowId = $(this).attr('id');
+    $('[data-target="#' + rowId + '"]').removeClass('expanded');
+});
+
 document.querySelectorAll('.btn-delete').forEach(function(btn) {
     btn.addEventListener('click', function() {
         const id   = this.dataset.id;
