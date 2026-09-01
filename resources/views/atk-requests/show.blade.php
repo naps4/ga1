@@ -141,7 +141,7 @@
                 <form action="{{ route('atk-requests.approve', $atkRequest->id) }}" method="POST">
                     @csrf
                     <div class="alert alert-info rounded-3 border-0 py-2 px-3 mb-3 d-flex flex-wrap align-items-center justify-content-between" style="border-radius: .75rem; background-color: #e0f2fe; color: #0369a1;">
-                        <span><i class="fas fa-info-circle mr-1"></i> Klik tombol <strong>Setuju</strong> atau <strong>Tolak</strong> pada setiap item untuk langsung menyimpan keputusan secara instan.</span>
+                        <span><i class="fas fa-info-circle mr-1"></i> Klik tombol <strong>Setuju</strong> atau <strong>Tolak</strong> pada setiap item untuk langsung menyimpan keputusan. Klik kembali tombol yang aktif jika ingin membatalkan (kembali ke status <strong>Pending</strong>).</span>
                     </div>
                 @endif
 
@@ -155,8 +155,8 @@
                                 <th style="width: 20%;">Spesifikasi</th>
                                 <th style="width: 12%;" class="text-center">Qty</th>
                                 @if($isApprovalMode)
-                                    <th style="width: 27%;" class="text-center">Tindakan</th>
-                                    <th style="width: 18%;">Catatan Item</th>
+                                    <th style="width: 22%;" class="text-center">Tindakan</th>
+                                    <th style="width: 23%;">Catatan Item</th>
                                 @elseif($showItemStatus)
                                     <th style="width: 15%;" class="text-center">Status Item</th>
                                     <th style="width: 18%;">Catatan Item</th>
@@ -173,7 +173,7 @@
                                     <td class="font-weight-600 align-middle">
                                         {{ $item->item_name }}
                                         @if($item->is_revised)
-                                            <span class="badge badge-warning text-dark font-weight-bold ml-1" title="Item telah disesuaikan/direvisi"><i class="fas fa-history"></i> Direvisi</span>
+                                             <span class="badge badge-warning text-dark font-weight-bold ml-1" title="Item telah disesuaikan/direvisi"><i class="fas fa-history"></i> Direvisi</span>
                                         @endif
                                     </td>
                                     <td class="text-center align-middle">
@@ -198,19 +198,22 @@
                                     
                                     @if($isApprovalMode)
                                         <td class="text-center align-middle">
-                                            <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                                <label class="btn btn-outline-success btn-xs px-2 {{ $item->status_approval === 'Disetujui' ? 'active' : '' }}"
-                                                       onclick="submitSingleItemApproval({{ $item->id }}, 'Disetujui', this)" title="Setujui Barang Ini">
-                                                    <input type="radio" name="items[{{ $item->id }}][status]" value="Disetujui" autocomplete="off" {{ $item->status_approval === 'Disetujui' ? 'checked' : '' }}> <i class="fas fa-check"></i> Setuju
-                                                </label>
-                                                <label class="btn btn-outline-danger btn-xs px-2 {{ $item->status_approval === 'Ditolak' ? 'active' : '' }}"
-                                                       onclick="submitSingleItemApproval({{ $item->id }}, 'Ditolak', this)" title="Tolak Barang Ini">
-                                                    <input type="radio" name="items[{{ $item->id }}][status]" value="Ditolak" autocomplete="off" {{ $item->status_approval === 'Ditolak' ? 'checked' : '' }}> <i class="fas fa-times"></i> Tolak
-                                                </label>
-                                                <label class="btn btn-outline-warning btn-xs px-2 {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'active' : '' }}"
-                                                       onclick="submitSingleItemApproval({{ $item->id }}, 'Pending', this)" title="Belum Ada Keputusan (Pending)">
-                                                    <input type="radio" name="items[{{ $item->id }}][status]" value="Pending" autocomplete="off" {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'checked' : '' }}> <i class="fas fa-hourglass-half"></i> Pending
-                                                </label>
+                                            <input type="hidden" name="items[{{ $item->id }}][status]" id="item_status_{{ $item->id }}" value="{{ $item->status_approval ?? 'Pending' }}" class="item-status-input">
+                                            <div class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                <button type="button" 
+                                                        id="btn_approve_{{ $item->id }}"
+                                                        class="btn btn-xs px-2 py-1 font-weight-bold rounded-pill shadow-none {{ $item->status_approval === 'Disetujui' ? 'btn-success text-white' : 'btn-outline-success' }}"
+                                                        onclick="toggleItemApproval({{ $item->id }}, 'Disetujui')"
+                                                        title="{{ $item->status_approval === 'Disetujui' ? 'Klik untuk membatalkan (ubah ke Pending)' : 'Setujui Barang Ini' }}">
+                                                    <i class="fas fa-check mr-1"></i> Setuju
+                                                </button>
+                                                <button type="button" 
+                                                        id="btn_reject_{{ $item->id }}"
+                                                        class="btn btn-xs px-2 py-1 font-weight-bold rounded-pill shadow-none {{ $item->status_approval === 'Ditolak' ? 'btn-danger text-white' : 'btn-outline-danger' }}"
+                                                        onclick="toggleItemApproval({{ $item->id }}, 'Ditolak')"
+                                                        title="{{ $item->status_approval === 'Ditolak' ? 'Klik untuk membatalkan (ubah ke Pending)' : 'Tolak Barang Ini' }}">
+                                                    <i class="fas fa-times mr-1"></i> Tolak
+                                                </button>
                                             </div>
                                         </td>
                                         <td class="align-middle">
@@ -280,19 +283,22 @@
                                         
                                         @if($isApprovalMode)
                                             <td class="text-center align-middle">
-                                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                                    <label class="btn btn-outline-success btn-xs px-2 {{ $item->status_approval === 'Disetujui' ? 'active' : '' }}"
-                                                           onclick="submitSingleItemApproval({{ $item->id }}, 'Disetujui', this)" title="Setujui Barang Ini">
-                                                        <input type="radio" name="items[{{ $item->id }}][status]" value="Disetujui" autocomplete="off" {{ $item->status_approval === 'Disetujui' ? 'checked' : '' }}> <i class="fas fa-check"></i> Setuju
-                                                    </label>
-                                                    <label class="btn btn-outline-danger btn-xs px-2 {{ $item->status_approval === 'Ditolak' ? 'active' : '' }}"
-                                                           onclick="submitSingleItemApproval({{ $item->id }}, 'Ditolak', this)" title="Tolak Barang Ini">
-                                                        <input type="radio" name="items[{{ $item->id }}][status]" value="Ditolak" autocomplete="off" {{ $item->status_approval === 'Ditolak' ? 'checked' : '' }}> <i class="fas fa-times"></i> Tolak
-                                                    </label>
-                                                    <label class="btn btn-outline-warning btn-xs px-2 {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'active' : '' }}"
-                                                           onclick="submitSingleItemApproval({{ $item->id }}, 'Pending', this)" title="Belum Ada Keputusan (Pending)">
-                                                        <input type="radio" name="items[{{ $item->id }}][status]" value="Pending" autocomplete="off" {{ ($item->status_approval === 'Pending' || !$item->status_approval) ? 'checked' : '' }}> <i class="fas fa-hourglass-half"></i> Pending
-                                                    </label>
+                                                <input type="hidden" name="items[{{ $item->id }}][status]" id="item_status_{{ $item->id }}" value="{{ $item->status_approval ?? 'Pending' }}" class="item-status-input">
+                                                <div class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                    <button type="button" 
+                                                            id="btn_approve_{{ $item->id }}"
+                                                            class="btn btn-xs px-2 py-1 font-weight-bold rounded-pill shadow-none {{ $item->status_approval === 'Disetujui' ? 'btn-success text-white' : 'btn-outline-success' }}"
+                                                            onclick="toggleItemApproval({{ $item->id }}, 'Disetujui')"
+                                                            title="{{ $item->status_approval === 'Disetujui' ? 'Klik untuk membatalkan (ubah ke Pending)' : 'Setujui Barang Ini' }}">
+                                                        <i class="fas fa-check mr-1"></i> Setuju
+                                                    </button>
+                                                    <button type="button" 
+                                                            id="btn_reject_{{ $item->id }}"
+                                                            class="btn btn-xs px-2 py-1 font-weight-bold rounded-pill shadow-none {{ $item->status_approval === 'Ditolak' ? 'btn-danger text-white' : 'btn-outline-danger' }}"
+                                                            onclick="toggleItemApproval({{ $item->id }}, 'Ditolak')"
+                                                            title="{{ $item->status_approval === 'Ditolak' ? 'Klik untuk membatalkan (ubah ke Pending)' : 'Tolak Barang Ini' }}">
+                                                        <i class="fas fa-times mr-1"></i> Tolak
+                                                    </button>
                                                 </div>
                                             </td>
                                             <td class="align-middle">
@@ -409,15 +415,15 @@
                     </div>
                     <div class="d-flex justify-content-around align-items-center">
                         <div>
-                            <span class="d-block font-weight-bold text-success text-md">{{ $atkRequest->items->where('status_approval', 'Disetujui')->count() }}</span>
+                            <span id="summary_approved_count" class="d-block font-weight-bold text-success text-md">{{ $atkRequest->items->where('status_approval', 'Disetujui')->count() }}</span>
                             <small class="text-muted">Disetujui</small>
                         </div>
                         <div>
-                            <span class="d-block font-weight-bold text-danger text-md">{{ $atkRequest->items->where('status_approval', 'Ditolak')->count() }}</span>
+                            <span id="summary_rejected_count" class="d-block font-weight-bold text-danger text-md">{{ $atkRequest->items->where('status_approval', 'Ditolak')->count() }}</span>
                             <small class="text-muted">Ditolak</small>
                         </div>
                         <div>
-                            <span class="d-block font-weight-bold text-warning text-md">{{ $atkRequest->items->filter(function($i){ return $i->status_approval === 'Pending' || empty($i->status_approval); })->count() }}</span>
+                            <span id="summary_pending_count" class="d-block font-weight-bold text-warning text-md">{{ $atkRequest->items->filter(function($i){ return $i->status_approval === 'Pending' || empty($i->status_approval); })->count() }}</span>
                             <small class="text-muted">Pending</small>
                         </div>
                     </div>
@@ -828,10 +834,64 @@
     }
 
 
-    function submitSingleItemApproval(itemId, status, labelElement) {
-        var $btnGroup = $(labelElement).closest('.btn-group-toggle');
-        $btnGroup.find('.btn').removeClass('active');
-        $(labelElement).addClass('active');
+    function updateSidebarSummary() {
+        var approvedCount = 0;
+        var rejectedCount = 0;
+        var pendingCount = 0;
+
+        $('.item-status-input').each(function() {
+            var val = $(this).val();
+            if (val === 'Disetujui') {
+                approvedCount++;
+            } else if (val === 'Ditolak') {
+                rejectedCount++;
+            } else {
+                pendingCount++;
+            }
+        });
+
+        $('#summary_approved_count').text(approvedCount);
+        $('#summary_rejected_count').text(rejectedCount);
+        $('#summary_pending_count').text(pendingCount);
+    }
+
+    function toggleItemApproval(itemId, clickedStatus) {
+        var $hiddenInput = $('#item_status_' + itemId);
+        var currentStatus = $hiddenInput.val();
+        var newStatus = '';
+
+        var $btnApprove = $('#btn_approve_' + itemId);
+        var $btnReject = $('#btn_reject_' + itemId);
+
+        // Jika tombol yang aktif diklik kembali, batalkan ke 'Pending'
+        if (currentStatus === clickedStatus) {
+            newStatus = 'Pending';
+            $hiddenInput.val('Pending');
+
+            $btnApprove.removeClass('btn-success text-white').addClass('btn-outline-success')
+                       .attr('title', 'Setujui Barang Ini');
+            $btnReject.removeClass('btn-danger text-white').addClass('btn-outline-danger')
+                      .attr('title', 'Tolak Barang Ini');
+        } else {
+            // Set ke status yang baru diklik
+            newStatus = clickedStatus;
+            $hiddenInput.val(clickedStatus);
+
+            if (clickedStatus === 'Disetujui') {
+                $btnApprove.removeClass('btn-outline-success').addClass('btn-success text-white')
+                           .attr('title', 'Klik untuk membatalkan (ubah ke Pending)');
+                $btnReject.removeClass('btn-danger text-white').addClass('btn-outline-danger')
+                          .attr('title', 'Tolak Barang Ini');
+            } else if (clickedStatus === 'Ditolak') {
+                $btnReject.removeClass('btn-outline-danger').addClass('btn-danger text-white')
+                          .attr('title', 'Klik untuk membatalkan (ubah ke Pending)');
+                $btnApprove.removeClass('btn-success text-white').addClass('btn-outline-success')
+                           .attr('title', 'Setujui Barang Ini');
+            }
+        }
+
+        // Perbarui angka counter sidebar secara live
+        updateSidebarSummary();
 
         var notesInput = $('input[name="items[' + itemId + '][notes]"]');
         var notes = notesInput.length ? notesInput.val() : '';
@@ -840,7 +900,7 @@
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
-            timer: 2500,
+            timer: 2000,
             timerProgressBar: true
         });
 
@@ -850,14 +910,14 @@
             data: {
                 _token: "{{ csrf_token() }}",
                 item_id: itemId,
-                status: status,
+                status: newStatus,
                 notes: notes
             },
             success: function(response) {
                 if (response.success) {
                     if (window.Swal) {
                         Toast.fire({
-                            icon: 'success',
+                            icon: newStatus === 'Ditolak' ? 'warning' : (newStatus === 'Pending' ? 'info' : 'success'),
                             title: response.message
                         });
                     }
@@ -877,9 +937,7 @@
 
     function saveItemNote(itemId, inputElement) {
         var notes = $(inputElement).val();
-        var $btnGroup = $(inputElement).closest('tr').find('.btn-group-toggle');
-        var activeBtn = $btnGroup.find('label.active input');
-        var status = activeBtn.length ? activeBtn.val() : 'Pending';
+        var status = $('#item_status_' + itemId).val() || 'Pending';
 
         $.ajax({
             url: "{{ route('atk-requests.approve-item', $atkRequest->id) }}",
@@ -922,22 +980,13 @@
     }
 
     function approveAllItems() {
-        $('.btn-group-toggle').each(function() {
-            var $group = $(this);
-            var $setujuLabel = $group.find('label.btn-outline-success');
-            if ($setujuLabel.length) {
-                $group.find('.btn').removeClass('active');
-                $setujuLabel.addClass('active');
-                $group.find('input[type="radio"]').prop('checked', false);
-                $setujuLabel.find('input[type="radio"]').prop('checked', true);
-                
-                var inputName = $setujuLabel.find('input[type="radio"]').attr('name');
-                if (inputName) {
-                    var match = inputName.match(/\d+/);
-                    if (match) {
-                        submitSingleItemApproval(match[0], 'Disetujui', $setujuLabel[0]);
-                    }
-                }
+        $('.item-status-input').each(function() {
+            var inputId = $(this).attr('id');
+            var itemId = inputId.replace('item_status_', '');
+            var currentStatus = $(this).val();
+            
+            if (currentStatus !== 'Disetujui') {
+                toggleItemApproval(itemId, 'Disetujui');
             }
         });
     }
