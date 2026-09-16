@@ -45,11 +45,37 @@
         <div class="row">
             <!-- Informasi Utama WO -->
             <div class="col-md-6">
+                @if($workOrder->status === 'Ditolak')
+                    <div class="alert alert-danger rounded-4 shadow-sm mb-4 border-0">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-times-circle fa-2x mr-3 text-danger"></i>
+                            <div>
+                                <h5 class="font-weight-bold mb-0 text-danger">Tiket Work Order Ditolak</h5>
+                                <small class="text-muted">Pengajuan tiket ini telah ditolak dan tidak diproses lebih lanjut.</small>
+                            </div>
+                        </div>
+                        <hr class="my-2 border-danger">
+                        <strong>Alasan Penolakan:</strong>
+                        <div class="p-3 bg-white rounded-3 mt-1 text-dark border border-danger">
+                            {{ $workOrder->rejection_note ?? 'Tidak ada catatan penolakan.' }}
+                        </div>
+                    </div>
+                @endif
+
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-header bg-white border-bottom border-light">
                         <h3 class="card-title text-primary"><i class="fas fa-info-circle"></i> Informasi Tiket (Form A)</h3>
                         <div class="card-tools">
-                            <span class="badge badge-primary">{{ $workOrder->status }}</span>
+                            @php
+                                $badgeClass = 'secondary';
+                                if ($workOrder->status == 'Pengecekan Engineer') $badgeClass = 'info';
+                                elseif ($workOrder->status == 'Sedang Dikerjakan') $badgeClass = 'primary';
+                                elseif ($workOrder->status == 'Menunggu Pengadaan Material') $badgeClass = 'warning';
+                                elseif ($workOrder->status == 'Menunggu Serah Terima') $badgeClass = 'primary';
+                                elseif ($workOrder->status == 'Selesai') $badgeClass = 'success';
+                                elseif ($workOrder->status == 'Ditolak') $badgeClass = 'danger';
+                            @endphp
+                            <span class="badge badge-{{ $badgeClass }}">{{ $workOrder->status }}</span>
                             @if($workOrder->status === 'Menunggu Serah Terima')
                                 @php
                                     $ho = $workOrder->handover;
@@ -92,31 +118,82 @@
                     </div>
                 </div>
 
-                <!-- Modul Penugasan untuk Admin -->
-                @if((auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin') && $workOrder->status === 'Menunggu Penugasan')
+                <!-- Modul Penugasan & Aksi Tiket untuk Admin / Operational Manager -->
+                @php
+                    $canActionWO = (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin() || auth()->user()->isManager()) && $workOrder->status === 'Menunggu Penugasan';
+                @endphp
+                @if($canActionWO)
                     <div class="card shadow-sm border-0 rounded-4 bg-light border-primary mb-4">
                         <div class="card-body">
-                            <h5 class="text-primary mb-3"><i class="fas fa-user-plus"></i> Tugaskan Engineer</h5>
-                            <form action="{{ route('work-orders.assign', $workOrder->id) }}" method="POST">
-                                @csrf
-                                <div class="input-group">
-                                    <select name="assigned_engineer_id" class="form-control rounded-left-pill" required>
-                                        <option value="">-- Pilih Teknisi --</option>
-                                        @foreach($engineers as $engineer)
-                                            <option value="{{ $engineer->id }}">{{ $engineer->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <div class="input-group-append">
-                                        <button type="submit" class="btn btn-primary rounded-right-pill">Tugaskan</button>
+                            <h5 class="text-primary mb-3"><i class="fas fa-tasks"></i> Tindakan Pengajuan Tiket</h5>
+                            
+                            @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
+                                <label class="text-sm font-weight-bold text-dark mb-1"><i class="fas fa-user-plus mr-1"></i> Tugaskan Engineer</label>
+                                <form action="{{ route('work-orders.assign', $workOrder->id) }}" method="POST" class="mb-3">
+                                    @csrf
+                                    <div class="input-group">
+                                        <select name="assigned_engineer_id" class="form-control rounded-left-pill" required>
+                                            <option value="">-- Pilih Teknisi --</option>
+                                            @foreach($engineers as $engineer)
+                                                <option value="{{ $engineer->id }}">{{ $engineer->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <div class="input-group-append">
+                                            <button type="submit" class="btn btn-primary rounded-right-pill font-weight-bold">
+                                                Tugaskan
+                                            </button>
+                                        </div>
                                     </div>
+                                </form>
+                            @endif
+
+                            <div class="d-flex align-items-center justify-content-between pt-2 {{ (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()) ? 'border-top' : '' }}">
+                                <div>
+                                    <span class="text-sm font-weight-bold text-danger"><i class="fas fa-ban mr-1"></i> Tolak Pengajuan Tiket</span>
+                                    <p class="text-xs text-muted mb-0">Tolak tiket jika tidak valid atau dibatalkan.</p>
                                 </div>
-                            </form>
+                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 font-weight-bold ml-2 shadow-sm" data-toggle="modal" data-target="#modalRejectWO">
+                                    <i class="fas fa-times-circle mr-1"></i> Tolak Tiket
+                                </button>
+                            </div>
                         </div>
                     </div>
                 @endif
 
                 <!-- Status Pengerjaan (Tracking) -->
-                @if($workOrder->status !== 'Menunggu Penugasan')
+                @if($workOrder->status === 'Ditolak')
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-white border-bottom border-light">
+                        <h3 class="card-title text-danger font-weight-bold"><i class="fas fa-times-circle text-danger"></i> Riwayat Penolakan</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline timeline-inverse mb-3">
+                            <div>
+                                <i class="fas fa-file-alt bg-primary"></i>
+                                <div class="timeline-item border-0 shadow-none bg-transparent">
+                                    <h3 class="timeline-header border-0 pb-1 text-dark">Pengajuan Tiket Masuk</h3>
+                                    <div class="timeline-body pt-0 text-muted text-sm pb-0">
+                                        Diajukan oleh: <strong>{{ $workOrder->user->name ?? '-' }}</strong><br>
+                                        <small class="text-muted">{{ $workOrder->created_at->format('d M Y H:i') }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <i class="fas fa-times bg-danger"></i>
+                                <div class="timeline-item border-0 shadow-none bg-transparent">
+                                    <h3 class="timeline-header border-0 pb-1 text-danger font-weight-bold">Tiket Ditolak</h3>
+                                    <div class="timeline-body pt-0 text-muted text-sm pb-0">
+                                        <strong>Alasan:</strong> {{ $workOrder->rejection_note }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <i class="far fa-clock bg-gray"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @elseif($workOrder->status !== 'Menunggu Penugasan')
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-header bg-white border-bottom border-light">
                         <h3 class="card-title text-dark font-weight-bold"><i class="fas fa-stream text-primary"></i> Timeline Pengerjaan</h3>
@@ -201,7 +278,18 @@
 
             <!-- Panel Engineer -->
             <div class="col-md-6">
-                <!-- Form Pengecekan (Form B) -->
+                @if($workOrder->status === 'Ditolak')
+                    <div class="card shadow-sm border-0 rounded-4 mb-4 border-danger">
+                        <div class="card-body text-center py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-ban fa-4x text-danger" style="opacity: 0.5;"></i>
+                            </div>
+                            <h5 class="font-weight-bold text-dark">Pengajuan Work Order Ditolak</h5>
+                            <p class="text-muted text-sm mb-0">Tiket ini telah ditolak oleh Admin / Operational Manager. Tidak ada tahapan pengecekan maupun pengerjaan teknisi untuk tiket ini.</p>
+                        </div>
+                    </div>
+                @else
+                    <!-- Form Pengecekan (Form B) -->
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-header bg-white border-bottom border-light">
                         <h3 class="card-title text-success"><i class="fas fa-tools"></i> Pengecekan Engineer (Form B)</h3>
@@ -489,11 +577,43 @@
                         </div>
                     </div>
                 @endif
+                @endif
             </div>
         </div>
     </div>
 </section>
 
+<!-- Modal Tolak WO -->
+<div class="modal fade" id="modalRejectWO" tabindex="-1" role="dialog" aria-labelledby="modalRejectWOLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header bg-danger text-white rounded-top-4">
+                <h5 class="modal-title font-weight-bold" id="modalRejectWOLabel">
+                    <i class="fas fa-exclamation-triangle mr-1"></i> Konfirmasi Penolakan Tiket
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('work-orders.reject', $workOrder->id) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <p class="text-muted">Apakah Anda yakin ingin menolak tiket <strong>#WO-{{ str_pad($workOrder->id, 4, '0', STR_PAD_LEFT) }}</strong>?</p>
+                    <div class="form-group">
+                        <label class="font-weight-bold text-dark">Alasan Penolakan <span class="text-danger">*</span></label>
+                        <textarea name="rejection_note" class="form-control rounded-3" rows="3" placeholder="Tuliskan alasan penolakan tiket secara jelas..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger rounded-pill font-weight-bold">
+                        <i class="fas fa-times-circle mr-1"></i> Ya, Tolak Tiket
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 @endsection
 

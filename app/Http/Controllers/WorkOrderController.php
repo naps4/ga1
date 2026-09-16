@@ -106,7 +106,7 @@ class WorkOrderController extends Controller
 
     public function destroy(WorkOrder $workOrder)
     {
-        if ($workOrder->user_id !== auth()->id() || $workOrder->status !== 'Menunggu Penugasan') {
+        if ($workOrder->user_id !== auth()->id() || !in_array($workOrder->status, ['Menunggu Penugasan', 'Ditolak'])) {
             return redirect()->route('work-orders.index')->withErrors(['error' => 'Work Order ini tidak dapat dihapus.']);
         }
 
@@ -139,6 +139,34 @@ class WorkOrderController extends Controller
         ]);
 
         return back()->with('success', 'Teknisi berhasil ditugaskan.');
+    }
+
+    public function reject(Request $request, WorkOrder $workOrder)
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin() && !$user->isSuperAdmin() && !$user->isManager()) {
+            return back()->withErrors(['error' => 'Hanya Admin dan Operational Manager yang dapat menolak tiket.']);
+        }
+
+        if ($workOrder->status !== 'Menunggu Penugasan') {
+            return back()->withErrors(['error' => 'Hanya tiket dengan status Menunggu Penugasan yang dapat ditolak.']);
+        }
+
+        $request->validate([
+            'rejection_note' => 'required|string|max:1000',
+        ]);
+
+        $workOrder->update([
+            'status'         => 'Ditolak',
+            'rejection_note' => $request->rejection_note,
+        ]);
+
+        // Catat di timeline progress
+        $workOrder->progresses()->create([
+            'description' => 'Tiket ditolak oleh ' . $user->name . ' (' . $user->role_label . '). Alasan: ' . $request->rejection_note,
+        ]);
+
+        return back()->with('success', 'Tiket Work Order berhasil ditolak.');
     }
 
     public function updateCheck(Request $request, WorkOrder $workOrder)

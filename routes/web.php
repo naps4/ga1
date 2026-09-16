@@ -311,6 +311,7 @@ Route::middleware(['auth'])->group(function () {
     // Rute utama tiket
     Route::resource('work-orders', WorkOrderController::class);
     Route::post('work-orders/{workOrder}/assign', [WorkOrderController::class, 'assign'])->name('work-orders.assign');
+    Route::post('work-orders/{workOrder}/reject', [WorkOrderController::class, 'reject'])->name('work-orders.reject');
     Route::post('work-orders/{workOrder}/check', [WorkOrderController::class, 'updateCheck'])->name('work-orders.update-check');
     Route::post('work-orders/{workOrder}/reject-check', [WorkOrderController::class, 'rejectCheck'])->name('work-orders.reject-check');
     Route::post('work-orders/{workOrder}/approve-check', [WorkOrderController::class, 'approveCheck'])->name('work-orders.approve-check');

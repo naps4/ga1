@@ -76,6 +76,7 @@
                                             elseif ($wo->status == 'Menunggu Pengadaan Material') $badgeClass = 'warning';
                                             elseif ($wo->status == 'Menunggu Serah Terima') $badgeClass = 'primary';
                                             elseif ($wo->status == 'Selesai') $badgeClass = 'success';
+                                            elseif ($wo->status == 'Ditolak') $badgeClass = 'danger';
                                         @endphp
                                         <span class="badge badge-{{ $badgeClass }}" style="white-space: normal; text-align: center; display: inline-block;">{{ $wo->status }}</span>
                                         @if($wo->status === 'Menunggu Serah Terima')
@@ -96,10 +97,17 @@
                                             <a href="{{ route('work-orders.show', $wo->id) }}" class="btn btn-sm btn-outline-primary rounded-pill mr-1">
                                                 <i class="fas fa-eye"></i> <span class="d-none d-sm-inline">Detail</span>
                                             </a>
-                                            @if($wo->user_id === auth()->id() && $wo->status === 'Menunggu Penugasan')
-                                                <a href="{{ route('work-orders.edit', $wo->id) }}" class="btn btn-sm btn-outline-warning rounded-pill mr-1">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
+                                            @if((auth()->user()->isAdmin() || auth()->user()->isSuperAdmin() || auth()->user()->isManager()) && $wo->status === 'Menunggu Penugasan')
+                                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill mr-1" data-toggle="modal" data-target="#modalRejectIndex{{ $wo->id }}" title="Tolak Tiket">
+                                                    <i class="fas fa-times-circle"></i> <span class="d-none d-lg-inline">Tolak</span>
+                                                </button>
+                                            @endif
+                                            @if($wo->user_id === auth()->id() && in_array($wo->status, ['Menunggu Penugasan', 'Ditolak']))
+                                                @if($wo->status === 'Menunggu Penugasan')
+                                                    <a href="{{ route('work-orders.edit', $wo->id) }}" class="btn btn-sm btn-outline-warning rounded-pill mr-1">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                @endif
                                                 <form action="{{ route('work-orders.destroy', $wo->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus tiket ini?');" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
@@ -109,6 +117,40 @@
                                                 </form>
                                             @endif
                                         </div>
+
+                                        @if((auth()->user()->isAdmin() || auth()->user()->isSuperAdmin() || auth()->user()->isManager()) && $wo->status === 'Menunggu Penugasan')
+                                            <!-- Modal Tolak WO {{ $wo->id }} -->
+                                            <div class="modal fade text-left" id="modalRejectIndex{{ $wo->id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                    <div class="modal-content rounded-4 border-0 shadow">
+                                                        <div class="modal-header bg-danger text-white rounded-top-4">
+                                                            <h5 class="modal-title font-weight-bold">
+                                                                <i class="fas fa-exclamation-triangle mr-1"></i> Tolak Tiket #WO-{{ str_pad($wo->id, 4, '0', STR_PAD_LEFT) }}
+                                                            </h5>
+                                                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <form action="{{ route('work-orders.reject', $wo->id) }}" method="POST">
+                                                            @csrf
+                                                            <div class="modal-body">
+                                                                <p class="text-muted">Yakin ingin menolak tiket <strong>#WO-{{ str_pad($wo->id, 4, '0', STR_PAD_LEFT) }}</strong> dari <strong>{{ $wo->user->name ?? 'Pemohon' }}</strong>?</p>
+                                                                <div class="form-group">
+                                                                    <label class="font-weight-bold text-dark">Alasan Penolakan <span class="text-danger">*</span></label>
+                                                                    <textarea name="rejection_note" class="form-control rounded-3" rows="3" placeholder="Tuliskan alasan penolakan tiket secara jelas..." required></textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer bg-light rounded-bottom-4">
+                                                                <button type="button" class="btn btn-secondary rounded-pill" data-dismiss="modal">Batal</button>
+                                                                <button type="submit" class="btn btn-danger rounded-pill font-weight-bold">
+                                                                    <i class="fas fa-times-circle mr-1"></i> Ya, Tolak Tiket
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
