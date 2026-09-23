@@ -110,7 +110,12 @@
                                 </div>
                                 
                                 <div class="form-group mt-3">
-                                    <label for="input-qty" class="font-weight-600">3. Jumlah (Qty)</label>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="input-qty" class="font-weight-600 mb-0">3. Jumlah (Qty)</label>
+                                        <span class="small font-weight-bold text-muted">
+                                            Satuan: <span id="standard-unit-badge" class="badge badge-primary px-2.5 py-1 font-weight-bold">-</span>
+                                        </span>
+                                    </div>
                                     <div class="input-group" style="max-width: 160px;">
                                         <div class="input-group-prepend">
                                             <button class="btn btn-outline-secondary btn-minus" type="button">-</button>
@@ -138,7 +143,23 @@
                                     <div class="col-6">
                                         <div class="form-group">
                                             <label for="custom-unit" class="font-weight-600">Satuan</label>
-                                            <input type="text" id="custom-unit" class="form-control rounded-pill" placeholder="Pcs, Box, Rim, dll...">
+                                            <select id="custom-unit" class="form-control rounded-pill">
+                                                @if(isset($uoms) && $uoms->isNotEmpty())
+                                                    @foreach($uoms as $u)
+                                                        <option value="{{ $u->name }}" {{ $u->name === 'Pcs' ? 'selected' : '' }}>{{ $u->name }}</option>
+                                                    @endforeach
+                                                @else
+                                                    <option value="Pcs" selected>Pcs</option>
+                                                    <option value="Rim">Rim</option>
+                                                    <option value="Box">Box</option>
+                                                    <option value="Pack">Pack</option>
+                                                    <option value="Roll">Roll</option>
+                                                    <option value="Botol">Botol</option>
+                                                    <option value="Dus">Dus</option>
+                                                @endif
+                                                <option value="_other">-- Satuan Lainnya (Ketik Manual) --</option>
+                                            </select>
+                                            <input type="text" id="custom-unit-other" class="form-control rounded-pill mt-2 d-none" placeholder="Ketik satuan baru...">
                                         </div>
                                     </div>
                                     <div class="col-6">
@@ -274,6 +295,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         const standardItems = @json($standardItems);
         const householdItems = @json($householdItems);
+        const availableUoms = @json($uoms ?? []);
         
         const typeSelect = document.getElementById('request_type');
         typeSelect.dataset.lastValue = typeSelect.value;
@@ -374,6 +396,8 @@
             const category = this.value;
             itemSelect.innerHTML = '<option value="">-- Pilih Barang --</option>';
             optionsContainer.innerHTML = '';
+            const unitBadge = document.getElementById('standard-unit-badge');
+            if (unitBadge) unitBadge.textContent = '-';
             
             if (!category) {
                 itemSelect.disabled = true;
@@ -395,9 +419,16 @@
             const itemName = this.value;
             optionsContainer.innerHTML = '';
             
-            if (!itemName) return;
+            const unitBadge = document.getElementById('standard-unit-badge');
+            if (!itemName) {
+                if (unitBadge) unitBadge.textContent = '-';
+                return;
+            }
             
             const item = currentItems.find(i => i.name === itemName);
+            if (unitBadge) {
+                unitBadge.textContent = item && item.unit ? item.unit : 'Pcs';
+            }
             if (item && item.options && item.options.length > 0) {
                 const label = document.createElement('label');
                 label.className = 'font-weight-600 d-block mb-1 mt-2';
@@ -525,9 +556,26 @@
         
         bindAttachmentChangeListener();
 
+        // Custom unit other toggle
+        const customUnitSelect = document.getElementById('custom-unit');
+        const customUnitOther = document.getElementById('custom-unit-other');
+        if (customUnitSelect && customUnitOther) {
+            customUnitSelect.addEventListener('change', function() {
+                if (this.value === '_other') {
+                    customUnitOther.classList.remove('d-none');
+                    customUnitOther.focus();
+                } else {
+                    customUnitOther.classList.add('d-none');
+                }
+            });
+        }
+
         btnAddCustom.addEventListener('click', function() {
             const name = document.getElementById('custom-name').value.trim();
-            const unit = document.getElementById('custom-unit').value.trim() || 'Pcs';
+            let unit = customUnitSelect ? customUnitSelect.value : 'Pcs';
+            if (unit === '_other' && customUnitOther) {
+                unit = customUnitOther.value.trim() || 'Pcs';
+            }
             const qty = parseInt(document.getElementById('custom-qty').value) || 1;
             const desc = document.getElementById('custom-desc').value.trim();
             
@@ -566,7 +614,11 @@
             
             // Reset custom form
             document.getElementById('custom-name').value = '';
-            document.getElementById('custom-unit').value = '';
+            if (customUnitSelect) customUnitSelect.value = 'Pcs';
+            if (customUnitOther) {
+                customUnitOther.value = '';
+                customUnitOther.classList.add('d-none');
+            }
             document.getElementById('custom-qty').value = 1;
             document.getElementById('custom-desc').value = '';
         });
@@ -702,6 +754,20 @@
                     const currentDesc = descInput ? descInput.value : '';
                     const currentQty = qtyInput ? qtyInput.value : 1;
 
+                    let uomOptsHtml = '';
+                    let matchedUom = false;
+                    if (Array.isArray(availableUoms) && availableUoms.length > 0) {
+                        availableUoms.forEach(u => {
+                            const isSelected = (u.name.toLowerCase() === currentUnit.toLowerCase());
+                            if (isSelected) matchedUom = true;
+                            uomOptsHtml += `<option value="${u.name}" ${isSelected ? 'selected' : ''}>${u.name}</option>`;
+                        });
+                    }
+                    if (!matchedUom && currentUnit) {
+                        uomOptsHtml += `<option value="${currentUnit}" selected>${currentUnit}</option>`;
+                    }
+                    uomOptsHtml += `<option value="_swal_other">-- Lainnya (Ketik Manual) --</option>`;
+
                     Swal.fire({
                         title: '<i class="fas fa-edit text-warning mr-2"></i>Edit Barang Kustom',
                         html: `
@@ -714,7 +780,10 @@
                                     <div class="col-6">
                                         <div class="form-group mb-3">
                                             <label class="font-weight-bold small text-muted mb-1">Satuan:</label>
-                                            <input type="text" id="swal-edit-unit" class="form-control rounded-pill" value="${currentUnit.replace(/"/g, '&quot;')}">
+                                            <select id="swal-edit-unit" class="form-control rounded-pill" onchange="document.getElementById('swal-edit-unit-other').classList.toggle('d-none', this.value !== '_swal_other')">
+                                                ${uomOptsHtml}
+                                            </select>
+                                            <input type="text" id="swal-edit-unit-other" class="form-control rounded-pill mt-2 d-none" placeholder="Ketik satuan baru...">
                                         </div>
                                     </div>
                                     <div class="col-6">
@@ -741,7 +810,10 @@
                         focusConfirm: false,
                         preConfirm: () => {
                             const newName = document.getElementById('swal-edit-name').value.trim();
-                            const newUnit = document.getElementById('swal-edit-unit').value.trim() || 'Pcs';
+                            let newUnit = document.getElementById('swal-edit-unit').value;
+                            if (newUnit === '_swal_other') {
+                                newUnit = document.getElementById('swal-edit-unit-other').value.trim() || 'Pcs';
+                            }
                             const newQty = parseInt(document.getElementById('swal-edit-qty').value) || 1;
                             const newDesc = document.getElementById('swal-edit-desc').value.trim();
 

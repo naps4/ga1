@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AtkCategory;
 use App\Models\AtkItem;
+use App\Models\Uom;
 use Illuminate\Http\Request;
 use App\Models\ActivityLog;
 
@@ -11,6 +12,7 @@ class MasterBarangController extends Controller
 {
     public function index(Request $request)
     {
+        $tab = $request->query('tab', 'barang'); // 'barang' or 'uom'
         $type = $request->query('type', 'ATK'); // default to ATK
         if (!in_array($type, ['ATK', 'Rumah Tangga'])) {
             $type = 'ATK';
@@ -31,7 +33,9 @@ class MasterBarangController extends Controller
             $items = AtkItem::where('atk_category_id', $selectedCategory->id)->orderBy('name')->get();
         }
 
-        return view('super-admin.master-barang.index', compact('categories', 'selectedCategory', 'items', 'type'));
+        $uoms = Uom::withCount('atkItems')->orderBy('name')->get();
+
+        return view('super-admin.master-barang.index', compact('categories', 'selectedCategory', 'items', 'type', 'uoms', 'tab'));
     }
 
     public function store(Request $request)
@@ -118,10 +122,12 @@ class MasterBarangController extends Controller
             $options = array_values(array_filter($options, fn($val) => $val !== ''));
         }
 
+        Uom::firstOrCreate(['name' => trim($validated['unit'])]);
+
         $item = AtkItem::create([
             'atk_category_id' => $validated['atk_category_id'],
             'name' => $validated['name'],
-            'unit' => $validated['unit'],
+            'unit' => trim($validated['unit']),
             'options' => $options,
         ]);
 
@@ -150,10 +156,12 @@ class MasterBarangController extends Controller
             $options = array_values(array_filter($options, fn($val) => $val !== ''));
         }
 
+        Uom::firstOrCreate(['name' => trim($validated['unit'])]);
+
         $oldData = $item->toArray();
         $item->update([
             'name' => $validated['name'],
-            'unit' => $validated['unit'],
+            'unit' => trim($validated['unit']),
             'options' => $options,
         ]);
 

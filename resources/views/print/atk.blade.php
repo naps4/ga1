@@ -163,58 +163,68 @@
             <!-- Render Standard Items with Quantity > 0 (that are not rejected) -->
             @foreach($orderedNames as $name)
                 @php
-                    $dbItem = $itemsMap[$name] ?? null;
-                    $qty = $dbItem ? $dbItem['quantity'] : 0;
+                    $nameKey = trim(strtolower($name));
+                    $itemGroup = isset($itemsGrouped) ? ($itemsGrouped->get($nameKey) ?? collect()) : collect();
+                    if ($itemGroup->isEmpty() && isset($itemsMap[$name])) {
+                        $itemGroup = collect([ $itemsMap[$name] ]);
+                    }
                 @endphp
-                @if($qty > 0)
+                @foreach($itemGroup as $dbItemObj)
                     @php
-                        $itemConfig = $itemsByName->get($name);
-                        $unit = $itemConfig ? $itemConfig['unit'] : 'Pcs';
-                        $options = $itemConfig && isset($itemConfig['options']) ? $itemConfig['options'] : [];
-
-                        // Parse options
-                        $checkedOpts = [];
-                        $customOpt = '';
-                        $dbDesc = $dbItem['description'] ?? '';
-                        if (!empty($options)) {
-                            $descParts = array_map('trim', explode(',', $dbDesc));
-                            foreach ($options as $opt) {
-                                if (in_array($opt, $descParts)) {
-                                    $checkedOpts[] = $opt;
-                                }
-                            }
-                            $remainingParts = array_diff($descParts, $options);
-                            $customOpt = implode(', ', $remainingParts);
-                        } else {
-                            $customOpt = $dbDesc;
-                        }
+                        $dbItem = is_array($dbItemObj) ? $dbItemObj : (method_exists($dbItemObj, 'toArray') ? $dbItemObj->toArray() : (array)$dbItemObj);
+                        $qty = $dbItem['quantity'] ?? 0;
                     @endphp
-                    <tr>
-                        <td style="text-align: center;">{{ $no++ }}</td>
-                        <td style="font-weight: bold;">{{ $name }}</td>
-                        <td style="text-align: center;">{{ $unit }}</td>
-                        <td style="font-size: 9.5px;">
-                            @if(!empty($options))
-                                @foreach($options as $opt)
-                                    @php $isChecked = in_array($opt, $checkedOpts); @endphp
-                                    <span style="margin-right: 10px; white-space: nowrap; display: inline-block;">
-                                        <span class="checkbox-box">[{{ $isChecked ? 'X' : ' ' }}]</span> {{ $opt }}
-                                    </span>
-                                @endforeach
-                                @if($customOpt)
-                                    <span class="dotted-underline">{{ $customOpt }}</span>
-                                @endif
-                            @else
-                                @if($customOpt)
-                                    <span class="dotted-underline" style="width: 90%;">{{ $customOpt }}</span>
+                    @if($qty > 0)
+                        @php
+                            $itemConfig = $itemsByName->get($name);
+                            // Prioritaskan satuan yang tersimpan di request user
+                            $unit = !empty($dbItem['unit']) ? $dbItem['unit'] : ($itemConfig['unit'] ?? 'Pcs');
+                            $options = $itemConfig && isset($itemConfig['options']) ? $itemConfig['options'] : [];
+
+                            // Parse options
+                            $checkedOpts = [];
+                            $customOpt = '';
+                            $dbDesc = $dbItem['description'] ?? '';
+                            if (!empty($options)) {
+                                $descParts = array_map('trim', explode(',', $dbDesc));
+                                foreach ($options as $opt) {
+                                    if (in_array($opt, $descParts)) {
+                                        $checkedOpts[] = $opt;
+                                    }
+                                }
+                                $remainingParts = array_diff($descParts, $options);
+                                $customOpt = implode(', ', $remainingParts);
+                            } else {
+                                $customOpt = $dbDesc;
+                            }
+                        @endphp
+                        <tr>
+                            <td style="text-align: center;">{{ $no++ }}</td>
+                            <td style="font-weight: bold;">{{ $name }}</td>
+                            <td style="text-align: center;">{{ $unit }}</td>
+                            <td style="font-size: 9.5px;">
+                                @if(!empty($options))
+                                    @foreach($options as $opt)
+                                        @php $isChecked = in_array($opt, $checkedOpts); @endphp
+                                        <span style="margin-right: 10px; white-space: nowrap; display: inline-block;">
+                                            <span class="checkbox-box">[{{ $isChecked ? 'X' : ' ' }}]</span> {{ $opt }}
+                                        </span>
+                                    @endforeach
+                                    @if($customOpt)
+                                        <span class="dotted-underline">{{ $customOpt }}</span>
+                                    @endif
                                 @else
-                                    -
+                                    @if($customOpt)
+                                        <span class="dotted-underline" style="width: 90%;">{{ $customOpt }}</span>
+                                    @else
+                                        -
+                                    @endif
                                 @endif
-                            @endif
-                        </td>
-                        <td style="text-align: center; font-weight: bold; font-size: 11px;">{{ $qty }}</td>
-                    </tr>
-                @endif
+                            </td>
+                            <td style="text-align: center; font-weight: bold; font-size: 11px;">{{ $qty }}</td>
+                        </tr>
+                    @endif
+                @endforeach
             @endforeach
 
             <!-- Render Custom / Unlisted Items (that are not rejected) -->

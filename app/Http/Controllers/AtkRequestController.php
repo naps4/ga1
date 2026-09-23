@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AtkRequest;
 use App\Models\AtkRequestItem;
+use App\Models\Uom;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -37,7 +38,7 @@ class AtkRequestController extends Controller
         ['name' => 'Pembatas File', 'unit' => 'Pack', 'options' => ['A4', 'A4 (A-Z)', 'F4'], 'category' => 'Penyimpanan Dokumen'],
         ['name' => 'Sheet Protector', 'unit' => 'Pcs', 'options' => [], 'category' => 'Penyimpanan Dokumen'],
         
-        ['name' => 'Cutter', 'unit' => 'Pcs / Pack', 'options' => ['Kecil', 'Besar'], 'category' => 'Perekat & Pemotong'],
+        ['name' => 'Cutter', 'unit' => 'Pcs', 'options' => ['Kecil', 'Besar'], 'category' => 'Perekat & Pemotong'],
         ['name' => 'Isi Cutter', 'unit' => 'Pack', 'options' => ['Kecil', 'Besar'], 'category' => 'Perekat & Pemotong'],
         ['name' => 'Double Tape', 'unit' => 'Pcs', 'options' => ['Kecil', 'Besar'], 'category' => 'Perekat & Pemotong'],
         ['name' => 'Gunting', 'unit' => 'Pcs', 'options' => ['Kecil', 'Besar'], 'category' => 'Perekat & Pemotong'],
@@ -73,11 +74,11 @@ class AtkRequestController extends Controller
     public static $householdItems = [
         ['name' => 'Hand Soap', 'unit' => 'Pcs', 'options' => [], 'category' => 'Sabun & Pembersih'],
         ['name' => 'Sabun Cuci Piring', 'unit' => 'Pcs', 'options' => [], 'category' => 'Sabun & Pembersih'],
-        ['name' => 'Wipol', 'unit' => 'Pcs/Botol', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        ['name' => 'Wipol', 'unit' => 'Botol', 'options' => [], 'category' => 'Sabun & Pembersih'],
         ['name' => 'Soklin lantai', 'unit' => 'Pack', 'options' => [], 'category' => 'Sabun & Pembersih'],
         ['name' => 'Soklin Liquid', 'unit' => 'Pack', 'options' => [], 'category' => 'Sabun & Pembersih'],
         ['name' => 'Pewangi Pakaian/molto', 'unit' => 'Pack', 'options' => [], 'category' => 'Sabun & Pembersih'],
-        ['name' => 'Hand Sanitizer', 'unit' => 'Pcs/Botol', 'options' => [], 'category' => 'Sabun & Pembersih'],
+        ['name' => 'Hand Sanitizer', 'unit' => 'Botol', 'options' => [], 'category' => 'Sabun & Pembersih'],
         ['name' => 'Karbol WC', 'unit' => 'Pack', 'options' => [], 'category' => 'Sabun & Pembersih'],
         ['name' => 'Clink Pembersih Kaca', 'unit' => 'Pcs', 'options' => [], 'category' => 'Sabun & Pembersih'],
         
@@ -410,7 +411,9 @@ class AtkRequestController extends Controller
             $months[$val] = $text;
         }
 
-        return view('atk-requests.create', compact('standardItems', 'householdItems', 'nama', 'divisi', 'tanggal_pengajuan', 'months', 'defaultType'));
+        $uoms = Uom::orderBy('name')->get();
+
+        return view('atk-requests.create', compact('standardItems', 'householdItems', 'nama', 'divisi', 'tanggal_pengajuan', 'months', 'defaultType', 'uoms'));
     }
 
     public function store(Request $request)
@@ -527,7 +530,9 @@ class AtkRequestController extends Controller
         $existingItems = $atkRequest->items->where('is_custom', false)->values()->toArray();
         $customItems = $atkRequest->items->where('is_custom', true)->values()->toArray();
 
-        return view('atk-requests.edit', compact('atkRequest', 'standardItems', 'householdItems', 'months', 'existingItems', 'customItems'));
+        $uoms = Uom::orderBy('name')->get();
+
+        return view('atk-requests.edit', compact('atkRequest', 'standardItems', 'householdItems', 'months', 'existingItems', 'customItems', 'uoms'));
     }
 
     public function update(Request $request, AtkRequest $atkRequest)
@@ -1263,13 +1268,17 @@ class AtkRequestController extends Controller
             return back()->with('error', 'Formulir tidak dapat dicetak karena tidak ada barang yang dapat dicetak.');
         }
         
-        $itemsMap = $items->where('is_custom', false)->keyBy('item_name')->toArray();
+        $standardItemsCollection = $items->where('is_custom', false)->values();
+        $itemsGrouped = $standardItemsCollection->groupBy(function($item) {
+            return trim(strtolower($item->item_name));
+        });
+        $itemsMap = $standardItemsCollection->keyBy('item_name')->toArray();
         $customItems = $items->where('is_custom', true)->values()->all();
 
         $standardItems = $this->getItemsForType('ATK');
         $householdItems = $this->getItemsForType('Rumah Tangga');
 
-        return view('print.atk', compact('atkRequest', 'standardItems', 'householdItems', 'itemsMap', 'customItems'));
+        return view('print.atk', compact('atkRequest', 'standardItems', 'householdItems', 'itemsMap', 'itemsGrouped', 'customItems'));
     }
 
     public function exportPdf(Request $request)
