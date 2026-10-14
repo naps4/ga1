@@ -81,8 +81,7 @@
                                     $ho = $workOrder->handover;
                                     $hoText = '';
                                     if (!$ho || !$ho->prepared_by) $hoText = 'Admin/HRGA';
-                                    elseif (!$ho->known_by) $hoText = 'Oprt. Manager';
-                                    elseif (!$ho->accepted_by) $hoText = 'Klien/Pemohon';
+                                    elseif ($ho->known_by && !$ho->accepted_by) $hoText = 'Klien/Pemohon';
                                 @endphp
                                 @if($hoText)
                                     <span class="badge badge-warning ml-1"><i class="fas fa-clock"></i> {{ $hoText }}</span>

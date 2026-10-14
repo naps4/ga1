@@ -84,8 +84,7 @@
                                                 $ho = $wo->handover;
                                                 $hoText = '';
                                                 if (!$ho || !$ho->prepared_by) $hoText = 'Admin/HRGA';
-                                                elseif (!$ho->known_by) $hoText = 'Oprt. Manager';
-                                                elseif (!$ho->accepted_by) $hoText = 'Klien/Pemohon';
+                                                elseif ($ho->known_by && !$ho->accepted_by) $hoText = 'Klien/Pemohon';
                                             @endphp
                                             @if($hoText)
                                                 <div class="mt-1"><small class="text-muted font-weight-bold" style="font-size: 0.75rem;"><i class="fas fa-clock"></i> {{ $hoText }}</small></div>
