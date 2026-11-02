@@ -358,6 +358,122 @@
         background-color: #1e242c !important;
         border-top-color: #2d3748 !important;
     }
+
+    /* ── Physical Inventory QR Sticker Label Styling ──────── */
+    .asset-physical-sticker {
+        background: #ffffff;
+        border: 2px solid #0f172a;
+        border-radius: 0.75rem;
+        padding: 0.85rem 1rem;
+        color: #0f172a;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+    .sticker-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #0f172a;
+        padding-bottom: 0.35rem;
+        margin-bottom: 0.65rem;
+    }
+    .sticker-company {
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #0f172a;
+    }
+    .sticker-system-badge {
+        font-size: 0.68rem;
+        font-weight: 800;
+        background: #0f172a;
+        color: #ffffff;
+        padding: 0.15rem 0.45rem;
+        border-radius: 0.25rem;
+        letter-spacing: 0.05em;
+    }
+    .sticker-body {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .sticker-qr-wrap {
+        background: #ffffff;
+        padding: 0.35rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.45rem;
+        width: 110px;
+        height: 110px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .sticker-meta {
+        flex-grow: 1;
+        min-width: 0;
+    }
+    .sticker-code {
+        font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #1e40af;
+        letter-spacing: 0.02em;
+        word-break: break-all;
+        line-height: 1.2;
+        margin-bottom: 0.2rem;
+    }
+    .sticker-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.35rem;
+        line-height: 1.25;
+    }
+    .sticker-details {
+        font-size: 0.75rem;
+        color: #334155;
+        line-height: 1.35;
+    }
+    .sticker-lbl {
+        color: #64748b;
+        font-weight: 600;
+    }
+    .sticker-foot {
+        border-top: 1px dashed #94a3b8;
+        margin-top: 0.55rem;
+        padding-top: 0.35rem;
+        text-align: center;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #64748b;
+    }
+
+    body.dark-mode .asset-physical-sticker {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #0f172a !important;
+    }
+    body.dark-mode .asset-physical-sticker * {
+        color: #0f172a;
+    }
+    body.dark-mode .asset-physical-sticker .sticker-code {
+        color: #1e40af !important;
+    }
+    body.dark-mode .asset-physical-sticker .sticker-system-badge {
+        background: #0f172a !important;
+        color: #ffffff !important;
+    }
+    body.dark-mode .asset-physical-sticker .sticker-lbl {
+        color: #64748b !important;
+    }
+    body.dark-mode .asset-physical-sticker .sticker-foot {
+        color: #64748b !important;
+    }
 </style>
 @endpush
 
@@ -700,6 +816,9 @@
                                         <div class="font-weight-bold text-dark">{{ $asset->item_name }}</div>
                                         <div class="d-inline-flex align-items-center flex-nowrap mt-0.5" style="gap: .35rem;">
                                             <code class="text-primary font-weight-bold">{{ $asset->asset_code }}</code>
+                                            <button type="button" class="btn btn-xs btn-outline-primary border-0 p-0 px-1" title="Buka Detail & QR Code" onclick="openDetailModal({{ json_encode($asset) }})">
+                                                <i class="fas fa-qrcode"></i>
+                                            </button>
                                             @if($asset->origin_plant_code !== $plant->code)
                                                 <span class="badge badge-warning text-dark" style="font-size: 10px;" title="Aset lahir di Plant lain">
                                                     <i class="fas fa-exchange-alt mr-1"></i>Mutasi dari Plant {{ $asset->origin_plant_code }}
@@ -769,13 +888,20 @@
                                         Rp {{ number_format($asset->total_price, 0, ',', '.') }}
                                     </td>
                                     <td class="text-center cell-single-line">
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-primary rounded-circle"
-                                                style="width: 32px; height: 32px; padding: 0;"
-                                                onclick="openEditAssetModal({{ json_encode($asset) }})"
-                                                title="Edit Data & Pindah Ruangan">
-                                            <i class="fas fa-pencil-alt"></i>
-                                        </button>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button"
+                                                    class="btn btn-outline-primary"
+                                                    onclick="openDetailModal({{ json_encode($asset) }})"
+                                                    title="Lihat Detail & QR Code">
+                                                <i class="fas fa-qrcode"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary"
+                                                    onclick="openEditAssetModal({{ json_encode($asset) }})"
+                                                    title="Edit Data & Pindah Ruangan">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -973,7 +1099,7 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text font-weight-bold text-muted bg-light">Rp</span>
                                 </div>
-                                <input type="number" name="unit_price" id="plantPriceInput" class="form-control font-weight-bold" value="0" min="0" autocomplete="off" required>
+                                <input type="text" inputmode="numeric" name="unit_price" id="plantPriceInput" class="form-control font-weight-bold" value="0" placeholder="0" autocomplete="off" required>
                             </div>
                         </div>
                         <div class="col-md-5 col-12 mb-3">
@@ -1081,6 +1207,133 @@
     </div>
 </div>
 
+{{-- MODAL DETAIL & STIKER QR CODE ASET --}}
+<div class="modal fade" id="modalDetailAsset" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width: 820px;" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            <div class="modal-header bg-primary text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem; padding: 1.15rem 1.5rem;">
+                <div>
+                    <h5 class="modal-title font-weight-bold mb-0">
+                        <i class="fas fa-qrcode mr-2"></i> Detail Aset & Stiker QR Code
+                    </h5>
+                    <small class="text-white-50">PT Herbatech Innopharma Industry — Inventaris Operasional {{ $plant->name }}</small>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            
+            <div class="modal-body p-4" style="max-height: calc(85vh - 120px); overflow-y: auto;">
+                
+                {{-- STIKER FISIK PREVIEW (Printable Area) --}}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small font-weight-bold text-uppercase text-muted" style="letter-spacing: .05em;">
+                            <i class="fas fa-barcode mr-1"></i> Format Kartu Stiker Label Fisik
+                        </span>
+                        <div class="d-flex" style="gap: .4rem;">
+                            <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-2" onclick="downloadQRCode()">
+                                <i class="fas fa-download mr-1"></i> Unduh QR (PNG)
+                            </button>
+                            <button type="button" class="btn btn-xs btn-primary rounded-pill px-3 shadow-sm font-weight-bold" onclick="printAssetSticker()">
+                                <i class="fas fa-print mr-1"></i> Cetak Stiker Label
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="stickerPrintArea">
+                        <div class="asset-physical-sticker">
+                            <div class="sticker-head">
+                                <div class="sticker-company">PT HERBATECH INNOPHARMA INDUSTRY</div>
+                                <div class="sticker-system-badge">INVENTARIS GA</div>
+                            </div>
+                            <div class="sticker-body">
+                                <div class="sticker-qr-wrap" id="detailQrContainer">
+                                    <!-- QR Code Canvas/SVG injected here -->
+                                </div>
+                                <div class="sticker-meta">
+                                    <div class="sticker-code" id="detailStickerCode">HII-...</div>
+                                    <div class="sticker-title" id="detailStickerName">Nama Aset</div>
+                                    <div class="sticker-details">
+                                        <div><span class="sticker-lbl">Lokasi:</span> <strong id="detailStickerLocation">{{ $plant->name }}</strong></div>
+                                        <div><span class="sticker-lbl">Departemen:</span> <strong id="detailStickerDept">-</strong></div>
+                                        <div><span class="sticker-lbl">Tgl Beli:</span> <strong id="detailStickerDate">-</strong> | <strong id="detailStickerSource">-</strong></div>
+                                        <div><span class="sticker-lbl">Tracking:</span> <span class="badge badge-dark" id="detailStickerTracking">INDIVIDUAL</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sticker-foot">
+                                <span>* SCAN QR UNTUK VERIFIKASI ASLI INVENTARIS PERUSAHAAN *</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- INFORMASI LENGKAP PROFIL ASET --}}
+                <div class="modal-form-section mb-0">
+                    <div class="modal-form-section-title">
+                        <i class="fas fa-info-circle mr-2"></i> Informasi Detail Spesifikasi & Finansial
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-4 col-6 mb-2">
+                            <small class="text-muted d-block">Kategori Aset</small>
+                            <strong class="text-dark" id="detailInfoCategory">-</strong>
+                        </div>
+                        <div class="col-md-4 col-6 mb-2">
+                            <small class="text-muted d-block">Merk / Brand</small>
+                            <strong class="text-dark" id="detailInfoBrand">-</strong>
+                        </div>
+                        <div class="col-md-4 col-6 mb-2">
+                            <small class="text-muted d-block">Kondisi Fisik</small>
+                            <div id="detailInfoCondition">-</div>
+                        </div>
+                        <div class="col-md-4 col-6 mb-2">
+                            <small class="text-muted d-block">Kuantitas (Qty)</small>
+                            <strong class="text-dark" id="detailInfoQty">1 Unit</strong>
+                        </div>
+                        <div class="col-md-4 col-6 mb-2">
+                            <small class="text-muted d-block">Harga Satuan (Rp)</small>
+                            <strong class="text-dark text-success" id="detailInfoUnitPrice">Rp 0</strong>
+                        </div>
+                        <div class="col-md-4 col-6 mb-2">
+                            <small class="text-muted d-block">Total Nilai Perolehan</small>
+                            <strong class="text-success font-weight-bold" id="detailInfoTotalPrice" style="font-size: 1.1rem;">Rp 0</strong>
+                        </div>
+                        <div class="col-md-4 col-6 mb-2">
+                            <small class="text-muted d-block">Masa Manfaat</small>
+                            <strong class="text-dark" id="detailInfoUsefulLife">-</strong>
+                        </div>
+                        <div class="col-md-4 col-6 mb-2">
+                            <small class="text-muted d-block">Sumber Perolehan</small>
+                            <strong class="text-dark" id="detailInfoSource">-</strong>
+                        </div>
+                        <div class="col-md-4 col-6 mb-2">
+                            <small class="text-muted d-block">Status Aset</small>
+                            <span class="badge badge-success" id="detailInfoStatus">AKTIF</span>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <small class="text-muted d-block">Spesifikasi / Dimensi / Catatan</small>
+                            <div class="p-2 bg-light rounded text-dark font-italic small border" id="detailInfoSpec">
+                                Tidak ada catatan spesifikasi khusus.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer bg-light border-top" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; padding: 1rem 1.5rem;">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">
+                    Tutup
+                </button>
+                <button type="button" class="btn btn-info rounded-pill px-4 shadow-sm font-weight-bold" onclick="openEditFromDetail()">
+                    <i class="fas fa-edit mr-1"></i> Edit Aset Ini
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- MODAL EDIT ASET & PINDAH RUANGAN --}}
 <div class="modal fade" id="modalEditAssetPlant" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -1096,11 +1349,25 @@
                 </button>
             </div>
             <div class="modal-body p-4">
-                <div class="alert alert-light border d-flex align-items-center mb-3 py-2">
-                    <i class="fas fa-barcode text-primary fa-2x mr-3"></i>
-                    <div>
-                        <div class="font-weight-bold text-dark" id="editAssetCode"></div>
-                        <small class="text-muted">Kode ID Aset fisik tidak berubah saat pengeditan ruangan / data teknis.</small>
+                <div class="card bg-light border mb-3 shadow-none p-3" style="border-radius: 0.75rem;">
+                    <div class="d-flex align-items-center flex-wrap" style="gap: 1rem;">
+                        <div id="editAssetQrContainerPlant" class="bg-white p-1 rounded border shadow-sm d-flex align-items-center justify-content-center" style="width: 78px; height: 78px; flex-shrink: 0;">
+                            <!-- QR Code auto-generated -->
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1 flex-wrap" style="gap: .35rem;">
+                                <span class="badge badge-primary px-2 py-0.5" id="editAssetBadgeModePlant">INDIVIDUAL</span>
+                                <span class="badge badge-info px-2 py-0.5">{{ $plant->name }}</span>
+                                <span class="badge badge-secondary px-2 py-0.5" id="editAssetBadgeDeptPlant">Dept</span>
+                            </div>
+                            <h6 class="font-weight-bold text-dark mb-0 font-monospace" id="editAssetCode">HII-...</h6>
+                            <small class="text-muted d-block mt-0.5">Kode QR fisik otomatis sinkron dengan stiker barcode aset.</small>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" onclick="openDetailFromEdit()">
+                                <i class="fas fa-print mr-1"></i> Cetak Stiker
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1181,7 +1448,7 @@
                     </div>
                     <div class="col-md-4 col-12 mb-3">
                         <label class="form-label font-weight-bold">Harga Satuan (Rp) <span class="text-danger">*</span></label>
-                        <input type="number" name="unit_price" id="editUnitPrice" class="form-control" min="0" required>
+                        <input type="text" inputmode="numeric" name="unit_price" id="editUnitPrice" class="form-control font-weight-bold" placeholder="0" autocomplete="off" required>
                     </div>
                     <div class="col-md-4 col-12 mb-3">
                         <label class="form-label font-weight-bold">Masa Manfaat (Tahun) <span class="text-danger">*</span></label>
@@ -1206,7 +1473,46 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"></script>
 <script>
+    let currentDetailAsset = null;
+
+    function formatRupiahNumber(val) {
+        if (!val && val !== 0) return '';
+        let clean = val.toString().replace(/[^0-9]/g, '');
+        if (!clean) return '';
+        let num = parseInt(clean, 10);
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function parseRupiahNumber(val) {
+        if (!val) return 0;
+        let clean = val.toString().replace(/[^0-9]/g, '');
+        return clean ? parseInt(clean, 10) : 0;
+    }
+
+    function attachRupiahInput(input, onUpdate) {
+        if (!input) return;
+        input.addEventListener('input', function() {
+            let clean = this.value.replace(/[^0-9]/g, '');
+            if (clean === '') {
+                this.value = '';
+            } else {
+                let num = parseInt(clean, 10);
+                this.value = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+            if (typeof onUpdate === 'function') onUpdate();
+        });
+
+        input.addEventListener('focus', function() {
+            if (this.value === '0') this.value = '';
+        });
+
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') this.value = '0';
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const track = document.getElementById('deptTabsTrack');
         const scrollLeftBtn = document.getElementById('tabScrollLeft');
@@ -1240,17 +1546,19 @@
         const plantTotal = document.getElementById('plantTotalPreview');
         const plantCategory = document.getElementById('plantCategoryCode');
         const plantUsefulLife = document.getElementById('plantUsefulLifeYears');
+        const editUnitPrice = document.getElementById('editUnitPrice');
 
         function calculatePlantTotal() {
             if (!plantQty || !plantPrice || !plantTotal) return;
             const q = parseFloat(plantQty.value) || 0;
-            const p = parseFloat(plantPrice.value) || 0;
+            const p = parseRupiahNumber(plantPrice.value);
             const total = q * p;
             plantTotal.innerText = 'Rp ' + Math.round(total).toLocaleString('id-ID');
         }
 
         if (plantQty) plantQty.addEventListener('input', calculatePlantTotal);
-        if (plantPrice) plantPrice.addEventListener('input', calculatePlantTotal);
+        if (plantPrice) attachRupiahInput(plantPrice, calculatePlantTotal);
+        if (editUnitPrice) attachRupiahInput(editUnitPrice);
 
         if (plantCategory && plantUsefulLife) {
             function syncPlantCategoryUsefulLife() {
@@ -1267,9 +1575,234 @@
         calculatePlantTotal();
     });
 
+    // ── Detail & Cetak Stiker QR Code ──────────────────────────────────────────
+    function openDetailModal(asset) {
+        currentDetailAsset = asset;
+
+        // 1. Informasi Stiker Fisik
+        document.getElementById('detailStickerCode').innerText = asset.asset_code;
+        document.getElementById('detailStickerName').innerText = asset.item_name || '-';
+
+        let plantName = (asset.current_plant_code === '01') ? 'Plant A' : (asset.current_plant_code === '02' ? 'Plant B' : 'Mobile');
+        let roomName = asset.location ? asset.location.room_name : '-';
+        document.getElementById('detailStickerLocation').innerText = plantName + (roomName && roomName !== '-' ? ' — ' + roomName : '');
+
+        let deptName = asset.department ? (asset.department.code || asset.department.name) : '-';
+        document.getElementById('detailStickerDept').innerText = deptName;
+
+        let purchaseDate = asset.purchase_date ? asset.purchase_date.substring(0, 10) : '-';
+        document.getElementById('detailStickerDate').innerText = purchaseDate;
+        document.getElementById('detailStickerSource').innerText = asset.acquisition_source || 'RAB';
+
+        let trackingMode = asset.tracking_mode || 'INDIVIDUAL';
+        const trackingBadge = document.getElementById('detailStickerTracking');
+        if (trackingMode === 'BULK') {
+            trackingBadge.innerText = 'BULK (Qty: ' + (asset.qty || 1) + ')';
+            trackingBadge.className = 'badge badge-info';
+        } else {
+            trackingBadge.innerText = 'INDIVIDUAL';
+            trackingBadge.className = 'badge badge-dark';
+        }
+
+        // 2. Informasi Detail Profil
+        document.getElementById('detailInfoCategory').innerText = (asset.category ? (asset.category.code + ' - ' + asset.category.name) : (asset.category_code || '-'));
+        document.getElementById('detailInfoBrand').innerText = asset.brand || '-';
+
+        let condHtml = `<span class="badge badge-${asset.condition === 'Baik' ? 'success' : (asset.condition === 'Rusak' ? 'danger' : 'warning')}">${asset.condition || 'Baik'}</span>`;
+        condHtml += ` <span class="badge badge-light border ml-1">${asset.initial_condition || 'Baru'}</span>`;
+        if (asset.condition_note) condHtml += ` <small class="text-muted font-italic">(${asset.condition_note})</small>`;
+        document.getElementById('detailInfoCondition').innerHTML = condHtml;
+
+        document.getElementById('detailInfoQty').innerText = (asset.qty || 1) + ' Unit';
+        document.getElementById('detailInfoUnitPrice').innerText = 'Rp ' + Math.round(asset.unit_price || 0).toLocaleString('id-ID');
+        document.getElementById('detailInfoTotalPrice').innerText = 'Rp ' + Math.round(asset.total_price || 0).toLocaleString('id-ID');
+        document.getElementById('detailInfoUsefulLife').innerText = (asset.useful_life_years || 4) + ' Tahun';
+        document.getElementById('detailInfoSource').innerText = asset.acquisition_source || 'RAB';
+        document.getElementById('detailInfoStatus').innerText = asset.status || 'AKTIF';
+        document.getElementById('detailInfoStatus').className = 'badge badge-' + (asset.status === 'AKTIF' ? 'success' : 'secondary');
+        document.getElementById('detailInfoSpec').innerText = asset.specification || 'Tidak ada catatan spesifikasi khusus.';
+
+        // 3. Render QR Code (Dynamic Canvas/SVG)
+        const qrContainer = document.getElementById('detailQrContainer');
+        qrContainer.innerHTML = '';
+        const scanUrl = window.location.origin + '/assets/scan/' + encodeURIComponent(asset.asset_code);
+        new QRCode(qrContainer, {
+            text: scanUrl,
+            width: 100,
+            height: 100,
+            colorDark : "#0f172a",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.M
+        });
+
+        $('#modalDetailAsset').modal('show');
+    }
+
+    function printAssetSticker() {
+        if (!currentDetailAsset) return;
+        const printContent = document.getElementById('stickerPrintArea').innerHTML;
+        const printWindow = window.open('', '_blank', 'width=620,height=420');
+        if (!printWindow) {
+            alert('Mohon izinkan popup window di browser untuk mencetak stiker.');
+            return;
+        }
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>Cetak Stiker - ${currentDetailAsset.asset_code}</title>
+                    <style>
+                        @page { size: auto; margin: 4mm; }
+                        * { box-sizing: border-box; }
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background: #ffffff;
+                        }
+                        .asset-physical-sticker {
+                            background: #ffffff;
+                            border: 2px solid #000000;
+                            border-radius: 6px;
+                            padding: 8px 10px;
+                            width: 360px;
+                            color: #000000;
+                        }
+                        .sticker-head {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            border-bottom: 1.5px solid #000000;
+                            padding-bottom: 3px;
+                            margin-bottom: 6px;
+                        }
+                        .sticker-company {
+                            font-size: 8.5px;
+                            font-weight: 800;
+                            text-transform: uppercase;
+                        }
+                        .sticker-system-badge {
+                            font-size: 7.5px;
+                            font-weight: 800;
+                            background: #000000;
+                            color: #ffffff;
+                            padding: 1px 4px;
+                            border-radius: 3px;
+                        }
+                        .sticker-body {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+                        .sticker-qr-wrap {
+                            width: 95px;
+                            height: 95px;
+                            flex-shrink: 0;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                        .sticker-qr-wrap img, .sticker-qr-wrap canvas {
+                            width: 95px !important;
+                            height: 95px !important;
+                        }
+                        .sticker-meta {
+                            flex-grow: 1;
+                            font-size: 8.5px;
+                            line-height: 1.35;
+                        }
+                        .sticker-code {
+                            font-size: 10px;
+                            font-weight: 800;
+                            font-family: monospace;
+                        }
+                        .sticker-title {
+                            font-size: 10px;
+                            font-weight: 700;
+                            margin: 2px 0;
+                        }
+                        .sticker-foot {
+                            border-top: 1px dashed #666;
+                            margin-top: 5px;
+                            padding-top: 3px;
+                            text-align: center;
+                            font-size: 7px;
+                            font-weight: bold;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${printContent}
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                                window.close();
+                            }, 250);
+                        };
+                    <\/script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+
+    function downloadQRCode() {
+        if (!currentDetailAsset) return;
+        const canvas = document.querySelector('#detailQrContainer canvas') || document.querySelector('#detailQrContainer img');
+        if (!canvas) return;
+        const link = document.createElement('a');
+        link.download = 'QR_' + currentDetailAsset.asset_code + '.png';
+        link.href = canvas.src || canvas.toDataURL('image/png');
+        link.click();
+    }
+
+    function openDetailFromEdit() {
+        $('#modalEditAssetPlant').modal('hide');
+        setTimeout(() => {
+            if (currentDetailAsset) openDetailModal(currentDetailAsset);
+        }, 350);
+    }
+
+    function openEditFromDetail() {
+        $('#modalDetailAsset').modal('hide');
+        setTimeout(() => {
+            if (currentDetailAsset) openEditAssetModal(currentDetailAsset);
+        }, 350);
+    }
+
+    // ── Edit Aset Modal ────────────────────────────────────────────────────────
     function openEditAssetModal(asset) {
+        currentDetailAsset = asset;
         document.getElementById('formEditAsset').action = '/assets/' + asset.id;
         document.getElementById('editAssetCode').innerText = asset.asset_code + ' — ' + (asset.item_name || '');
+
+        // Header Badges
+        const modeBadge = document.getElementById('editAssetBadgeModePlant');
+        if (modeBadge) {
+            modeBadge.innerText = asset.tracking_mode || 'INDIVIDUAL';
+            modeBadge.className = 'badge ' + ((asset.tracking_mode === 'BULK') ? 'badge-info' : 'badge-primary') + ' px-2 py-0.5';
+        }
+        const deptBadge = document.getElementById('editAssetBadgeDeptPlant');
+        if (deptBadge) {
+            deptBadge.innerText = asset.department ? (asset.department.code || asset.department.name) : '-';
+        }
+
+        // Header QR Code
+        const editQrContainer = document.getElementById('editAssetQrContainerPlant');
+        if (editQrContainer) {
+            editQrContainer.innerHTML = '';
+            const scanUrl = window.location.origin + '/assets/scan/' + encodeURIComponent(asset.asset_code);
+            new QRCode(editQrContainer, {
+                text: scanUrl,
+                width: 70,
+                height: 70,
+                colorDark : "#0f172a",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+        }
+
         document.getElementById('editItemName').value = asset.item_name || '';
         document.getElementById('editBrand').value = asset.brand || '';
         document.getElementById('editAcquisitionSource').value = asset.acquisition_source || 'RAB';
@@ -1279,7 +1812,7 @@
         document.getElementById('editInitialCondition').value = asset.initial_condition || 'Baru';
         document.getElementById('editCondition').value = asset.condition || 'Baik';
         document.getElementById('editConditionNote').value = asset.condition_note || '';
-        document.getElementById('editUnitPrice').value = Math.round(asset.unit_price) || 0;
+        document.getElementById('editUnitPrice').value = formatRupiahNumber(Math.round(asset.unit_price) || 0);
         document.getElementById('editQty').value = asset.qty || 1;
         document.getElementById('editUsefulLife').value = asset.useful_life_years || 4;
         document.getElementById('editSpecification').value = asset.specification || '';

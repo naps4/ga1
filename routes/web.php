@@ -484,6 +484,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/projects/pdf', [App\Http\Controllers\ReportController::class, 'exportPdf'])->name('reports.projects.pdf');
 });
 
+// Scan QR Code Verification Route (Mobile/Scanner Friendly)
+Route::get('/assets/scan/{code}', [\App\Http\Controllers\GaAssetController::class, 'scan'])->name('assets.scan');
+
 // GA Asset Management Routes (PT Herbatech Innopharma Industry)
 Route::middleware(['auth'])->prefix('assets')->name('assets.')->group(function () {
     Route::get('/', [\App\Http\Controllers\GaAssetController::class, 'index'])->name('index');

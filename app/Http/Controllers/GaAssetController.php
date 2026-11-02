@@ -18,7 +18,7 @@ class GaAssetController extends Controller
     public function __construct(GaAssetService $assetService)
     {
         $this->assetService = $assetService;
-        $this->middleware('auth')->except(['apiMaster', 'apiPlant', 'apiLampiranC', 'aiToolDefinitions', 'aiToolCall']);
+        $this->middleware('auth')->except(['apiMaster', 'apiPlant', 'apiLampiranC', 'aiToolDefinitions', 'aiToolCall', 'scan']);
     }
 
     // ── Endpoint 1: Master Aset (ASET ALL 2026) ──────────────────────────────
@@ -363,6 +363,11 @@ class GaAssetController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->has('unit_price')) {
+            $cleanedPrice = preg_replace('/[^0-9]/', '', (string)$request->input('unit_price'));
+            $request->merge(['unit_price' => $cleanedPrice === '' ? 0 : (float)$cleanedPrice]);
+        }
+
         $validated = $request->validate([
             'item_name'          => 'required|string|max:255',
             'item_abbr'          => 'required|string|max:10',
@@ -394,6 +399,11 @@ class GaAssetController extends Controller
 
     public function update(Request $request, Asset $asset)
     {
+        if ($request->has('unit_price')) {
+            $cleanedPrice = preg_replace('/[^0-9]/', '', (string)$request->input('unit_price'));
+            $request->merge(['unit_price' => $cleanedPrice === '' ? 0 : (float)$cleanedPrice]);
+        }
+
         $validated = $request->validate([
             'item_name'          => 'required|string|max:255',
             'brand'              => 'nullable|string|max:150',
@@ -469,6 +479,17 @@ class GaAssetController extends Controller
         }
 
         return back()->with('success', "Aset {$asset->asset_code} berhasil diarsipkan sebagai disposed.");
+    }
+
+    // ── Endpoint: Scan QR Code Verifikasi Aset (Mobile Friendly) ─────────────
+
+    public function scan(string $code)
+    {
+        $asset = Asset::with(['originPlant', 'currentPlant', 'department', 'location', 'category', 'mutations'])
+            ->where('asset_code', $code)
+            ->firstOrFail();
+
+        return view('assets.scan', compact('asset'));
     }
 
     // ── Endpoint 5: AI Agent Tool-Calling Interfaces ─────────────────────────
