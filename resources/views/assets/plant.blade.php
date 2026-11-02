@@ -163,11 +163,11 @@
 
 @section('content')
 @php
-    $filterParams = request()->only(['search', 'location_id', 'category', 'condition', 'per_page']);
+    $filterParams = request()->only(['search', 'location_id', 'category', 'condition', 'source', 'per_page']);
     $activeDeptName = $selectedDeptId 
         ? ($departmentTabs->firstWhere('id', $selectedDeptId)->name ?? 'Departemen')
         : 'Semua Departemen';
-    $hasActiveFilters = !empty($search) || !empty($locationId) || !empty($categoryCode) || !empty($condition);
+    $hasActiveFilters = !empty($search) || !empty($locationId) || !empty($categoryCode) || !empty($condition) || !empty($source);
 @endphp
 
 <div class="content-header">
@@ -297,9 +297,9 @@
                     @endif
 
                     <div class="row align-items-center" style="row-gap: .6rem;">
-                        {{-- Search Input (Nama, Kode, Merk, Spek) --}}
-                        <div class="col-lg-4 col-md-12">
-                            <div class="input-group">
+                        {{-- Search Input (Nama, Kode, Merk, Spek, Sumber) --}}
+                        <div class="col-lg-3 col-md-12">
+                            <div class="input-group input-group-sm">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text bg-transparent border-right-0 text-muted">
                                         <i class="fas fa-search"></i>
@@ -308,7 +308,7 @@
                                 <input type="text"
                                        name="search"
                                        class="form-control border-left-0"
-                                       placeholder="Cari nama barang, kode aset, merk, spek..."
+                                       placeholder="Cari ID, Nama, Merk, Spek..."
                                        value="{{ $search ?? '' }}"
                                        autocomplete="off">
                                 @if(!empty($search))
@@ -324,9 +324,9 @@
                         </div>
 
                         {{-- Dropdown Ruangan / Area --}}
-                        <div class="col-lg-3 col-md-4 col-sm-6">
-                            <select name="location_id" class="form-control custom-select" onchange="this.form.submit()">
-                                <option value="">Semua Ruangan / Area ({{ $locations->count() }})</option>
+                        <div class="col-lg-2 col-md-3 col-sm-6">
+                            <select name="location_id" class="form-control form-control-sm custom-select" onchange="this.form.submit()">
+                                <option value="">Semua Ruangan ({{ $locations->count() }})</option>
                                 @foreach($locations as $loc)
                                     <option value="{{ $loc->id }}" {{ ($locationId ?? '') == $loc->id ? 'selected' : '' }}>
                                         {{ $loc->room_name }}
@@ -335,9 +335,19 @@
                             </select>
                         </div>
 
+                        {{-- Dropdown Sumber Perolehan (RAB / Hibah) --}}
+                        <div class="col-lg-2 col-md-3 col-sm-6">
+                            <select name="source" class="form-control form-control-sm custom-select" onchange="this.form.submit()">
+                                <option value="">Semua Sumber Perolehan</option>
+                                <option value="RAB" {{ ($source ?? '') === 'RAB' ? 'selected' : '' }}>Sumber: RAB</option>
+                                <option value="Hibah" {{ ($source ?? '') === 'Hibah' ? 'selected' : '' }}>Sumber: Hibah</option>
+                                <option value="Pengadaan Baru" {{ ($source ?? '') === 'Pengadaan Baru' ? 'selected' : '' }}>Sumber: Pengadaan Baru</option>
+                            </select>
+                        </div>
+
                         {{-- Dropdown Kategori --}}
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <select name="category" class="form-control custom-select" onchange="this.form.submit()">
+                        <div class="col-lg-2 col-md-3 col-sm-6">
+                            <select name="category" class="form-control form-control-sm custom-select" onchange="this.form.submit()">
                                 <option value="">Semua Kategori</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->code }}" {{ ($categoryCode ?? '') == $cat->code ? 'selected' : '' }}>
@@ -348,8 +358,8 @@
                         </div>
 
                         {{-- Dropdown Kondisi --}}
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <select name="condition" class="form-control custom-select" onchange="this.form.submit()">
+                        <div class="col-lg-2 col-md-3 col-sm-6">
+                            <select name="condition" class="form-control form-control-sm custom-select" onchange="this.form.submit()">
                                 <option value="">Semua Kondisi</option>
                                 <option value="Baik" {{ ($condition ?? '') === 'Baik' ? 'selected' : '' }}>Kondisi: Baik</option>
                                 <option value="Rusak" {{ ($condition ?? '') === 'Rusak' ? 'selected' : '' }}>Kondisi: Rusak</option>
@@ -358,13 +368,13 @@
                         </div>
 
                         {{-- Tombol Aksi --}}
-                        <div class="col-lg-1 col-md-12 col-sm-6 d-flex" style="gap: .4rem;">
-                            <button type="submit" class="btn btn-primary btn-block font-weight-bold" title="Terapkan Pencarian">
+                        <div class="col-lg-1 col-md-12 col-sm-6 d-flex" style="gap: .3rem;">
+                            <button type="submit" class="btn btn-primary btn-sm btn-block font-weight-bold" title="Terapkan Pencarian">
                                 <i class="fas fa-filter"></i>
                             </button>
                             @if($hasActiveFilters)
                                 <a href="{{ route('assets.plant', ['plantCode' => $plant->code, 'dept' => $selectedDeptId]) }}"
-                                   class="btn btn-outline-secondary"
+                                   class="btn btn-outline-secondary btn-sm"
                                    title="Reset Pencarian & Filter">
                                     <i class="fas fa-undo"></i>
                                 </a>
@@ -383,6 +393,15 @@
                                 <span class="badge badge-primary px-2.5 py-1 font-weight-normal">
                                     Pencarian: "<strong>{{ $search }}</strong>"
                                     <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except(['search', 'page']))) }}" class="text-white ml-1">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </span>
+                            @endif
+
+                            @if(!empty($source))
+                                <span class="badge badge-warning text-dark px-2.5 py-1 font-weight-normal">
+                                    Sumber: <strong>{{ $source }}</strong>
+                                    <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except(['source', 'page']))) }}" class="text-dark ml-1">
                                         <i class="fas fa-times"></i>
                                     </a>
                                 </span>
@@ -459,14 +478,17 @@
                     <table class="table table-hover align-middle mb-0" style="font-size: .88rem;">
                         <thead class="bg-light text-muted">
                             <tr>
-                                <th style="width: 50px;">No</th>
+                                <th style="width: 45px;">No</th>
                                 <th>ID ASET & Nama</th>
+                                <th>Merek</th>
                                 <th>Departemen</th>
                                 <th>Ruangan / Area</th>
+                                <th class="text-center">Sumber</th>
+                                <th class="text-center">Tgl Beli</th>
                                 <th>Kondisi</th>
                                 <th class="text-right">Qty</th>
                                 <th class="text-right">Harga Satuan</th>
-                                <th class="text-right">Total Perolehan</th>
+                                <th class="text-right">Total Nilai (Rp)</th>
                                 <th class="text-right text-primary font-weight-bold">Nilai Buku Sisa</th>
                                 <th class="text-center" style="width: 70px;">Aksi</th>
                             </tr>
@@ -478,12 +500,9 @@
                                     <td>
                                         <div class="font-weight-bold text-dark">{{ $asset->item_name }}</div>
                                         <code class="text-primary font-weight-bold">{{ $asset->asset_code }}</code>
-                                        @if($asset->brand)
-                                            <div class="small text-muted"><i class="fas fa-tag mr-1"></i>{{ $asset->brand }}</div>
-                                        @endif
                                         @if($asset->specification)
-                                            <div class="small text-muted" style="max-width: 320px; white-space: normal; line-height: 1.25;">
-                                                <i class="fas fa-info-circle mr-1 text-secondary"></i>{{ Str::limit($asset->specification, 60) }}
+                                            <div class="small text-muted" style="max-width: 250px; white-space: normal; line-height: 1.25;">
+                                                <i class="fas fa-info-circle mr-1 text-secondary"></i>{{ Str::limit($asset->specification, 45) }}
                                             </div>
                                         @endif
                                         @if($asset->origin_plant_code !== $plant->code)
@@ -493,11 +512,30 @@
                                         @endif
                                     </td>
                                     <td>
+                                        @if($asset->brand)
+                                            <span class="badge badge-light border"><i class="fas fa-tag mr-1 text-secondary"></i>{{ $asset->brand }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
                                         <span class="badge badge-light border">{{ $asset->department->code ?? '-' }}</span>
                                         <div class="small text-muted">{{ $asset->department->name ?? '-' }}</div>
                                     </td>
                                     <td>
                                         <span class="text-muted"><i class="fas fa-map-marker-alt text-danger mr-1"></i>{{ $asset->location->room_name ?? 'Area Umum' }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if($asset->acquisition_source === 'Hibah')
+                                            <span class="badge badge-warning text-dark px-2 py-1"><i class="fas fa-gift mr-1"></i>Hibah</span>
+                                        @elseif($asset->acquisition_source === 'Pengadaan Baru')
+                                            <span class="badge badge-success px-2 py-1"><i class="fas fa-plus-circle mr-1"></i>Baru</span>
+                                        @else
+                                            <span class="badge badge-info px-2 py-1"><i class="fas fa-file-invoice mr-1"></i>{{ $asset->acquisition_source ?? 'RAB' }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="small font-weight-bold text-dark">{{ $asset->purchase_date ? $asset->purchase_date->format('d M Y') : '-' }}</span>
                                     </td>
                                     <td>
                                         @if($asset->condition === 'Baik')
@@ -516,7 +554,7 @@
                                     <td class="text-right text-muted">
                                         Rp {{ number_format($asset->unit_price, 0, ',', '.') }}
                                     </td>
-                                    <td class="text-right">
+                                    <td class="text-right font-weight-bold">
                                         Rp {{ number_format($asset->total_price, 0, ',', '.') }}
                                     </td>
                                     <td class="text-right font-weight-bold text-primary">
@@ -534,7 +572,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="text-center py-5 text-muted">
+                                    <td colspan="13" class="text-center py-5 text-muted">
                                         <i class="fas fa-search fa-3x mb-3 text-secondary"></i>
                                         <h6 class="font-weight-bold">Tidak ada aset yang sesuai kriteria</h6>
                                         <p class="mb-3 text-muted">Coba ubah kata kunci pencarian atau sesuaikan filter ruangan / kondisi.</p>
@@ -592,11 +630,20 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 col-12 mb-3">
+                    <div class="col-md-4 col-12 mb-3">
                         <label class="form-label font-weight-bold">Merk / Brand</label>
                         <input type="text" name="brand" class="form-control" placeholder="Contoh: Great Scale, Brother, Sharp">
                     </div>
-                    <div class="col-md-6 col-12 mb-3">
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Sumber Perolehan <span class="text-danger">*</span></label>
+                        <select name="acquisition_source" class="form-control" required>
+                            <option value="RAB">RAB (Rencana Anggaran Biaya)</option>
+                            <option value="Hibah">Hibah</option>
+                            <option value="Pengadaan Baru">Pengadaan Baru</option>
+                            <option value="Sumbangan">Sumbangan</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
                         <label class="form-label font-weight-bold">Kategori Aset <span class="text-danger">*</span></label>
                         <select name="category_code" class="form-control" required>
                             @foreach($categories as $c)
@@ -704,6 +751,22 @@
 
                 <div class="row">
                     <div class="col-md-6 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Sumber Perolehan</label>
+                        <select name="acquisition_source" id="editAcquisitionSource" class="form-control">
+                            <option value="RAB">RAB (Rencana Anggaran Biaya)</option>
+                            <option value="Hibah">Hibah</option>
+                            <option value="Pengadaan Baru">Pengadaan Baru</option>
+                            <option value="Sumbangan">Sumbangan</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Tanggal Pembelian</label>
+                        <input type="date" name="purchase_date" id="editPurchaseDate" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 col-12 mb-3">
                         <label class="form-label font-weight-bold">Departemen</label>
                         <select name="department_id" id="editDept" class="form-control">
                             @foreach($departments as $d)
@@ -804,6 +867,8 @@
         document.getElementById('editAssetCode').innerText = asset.asset_code + ' — ' + (asset.item_name || '');
         document.getElementById('editItemName').value = asset.item_name || '';
         document.getElementById('editBrand').value = asset.brand || '';
+        document.getElementById('editAcquisitionSource').value = asset.acquisition_source || 'RAB';
+        document.getElementById('editPurchaseDate').value = asset.purchase_date ? asset.purchase_date.substring(0, 10) : '';
         document.getElementById('editDept').value = asset.department_id || '';
         document.getElementById('editLocation').value = asset.location_id || '';
         document.getElementById('editCondition').value = asset.condition || 'Baik';

@@ -112,6 +112,15 @@
                         </select>
                     </div>
                     <div class="col-lg-2 col-md-4 col-6 mb-2">
+                        <label class="small font-weight-bold text-muted mb-1">Sumber Perolehan</label>
+                        <select name="source" class="form-control form-control-sm" onchange="this.form.submit()">
+                            <option value="all">Semua Sumber</option>
+                            <option value="RAB" {{ request('source') == 'RAB' ? 'selected' : '' }}>RAB</option>
+                            <option value="Hibah" {{ request('source') == 'Hibah' ? 'selected' : '' }}>Hibah</option>
+                            <option value="Pengadaan Baru" {{ request('source') == 'Pengadaan Baru' ? 'selected' : '' }}>Pengadaan Baru</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4 col-6 mb-2">
                         <label class="small font-weight-bold text-muted mb-1">Kondisi</label>
                         <select name="condition" class="form-control form-control-sm" onchange="this.form.submit()">
                             <option value="all">Semua Kondisi</option>
@@ -120,14 +129,16 @@
                             <option value="Perbaikan" {{ request('condition') == 'Perbaikan' ? 'selected' : '' }}>Perbaikan</option>
                         </select>
                     </div>
-                    <div class="col-lg-2 col-md-8 col-12 mb-2">
-                        <label class="small font-weight-bold text-muted mb-1">Cari Aset</label>
+                    <div class="col-12 mt-1">
                         <div class="input-group input-group-sm">
-                            <input type="text" name="search" class="form-control" placeholder="ID / Nama / Merk..." value="{{ request('search') }}">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                            </div>
+                            <input type="text" name="search" class="form-control" placeholder="Cari Kode Aset, Nama Barang, Merek, atau Sumber Perolehan..." value="{{ request('search') }}">
                             <div class="input-group-append">
-                                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
-                                @if(request()->hasAny(['group', 'plant', 'dept', 'category', 'condition', 'search']))
-                                    <a href="{{ route('assets.index') }}" class="btn btn-light border"><i class="fas fa-times"></i></a>
+                                <button type="submit" class="btn btn-primary px-3 font-weight-bold"><i class="fas fa-search mr-1"></i> Cari Aset</button>
+                                @if(request()->hasAny(['group', 'plant', 'dept', 'category', 'condition', 'source', 'search']))
+                                    <a href="{{ route('assets.index') }}" class="btn btn-light border px-3" title="Reset Semua Filter"><i class="fas fa-undo mr-1"></i> Reset</a>
                                 @endif
                             </div>
                         </div>
@@ -143,13 +154,16 @@
                     <table class="table table-hover align-middle mb-0" style="font-size: .88rem;">
                         <thead class="bg-light text-muted">
                             <tr>
-                                <th style="width: 50px;">No</th>
+                                <th style="width: 45px;">No</th>
                                 <th>ID ASET & Nama</th>
+                                <th>Merek</th>
                                 <th>Departemen</th>
                                 <th>Posisi Plant</th>
+                                <th class="text-center">Sumber</th>
+                                <th class="text-center">Tgl Beli</th>
                                 <th>Kondisi</th>
                                 <th class="text-right">Qty</th>
-                                <th class="text-right">Total Perolehan</th>
+                                <th class="text-right">Total Nilai (Rp)</th>
                                 <th class="text-center">Umur / Bulan</th>
                                 <th class="text-right">Akumulasi Penyusutan</th>
                                 <th class="text-right font-weight-bold text-primary">Nilai Buku (Sisa)</th>
@@ -163,14 +177,18 @@
                                     <td>
                                         <div class="font-weight-bold text-dark">{{ $asset->item_name }}</div>
                                         <code class="text-primary font-weight-bold">{{ $asset->asset_code }}</code>
-                                        @if($asset->brand)
-                                            <div class="small text-muted"><i class="fas fa-tag mr-1"></i>{{ $asset->brand }}</div>
-                                        @endif
                                         @if(!$asset->is_price_complete)
                                             <span class="badge badge-warning text-dark" style="font-size: 10px;">Harga Belum Lengkap</span>
                                         @endif
                                         @if($asset->asset_group !== 'UTAMA')
                                             <span class="badge badge-info" style="font-size: 10px;">{{ $asset->asset_group }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($asset->brand)
+                                            <span class="badge badge-light border"><i class="fas fa-tag mr-1 text-secondary"></i>{{ $asset->brand }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
                                         @endif
                                     </td>
                                     <td>
@@ -191,6 +209,18 @@
                                                 <i class="fas fa-exchange-alt mr-1"></i>Lahir: Plant {{ $asset->origin_plant_code }}
                                             </div>
                                         @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($asset->acquisition_source === 'Hibah')
+                                            <span class="badge badge-warning text-dark px-2 py-1"><i class="fas fa-gift mr-1"></i>Hibah</span>
+                                        @elseif($asset->acquisition_source === 'Pengadaan Baru')
+                                            <span class="badge badge-success px-2 py-1"><i class="fas fa-plus-circle mr-1"></i>Baru</span>
+                                        @else
+                                            <span class="badge badge-info px-2 py-1"><i class="fas fa-file-invoice mr-1"></i>{{ $asset->acquisition_source ?? 'RAB' }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="small font-weight-bold text-dark">{{ $asset->purchase_date ? $asset->purchase_date->format('d M Y') : '-' }}</span>
                                     </td>
                                     <td>
                                         @if($asset->condition === 'Baik')
@@ -221,6 +251,10 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-secondary" title="Edit Data Aset"
+                                                    onclick="openEditModal({{ json_encode($asset) }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
                                             <button type="button" class="btn btn-outline-info" title="Pindah / Mutasi Aset"
                                                     onclick="openMutateModal({{ json_encode($asset) }})">
                                                 <i class="fas fa-exchange-alt"></i>
@@ -228,10 +262,6 @@
                                             <button type="button" class="btn btn-outline-warning" title="Update Kondisi"
                                                     onclick="openConditionModal({{ json_encode($asset) }})">
                                                 <i class="fas fa-stethoscope"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary" title="Edit Aset"
-                                                    onclick="openEditModal({{ json_encode($asset) }})">
-                                                <i class="fas fa-edit"></i>
                                             </button>
                                             <button type="button" class="btn btn-outline-danger" title="Disposal Aset"
                                                     onclick="openDisposeModal({{ json_encode($asset) }})">
@@ -242,7 +272,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="11" class="text-center py-5 text-muted">
+                                    <td colspan="14" class="text-center py-5 text-muted">
                                         <i class="fas fa-box-open fa-3x mb-3 text-secondary"></i>
                                         <p class="mb-0">Tidak ada aset yang sesuai dengan kriteria pencarian.</p>
                                     </td>
@@ -290,11 +320,20 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 col-12 mb-3">
-                        <label class="form-label font-weight-bold">Merk</label>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Merk / Brand</label>
                         <input type="text" name="brand" class="form-control" placeholder="Contoh: Active Furniture, Epson, Samsung">
                     </div>
-                    <div class="col-md-6 col-12 mb-3">
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Sumber Perolehan <span class="text-danger">*</span></label>
+                        <select name="acquisition_source" class="form-control" required>
+                            <option value="RAB">RAB (Rencana Anggaran Biaya)</option>
+                            <option value="Hibah">Hibah</option>
+                            <option value="Pengadaan Baru">Pengadaan Baru</option>
+                            <option value="Sumbangan">Sumbangan</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
                         <label class="form-label font-weight-bold">Kategori Aset <span class="text-danger">*</span></label>
                         <select name="category_code" class="form-control" required>
                             @foreach($categories as $c)
@@ -489,6 +528,120 @@
     </div>
 </div>
 
+{{-- MODAL EDIT ASET --}}
+<div class="modal fade" id="modalEditAsset" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <form id="formEditAssetMaster" method="POST" class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            @csrf
+            @method('PUT')
+            <div class="modal-header bg-info text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-edit mr-2"></i> Edit Data Aset
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-light border d-flex align-items-center mb-3 py-2">
+                    <i class="fas fa-barcode text-primary fa-2x mr-3"></i>
+                    <div>
+                        <div class="font-weight-bold text-dark" id="editAssetMasterCode"></div>
+                        <small class="text-muted">Kode ID Aset fisik tidak berubah saat pengeditan data teknis / perolehan.</small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
+                        <input type="text" name="item_name" id="editMasterItemName" class="form-control" required>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Merk / Brand</label>
+                        <input type="text" name="brand" id="editMasterBrand" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Sumber Perolehan</label>
+                        <select name="acquisition_source" id="editMasterSource" class="form-control">
+                            <option value="RAB">RAB (Rencana Anggaran Biaya)</option>
+                            <option value="Hibah">Hibah</option>
+                            <option value="Pengadaan Baru">Pengadaan Baru</option>
+                            <option value="Sumbangan">Sumbangan</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Tanggal Pembelian</label>
+                        <input type="date" name="purchase_date" id="editMasterPurchaseDate" class="form-control">
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Departemen</label>
+                        <select name="department_id" id="editMasterDept" class="form-control">
+                            @foreach($departments as $d)
+                                <option value="{{ $d->id }}">{{ $d->name }} ({{ $d->code }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Ruangan / Sub-Area (Lampiran C)</label>
+                        <select name="location_id" id="editMasterLocation" class="form-control">
+                            <option value="">-- Pilih Ruangan / Area --</option>
+                            @foreach($locations as $loc)
+                                <option value="{{ $loc->id }}" data-plant="{{ $loc->plant_code }}">
+                                    {{ $loc->room_name }} ({{ $loc->plant->name ?? 'Plant ' . $loc->plant_code }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Kondisi Fisik <span class="text-danger">*</span></label>
+                        <select name="condition" id="editMasterCondition" class="form-control" required>
+                            <option value="Baik">Baik</option>
+                            <option value="Rusak">Rusak</option>
+                            <option value="Perbaikan">Perbaikan</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Catatan Kondisi</label>
+                        <input type="text" name="condition_note" id="editMasterConditionNote" class="form-control" placeholder="Catatan kondisi...">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Qty <span class="text-danger">*</span></label>
+                        <input type="number" name="qty" id="editMasterQty" class="form-control" min="1" required>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Harga Satuan (Rp) <span class="text-danger">*</span></label>
+                        <input type="number" name="unit_price" id="editMasterUnitPrice" class="form-control" min="0" required>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Masa Manfaat (Tahun) <span class="text-danger">*</span></label>
+                        <input type="number" name="useful_life_years" id="editMasterUsefulLife" class="form-control" min="1" max="30" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Spesifikasi / Keterangan</label>
+                    <textarea name="specification" id="editMasterSpecification" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer bg-light" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-info rounded-pill px-4 font-weight-bold">
+                    <i class="fas fa-save mr-1"></i> Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const plantSelect = document.getElementById('modalPlantSelect');
@@ -513,6 +666,24 @@ document.addEventListener('DOMContentLoaded', function() {
         filterLocations();
     }
 });
+
+function openEditModal(asset) {
+    document.getElementById('formEditAssetMaster').action = '/assets/' + asset.id;
+    document.getElementById('editAssetMasterCode').innerText = asset.asset_code + ' — ' + (asset.item_name || '');
+    document.getElementById('editMasterItemName').value = asset.item_name || '';
+    document.getElementById('editMasterBrand').value = asset.brand || '';
+    document.getElementById('editMasterSource').value = asset.acquisition_source || 'RAB';
+    document.getElementById('editMasterPurchaseDate').value = asset.purchase_date ? asset.purchase_date.substring(0, 10) : '';
+    document.getElementById('editMasterDept').value = asset.department_id || '';
+    document.getElementById('editMasterLocation').value = asset.location_id || '';
+    document.getElementById('editMasterCondition').value = asset.condition || 'Baik';
+    document.getElementById('editMasterConditionNote').value = asset.condition_note || '';
+    document.getElementById('editMasterUnitPrice').value = Math.round(asset.unit_price) || 0;
+    document.getElementById('editMasterQty').value = asset.qty || 1;
+    document.getElementById('editMasterUsefulLife').value = asset.useful_life_years || 4;
+    document.getElementById('editMasterSpecification').value = asset.specification || '';
+    $('#modalEditAsset').modal('show');
+}
 
 function openMutateModal(asset) {
     document.getElementById('formMutateAsset').action = '/assets/' + asset.id + '/mutate';

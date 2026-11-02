@@ -48,12 +48,17 @@ class GaAssetController extends Controller
             $query->where('condition', $request->condition);
         }
 
+        if ($request->filled('source') && $request->source !== 'all') {
+            $query->where('acquisition_source', $request->source);
+        }
+
         if ($request->filled('search')) {
             $s = trim($request->search);
             $query->where(function ($q) use ($s) {
                 $q->where('asset_code', 'like', "%{$s}%")
                   ->orWhere('item_name', 'like', "%{$s}%")
                   ->orWhere('brand', 'like', "%{$s}%")
+                  ->orWhere('acquisition_source', 'like', "%{$s}%")
                   ->orWhere('specification', 'like', "%{$s}%");
             });
         }
@@ -64,6 +69,7 @@ class GaAssetController extends Controller
         $departments = Department::all();
         $categories = AssetCategory::all();
         $locations = Location::with('plant')->orderBy('plant_code')->orderBy('room_name')->get();
+        $source = $request->input('source');
 
         // Ringkasan Finansial Dinamis
         $totalActive = Asset::active()->count();
@@ -71,7 +77,7 @@ class GaAssetController extends Controller
         $incompletePriceCount = Asset::active()->where('is_price_complete', false)->count();
 
         return view('assets.index', compact(
-            'assets', 'plants', 'departments', 'categories', 'locations',
+            'assets', 'plants', 'departments', 'categories', 'locations', 'source',
             'totalActive', 'totalValuation', 'incompletePriceCount'
         ));
     }
@@ -96,12 +102,16 @@ class GaAssetController extends Controller
         if ($request->filled('condition')) {
             $query->where('condition', $request->condition);
         }
+        if ($request->filled('source')) {
+            $query->where('acquisition_source', $request->source);
+        }
         if ($request->filled('search')) {
             $s = trim($request->search);
             $query->where(function ($q) use ($s) {
                 $q->where('asset_code', 'like', "%{$s}%")
                   ->orWhere('item_name', 'like', "%{$s}%")
-                  ->orWhere('brand', 'like', "%{$s}%");
+                  ->orWhere('brand', 'like', "%{$s}%")
+                  ->orWhere('acquisition_source', 'like', "%{$s}%");
             });
         }
 
@@ -129,15 +139,22 @@ class GaAssetController extends Controller
             $query->where('department_id', $selectedDeptId);
         }
 
-        // Search Bar: asset_code, item_name, brand, specification
+        // Search Bar: asset_code, item_name, brand, specification, acquisition_source
         $search = $request->input('search');
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('asset_code', 'like', "%{$search}%")
                   ->orWhere('item_name', 'like', "%{$search}%")
                   ->orWhere('brand', 'like', "%{$search}%")
+                  ->orWhere('acquisition_source', 'like', "%{$search}%")
                   ->orWhere('specification', 'like', "%{$search}%");
             });
+        }
+
+        // Filter Sumber Perolehan (RAB / Hibah)
+        $source = $request->input('source');
+        if (!empty($source) && $source !== 'all') {
+            $query->where('acquisition_source', $source);
         }
 
         // Filter Lokasi / Ruangan
@@ -188,7 +205,7 @@ class GaAssetController extends Controller
         return view('assets.plant', compact(
             'plant', 'assets', 'departmentTabs', 'selectedDeptId',
             'totalItems', 'totalValuation', 'baikCount', 'rusakCount', 'percentBaik',
-            'search', 'locationId', 'categoryCode', 'condition', 'locations', 'categories', 'departments', 'plants', 'perPage'
+            'search', 'locationId', 'categoryCode', 'condition', 'source', 'locations', 'categories', 'departments', 'plants', 'perPage'
         ));
     }
 
@@ -210,6 +227,7 @@ class GaAssetController extends Controller
                 $q->where('asset_code', 'like', "%{$s}%")
                   ->orWhere('item_name', 'like', "%{$s}%")
                   ->orWhere('brand', 'like', "%{$s}%")
+                  ->orWhere('acquisition_source', 'like', "%{$s}%")
                   ->orWhere('specification', 'like', "%{$s}%");
             });
         }
@@ -224,6 +242,10 @@ class GaAssetController extends Controller
 
         if ($request->filled('condition')) {
             $query->where('condition', $request->condition);
+        }
+
+        if ($request->filled('source')) {
+            $query->where('acquisition_source', $request->source);
         }
 
         $totalItems = (clone $query)->count();
@@ -353,6 +375,7 @@ class GaAssetController extends Controller
             'qty'                => 'required|integer|min:1',
             'unit_price'         => 'required|numeric|min:0',
             'purchase_date'      => 'required|date',
+            'acquisition_source' => 'nullable|string|max:50',
             'useful_life_years'  => 'nullable|integer|min:1|max:30',
             'tracking_mode'      => 'required|in:INDIVIDUAL,BULK',
             'condition'          => 'nullable|in:Baik,Rusak,Perbaikan',
@@ -370,16 +393,18 @@ class GaAssetController extends Controller
     public function update(Request $request, Asset $asset)
     {
         $validated = $request->validate([
-            'item_name'         => 'required|string|max:255',
-            'brand'             => 'nullable|string|max:150',
-            'specification'     => 'nullable|string',
-            'unit_price'        => 'required|numeric|min:0',
-            'qty'               => 'required|integer|min:1',
-            'useful_life_years' => 'required|integer|min:1',
-            'condition'         => 'required|in:Baik,Rusak,Perbaikan',
-            'condition_note'    => 'nullable|string',
-            'department_id'     => 'nullable|exists:departments,id',
-            'location_id'       => 'nullable|exists:locations,id',
+            'item_name'          => 'required|string|max:255',
+            'brand'              => 'nullable|string|max:150',
+            'specification'      => 'nullable|string',
+            'acquisition_source' => 'nullable|string|max:50',
+            'purchase_date'      => 'nullable|date',
+            'unit_price'         => 'required|numeric|min:0',
+            'qty'                => 'required|integer|min:1',
+            'useful_life_years'  => 'required|integer|min:1',
+            'condition'          => 'required|in:Baik,Rusak,Perbaikan',
+            'condition_note'     => 'nullable|string',
+            'department_id'      => 'nullable|exists:departments,id',
+            'location_id'        => 'nullable|exists:locations,id',
         ]);
 
         $updated = $this->assetService->updateAsset($asset, $validated);

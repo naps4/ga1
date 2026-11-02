@@ -173,6 +173,13 @@ class GaAssetService
             'is_price_complete'  => ($unitPrice > 0),
         ];
 
+        if (isset($data['acquisition_source'])) {
+            $updateData['acquisition_source'] = $data['acquisition_source'];
+        }
+        if (!empty($data['purchase_date'])) {
+            $updateData['purchase_date'] = $data['purchase_date'];
+        }
+
         if (!empty($data['department_id'])) {
             $updateData['department_id'] = $data['department_id'];
         }
