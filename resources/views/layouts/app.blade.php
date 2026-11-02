@@ -925,6 +925,42 @@
             color: var(--theme-dark);
         }
 
+        /* Prevent browser autofill from turning inputs white in dark mode */
+        body.dark-mode input:-webkit-autofill,
+        body.dark-mode input:-webkit-autofill:hover, 
+        body.dark-mode input:-webkit-autofill:focus,
+        body.dark-mode input:-webkit-autofill:active,
+        body.dark-mode textarea:-webkit-autofill,
+        body.dark-mode textarea:-webkit-autofill:hover,
+        body.dark-mode textarea:-webkit-autofill:focus,
+        body.dark-mode select:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px #212529 inset !important;
+            -webkit-text-fill-color: #f8f9fa !important;
+            caret-color: #ffffff !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        body.dark-mode .modal .form-control,
+        body.dark-mode .modal .custom-select {
+            background-color: #212529 !important;
+            border-color: #3b424a !important;
+            color: #f8f9fa !important;
+        }
+
+        body.dark-mode .modal .form-control:focus,
+        body.dark-mode .modal .custom-select:focus {
+            background-color: #2a3036 !important;
+            border-color: #2563eb !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25) !important;
+        }
+
+        body.dark-mode .modal .input-group-text {
+            background-color: #2c3238 !important;
+            border-color: #3b424a !important;
+            color: #cbd5e1 !important;
+        }
+
         /* Dropdowns */
         body.dark-mode .dropdown-menu {
             background-color: var(--theme-white);

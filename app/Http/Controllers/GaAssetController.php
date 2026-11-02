@@ -378,7 +378,9 @@ class GaAssetController extends Controller
             'acquisition_source' => 'nullable|string|max:50',
             'useful_life_years'  => 'nullable|integer|min:1|max:30',
             'tracking_mode'      => 'required|in:INDIVIDUAL,BULK',
+            'initial_condition'  => 'nullable|in:Baru,Bekas',
             'condition'          => 'nullable|in:Baik,Rusak,Perbaikan',
+            'condition_note'     => 'nullable|string|max:255',
         ]);
 
         $created = $this->assetService->createAsset($validated);
@@ -401,6 +403,7 @@ class GaAssetController extends Controller
             'unit_price'         => 'required|numeric|min:0',
             'qty'                => 'required|integer|min:1',
             'useful_life_years'  => 'required|integer|min:1',
+            'initial_condition'  => 'nullable|in:Baru,Bekas',
             'condition'          => 'required|in:Baik,Rusak,Perbaikan',
             'condition_note'     => 'nullable|string',
             'department_id'      => 'nullable|exists:departments,id',
