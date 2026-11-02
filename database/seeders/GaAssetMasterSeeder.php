@@ -88,6 +88,7 @@ class GaAssetMasterSeeder extends Seeder
         // 4. Seed Specific Locations (Lampiran C CM-03/GA/002.C.01)
         $locations = [
             // Plant A
+            ['plant_code' => '01', 'dept_code' => null,   'room_name' => 'Area Umum'],
             ['plant_code' => '01', 'dept_code' => 'QA',   'room_name' => 'QA'],
             ['plant_code' => '01', 'dept_code' => 'QC',   'room_name' => 'QC LAB'],
             ['plant_code' => '01', 'dept_code' => 'GA',   'room_name' => 'OFFICE Plant A'],
@@ -99,6 +100,7 @@ class GaAssetMasterSeeder extends Seeder
             ['plant_code' => '01', 'dept_code' => 'GA',   'room_name' => 'Ruang Meeting'],
 
             // Plant B
+            ['plant_code' => '02', 'dept_code' => null,   'room_name' => 'Area Umum'],
             ['plant_code' => '02', 'dept_code' => 'GA',   'room_name' => 'OFFICE Plant B - Umum'],
             ['plant_code' => '02', 'dept_code' => 'PC',   'room_name' => 'OFFICE Plant B - Dep Procurement'],
             ['plant_code' => '02', 'dept_code' => 'FAT',  'room_name' => 'OFFICE Plant B - Dep FAT'],

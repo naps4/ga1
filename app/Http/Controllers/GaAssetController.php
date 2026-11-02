@@ -63,6 +63,7 @@ class GaAssetController extends Controller
         $plants = Plant::all();
         $departments = Department::all();
         $categories = AssetCategory::all();
+        $locations = Location::with('plant')->orderBy('plant_code')->orderBy('room_name')->get();
 
         // Ringkasan Finansial Dinamis
         $totalActive = Asset::active()->count();
@@ -70,7 +71,7 @@ class GaAssetController extends Controller
         $incompletePriceCount = Asset::active()->where('is_price_complete', false)->count();
 
         return view('assets.index', compact(
-            'assets', 'plants', 'departments', 'categories',
+            'assets', 'plants', 'departments', 'categories', 'locations',
             'totalActive', 'totalValuation', 'incompletePriceCount'
         ));
     }
@@ -178,14 +179,16 @@ class GaAssetController extends Controller
         $rusakCount = Asset::active()->where('current_plant_code', $plantCode)->where('condition', 'Rusak')->count();
         $percentBaik = $totalItems > 0 ? round(($baikCount / $totalItems) * 100, 1) : 100;
 
-        // Data master untuk filter dropdown
+        // Data master untuk filter dropdown dan modal
         $locations = Location::where('plant_code', $plantCode)->orderBy('room_name')->get();
         $categories = AssetCategory::orderBy('code')->get();
+        $departments = Department::orderBy('name')->get();
+        $plants = Plant::all();
 
         return view('assets.plant', compact(
             'plant', 'assets', 'departmentTabs', 'selectedDeptId',
             'totalItems', 'totalValuation', 'baikCount', 'rusakCount', 'percentBaik',
-            'search', 'locationId', 'categoryCode', 'condition', 'locations', 'categories', 'perPage'
+            'search', 'locationId', 'categoryCode', 'condition', 'locations', 'categories', 'departments', 'plants', 'perPage'
         ));
     }
 

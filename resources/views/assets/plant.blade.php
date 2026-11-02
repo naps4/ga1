@@ -163,7 +163,6 @@
 
 @section('content')
 @php
-    // Kumpulkan query filter aktif untuk diwariskan ke link tab dan link pagination
     $filterParams = request()->only(['search', 'location_id', 'category', 'condition', 'per_page']);
     $activeDeptName = $selectedDeptId 
         ? ($departmentTabs->firstWhere('id', $selectedDeptId)->name ?? 'Departemen')
@@ -180,8 +179,11 @@
                 </h1>
                 <small class="text-muted">PT Herbatech Innopharma Industry — Rekapitulasi Lokasi Fisik Terkini</small>
             </div>
-            <div class="mt-2 mt-md-0">
-                <a href="{{ route('assets.index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 mr-1">
+            <div class="mt-2 mt-md-0 d-flex align-items-center flex-wrap" style="gap: .4rem;">
+                <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" data-toggle="modal" data-target="#modalCreateAssetPlant">
+                    <i class="fas fa-plus-circle mr-1"></i> Tambah Aset di {{ $plant->name }}
+                </button>
+                <a href="{{ route('assets.index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                     <i class="fas fa-arrow-left mr-1"></i> Kembali ke Master
                 </a>
                 <a href="{{ route('assets.plant', $plant->code === '01' ? '02' : '01') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
@@ -466,6 +468,7 @@
                                 <th class="text-right">Harga Satuan</th>
                                 <th class="text-right">Total Perolehan</th>
                                 <th class="text-right text-primary font-weight-bold">Nilai Buku Sisa</th>
+                                <th class="text-center" style="width: 70px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -519,10 +522,19 @@
                                     <td class="text-right font-weight-bold text-primary">
                                         Rp {{ number_format($asset->book_value, 0, ',', '.') }}
                                     </td>
+                                    <td class="text-center">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary rounded-circle"
+                                                style="width: 32px; height: 32px; padding: 0;"
+                                                onclick="openEditAssetModal({{ json_encode($asset) }})"
+                                                title="Edit Data & Pindah Ruangan">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-5 text-muted">
+                                    <td colspan="10" class="text-center py-5 text-muted">
                                         <i class="fas fa-search fa-3x mb-3 text-secondary"></i>
                                         <h6 class="font-weight-bold">Tidak ada aset yang sesuai kriteria</h6>
                                         <p class="mb-3 text-muted">Coba ubah kata kunci pencarian atau sesuaikan filter ruangan / kondisi.</p>
@@ -551,6 +563,210 @@
 
     </div>
 </section>
+
+{{-- MODAL TAMBAH ASET DI PLANT INI --}}
+<div class="modal fade" id="modalCreateAssetPlant" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <form action="{{ route('assets.store') }}" method="POST" class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            @csrf
+            <input type="hidden" name="current_plant_code" value="{{ $plant->code }}">
+            <div class="modal-header bg-primary text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-plus-circle mr-2"></i> Tambah Aset di {{ $plant->name }} (Kode: {{ $plant->code }})
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row">
+                    <div class="col-md-8 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Nama Aset <span class="text-danger">*</span></label>
+                        <input type="text" name="item_name" class="form-control" placeholder="Contoh: Meja Kantor, Timbangan Digital, Mixer" required>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Singkatan Kode <span class="text-danger">*</span></label>
+                        <input type="text" name="item_abbr" class="form-control text-uppercase" placeholder="Contoh: MK, TD, MX" maxlength="10" required>
+                        <small class="text-muted">Untuk kode HII-[KODE]...</small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Merk / Brand</label>
+                        <input type="text" name="brand" class="form-control" placeholder="Contoh: Great Scale, Brother, Sharp">
+                    </div>
+                    <div class="col-md-6 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Kategori Aset <span class="text-danger">*</span></label>
+                        <select name="category_code" class="form-control" required>
+                            @foreach($categories as $c)
+                                <option value="{{ $c->code }}">{{ $c->name }} (Kode: {{ $c->code }} - Manfaat {{ $c->default_useful_life_years }} Th)</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Departemen <span class="text-danger">*</span></label>
+                        <select name="department_id" class="form-control" required>
+                            @foreach($departments as $d)
+                                <option value="{{ $d->id }}" {{ ($selectedDeptId == $d->id) ? 'selected' : '' }}>
+                                    {{ $d->name }} ({{ $d->code }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Ruangan / Sub-Area (Lampiran C)</label>
+                        <select name="location_id" class="form-control">
+                            <option value="">-- Pilih Ruangan / Area --</option>
+                            @foreach($locations as $loc)
+                                <option value="{{ $loc->id }}">
+                                    {{ $loc->room_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Untuk lembar audit Lampiran C</small>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Tanggal Pembelian <span class="text-danger">*</span></label>
+                        <input type="date" name="purchase_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Jumlah (Qty) <span class="text-danger">*</span></label>
+                        <input type="number" name="qty" class="form-control" value="1" min="1" required>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Harga Satuan (Rp) <span class="text-danger">*</span></label>
+                        <input type="number" name="unit_price" class="form-control" value="0" min="0" required>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Tracking Mode <span class="text-danger">*</span></label>
+                        <select name="tracking_mode" class="form-control" required>
+                            <option value="INDIVIDUAL">INDIVIDUAL (Loop pisah kode otomatis)</option>
+                            <option value="BULK">BULK (1 Baris untuk seluruh Qty)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Spesifikasi / Catatan Teknis</label>
+                    <textarea name="specification" class="form-control" rows="2" placeholder="Catatan dimensi, tipe spesifik, kelengkapan..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer bg-light" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 font-weight-bold">
+                    <i class="fas fa-save mr-1"></i> Simpan Aset Baru
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- MODAL EDIT ASET & PINDAH RUANGAN --}}
+<div class="modal fade" id="modalEditAssetPlant" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <form id="formEditAsset" method="POST" class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            @csrf
+            @method('PUT')
+            <div class="modal-header bg-info text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-edit mr-2"></i> Edit Data & Ruangan Aset
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-light border d-flex align-items-center mb-3 py-2">
+                    <i class="fas fa-barcode text-primary fa-2x mr-3"></i>
+                    <div>
+                        <div class="font-weight-bold text-dark" id="editAssetCode"></div>
+                        <small class="text-muted">Kode ID Aset fisik tidak berubah saat pengeditan ruangan / data teknis.</small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Nama Barang <span class="text-danger">*</span></label>
+                        <input type="text" name="item_name" id="editItemName" class="form-control" required>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Merk / Brand</label>
+                        <input type="text" name="brand" id="editBrand" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Departemen</label>
+                        <select name="department_id" id="editDept" class="form-control">
+                            @foreach($departments as $d)
+                                <option value="{{ $d->id }}">{{ $d->name }} ({{ $d->code }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Ruangan / Sub-Area (Lampiran C)</label>
+                        <select name="location_id" id="editLocation" class="form-control">
+                            <option value="">-- Pilih Ruangan / Area --</option>
+                            @foreach($locations as $loc)
+                                <option value="{{ $loc->id }}">{{ $loc->room_name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Ubah ruangan ini agar aset tampil di lembar Lampiran C terkait.</small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Kondisi Fisik <span class="text-danger">*</span></label>
+                        <select name="condition" id="editCondition" class="form-control" required>
+                            <option value="Baik">Baik</option>
+                            <option value="Rusak">Rusak</option>
+                            <option value="Perbaikan">Perbaikan</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Catatan Kondisi</label>
+                        <input type="text" name="condition_note" id="editConditionNote" class="form-control" placeholder="Contoh: Layar bergaris, tombol macet...">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Qty <span class="text-danger">*</span></label>
+                        <input type="number" name="qty" id="editQty" class="form-control" min="1" required>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Harga Satuan (Rp) <span class="text-danger">*</span></label>
+                        <input type="number" name="unit_price" id="editUnitPrice" class="form-control" min="0" required>
+                    </div>
+                    <div class="col-md-4 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Masa Manfaat (Tahun) <span class="text-danger">*</span></label>
+                        <input type="number" name="useful_life_years" id="editUsefulLife" class="form-control" min="1" max="30" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Spesifikasi / Keterangan</label>
+                    <textarea name="specification" id="editSpecification" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer bg-light" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-info rounded-pill px-4 font-weight-bold">
+                    <i class="fas fa-save mr-1"></i> Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -582,5 +798,21 @@
             }
         }
     });
+
+    function openEditAssetModal(asset) {
+        document.getElementById('formEditAsset').action = '/assets/' + asset.id;
+        document.getElementById('editAssetCode').innerText = asset.asset_code + ' — ' + (asset.item_name || '');
+        document.getElementById('editItemName').value = asset.item_name || '';
+        document.getElementById('editBrand').value = asset.brand || '';
+        document.getElementById('editDept').value = asset.department_id || '';
+        document.getElementById('editLocation').value = asset.location_id || '';
+        document.getElementById('editCondition').value = asset.condition || 'Baik';
+        document.getElementById('editConditionNote').value = asset.condition_note || '';
+        document.getElementById('editUnitPrice').value = Math.round(asset.unit_price) || 0;
+        document.getElementById('editQty').value = asset.qty || 1;
+        document.getElementById('editUsefulLife').value = asset.useful_life_years || 4;
+        document.getElementById('editSpecification').value = asset.specification || '';
+        $('#modalEditAssetPlant').modal('show');
+    }
 </script>
 @endpush

@@ -305,7 +305,7 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-4 col-12 mb-3">
+                    <div class="col-md-3 col-12 mb-3">
                         <label class="form-label font-weight-bold">Departemen <span class="text-danger">*</span></label>
                         <select name="department_id" class="form-control" required>
                             @foreach($departments as $d)
@@ -313,15 +313,27 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4 col-12 mb-3">
+                    <div class="col-md-3 col-12 mb-3">
                         <label class="form-label font-weight-bold">Lokasi Plant Fisik <span class="text-danger">*</span></label>
-                        <select name="current_plant_code" class="form-control" required>
+                        <select name="current_plant_code" id="modalPlantSelect" class="form-control" required>
                             @foreach($plants as $p)
                                 <option value="{{ $p->code }}">{{ $p->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4 col-12 mb-3">
+                    <div class="col-md-3 col-12 mb-3">
+                        <label class="form-label font-weight-bold">Ruangan / Sub-Area (Lampiran C)</label>
+                        <select name="location_id" id="modalLocationSelect" class="form-control">
+                            <option value="">-- Pilih Ruangan / Area --</option>
+                            @foreach($locations as $loc)
+                                <option value="{{ $loc->id }}" data-plant="{{ $loc->plant_code }}">
+                                    {{ $loc->room_name }} ({{ $loc->plant->name ?? 'Plant ' . $loc->plant_code }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Untuk audit Lampiran C</small>
+                    </div>
+                    <div class="col-md-3 col-12 mb-3">
                         <label class="form-label font-weight-bold">Tanggal Pembelian <span class="text-danger">*</span></label>
                         <input type="date" name="purchase_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                     </div>
@@ -478,6 +490,30 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const plantSelect = document.getElementById('modalPlantSelect');
+    const locSelect = document.getElementById('modalLocationSelect');
+    if (plantSelect && locSelect) {
+        function filterLocations() {
+            const selectedPlant = plantSelect.value;
+            const options = locSelect.querySelectorAll('option');
+            options.forEach(opt => {
+                const plant = opt.getAttribute('data-plant');
+                if (!plant || plant === selectedPlant) {
+                    opt.style.display = '';
+                } else {
+                    opt.style.display = 'none';
+                    if (opt.selected) {
+                        opt.selected = false;
+                    }
+                }
+            });
+        }
+        plantSelect.addEventListener('change', filterLocations);
+        filterLocations();
+    }
+});
+
 function openMutateModal(asset) {
     document.getElementById('formMutateAsset').action = '/assets/' + asset.id + '/mutate';
     document.getElementById('mutateAssetName').innerText = asset.item_name;
