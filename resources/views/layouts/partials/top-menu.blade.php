@@ -62,6 +62,7 @@
         @if(auth()->user()->isSuperAdmin())
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Work Order GA</span></a></li>
             <li><a href="{{ route('atk-requests.index') }}" class="mobile-drawer-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}"><i class="fas fa-pencil-alt"></i><span>Permintaan ATK</span></a></li>
+            <li><a href="{{ route('assets.index') }}" class="mobile-drawer-link {{ request()->routeIs('assets.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i><span>Manajemen Aset GA</span></a></li>
             <li><a href="{{ route('cleaning.logs.index') }}" class="mobile-drawer-link {{ request()->routeIs('cleaning.logs.index') ? 'active' : '' }}"><i class="fas fa-broom"></i><span>Rekap Kebersihan</span></a></li>
             <li><a href="{{ route('super-admin.reports') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.reports*') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i><span>Laporan GA</span></a></li>
             <li><a href="{{ route('super-admin.users.index') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><i class="fas fa-users"></i><span>Data Karyawan</span></a></li>
@@ -71,11 +72,13 @@
         @elseif(auth()->user()->canApproveProjects())
             <li><a href="{{ route('work-orders.index') }}" class="mobile-drawer-link {{ request()->routeIs('work-orders.*') ? 'active' : '' }}"><i class="fas fa-hard-hat"></i><span>Work Order GA</span></a></li>
             <li><a href="{{ route('atk-requests.index') }}" class="mobile-drawer-link {{ request()->routeIs('atk-requests.*') ? 'active' : '' }}"><i class="fas fa-pencil-alt"></i><span>Permintaan ATK</span></a></li>
+            <li><a href="{{ route('assets.index') }}" class="mobile-drawer-link {{ request()->routeIs('assets.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i><span>Manajemen Aset GA</span></a></li>
             <li><a href="{{ route('cleaning.logs.index') }}" class="mobile-drawer-link {{ request()->routeIs('cleaning.logs.index') ? 'active' : '' }}"><i class="fas fa-broom"></i><span>Rekap Kebersihan</span></a></li>
             <li><a href="{{ route('chat.index') }}" class="mobile-drawer-link {{ request()->routeIs('chat.*') ? 'active' : '' }}"><i class="fas fa-comments"></i><span>Chat</span></a></li>
             <li><a href="{{ route('super-admin.users.index') }}" class="mobile-drawer-link {{ request()->routeIs('super-admin.users.*') ? 'active' : '' }}"><i class="fas fa-users"></i><span>Data Karyawan</span></a></li>
 
         @elseif(auth()->user()->isManager())
+            <li><a href="{{ route('assets.index') }}" class="mobile-drawer-link {{ request()->routeIs('assets.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i><span>Manajemen Aset GA</span></a></li>
             <li><a href="{{ route('security.logs.index') }}" class="mobile-drawer-link {{ request()->routeIs('security.logs.index') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i><span>Laporan & Rekap Security</span></a></li>
             <li><a href="{{ route('cleaning.logs.index') }}" class="mobile-drawer-link {{ request()->routeIs('cleaning.logs.index') ? 'active' : '' }}"><i class="fas fa-broom"></i><span>Laporan & Rekap Kebersihan</span></a></li>
 

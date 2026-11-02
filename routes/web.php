@@ -484,4 +484,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/projects/pdf', [App\Http\Controllers\ReportController::class, 'exportPdf'])->name('reports.projects.pdf');
 });
 
+// GA Asset Management Routes (PT Herbatech Innopharma Industry)
+Route::middleware(['auth'])->prefix('assets')->name('assets.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\GaAssetController::class, 'index'])->name('index');
+    Route::get('/plant/{plantCode}', [\App\Http\Controllers\GaAssetController::class, 'plantView'])->name('plant');
+    Route::get('/lampiran-c/{locationId?}', [\App\Http\Controllers\GaAssetController::class, 'lampiranC'])->name('lampiran-c');
+    Route::get('/lampiran-c/{locationId}/print', [\App\Http\Controllers\GaAssetController::class, 'printLampiranC'])->name('lampiran-c.print');
+
+    Route::post('/', [\App\Http\Controllers\GaAssetController::class, 'store'])->name('store');
+    Route::put('/{asset}', [\App\Http\Controllers\GaAssetController::class, 'update'])->name('update');
+    Route::post('/{asset}/mutate', [\App\Http\Controllers\GaAssetController::class, 'mutate'])->name('mutate');
+    Route::post('/{asset}/condition', [\App\Http\Controllers\GaAssetController::class, 'updateCondition'])->name('condition');
+    Route::delete('/{asset}', [\App\Http\Controllers\GaAssetController::class, 'destroy'])->name('destroy');
+});
+
 require __DIR__.'/auth.php';

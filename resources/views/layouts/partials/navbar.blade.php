@@ -42,12 +42,17 @@
 
             @if(auth()->user()->isSuperAdmin())
                 <li class="dropdown position-relative">
-                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('work-orders.*') || request()->routeIs('atk-requests.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                        <span>Work Order & Permintaan</span>
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('work-orders.*') || request()->routeIs('atk-requests.*') || request()->routeIs('assets.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Work Order & Aset</span>
                     </a>
                     <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
                         <a class="dropdown-item py-2" href="{{ route('work-orders.index') }}"><i class="fas fa-hard-hat mr-2 text-primary"></i> Work Order GA</a>
                         <a class="dropdown-item py-2" href="{{ route('atk-requests.index') }}"><i class="fas fa-pencil-alt mr-2 text-info"></i> Permintaan ATK</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item py-2" href="{{ route('assets.index') }}"><i class="fas fa-boxes mr-2 text-warning"></i> Master Aset GA (All)</a>
+                        <a class="dropdown-item py-2" href="{{ route('assets.plant', '01') }}"><i class="fas fa-industry mr-2 text-primary"></i> Aset Plant A</a>
+                        <a class="dropdown-item py-2" href="{{ route('assets.plant', '02') }}"><i class="fas fa-building mr-2 text-info"></i> Aset Plant B</a>
+                        <a class="dropdown-item py-2" href="{{ route('assets.lampiran-c') }}"><i class="fas fa-clipboard-list mr-2 text-success"></i> Form Lampiran C</a>
                     </div>
                 </li>
                 <li class="dropdown position-relative">
@@ -86,12 +91,17 @@
 
             @elseif(auth()->user()->canApproveProjects())
                 <li class="dropdown position-relative">
-                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('work-orders.*') || request()->routeIs('atk-requests.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                        <span>Work Order & Permintaan</span>
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('work-orders.*') || request()->routeIs('atk-requests.*') || request()->routeIs('assets.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Work Order & Aset</span>
                     </a>
                     <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
                         <a class="dropdown-item py-2" href="{{ route('work-orders.index') }}"><i class="fas fa-hard-hat mr-2 text-primary"></i> Work Order GA</a>
                         <a class="dropdown-item py-2" href="{{ route('atk-requests.index') }}"><i class="fas fa-pencil-alt mr-2 text-info"></i> Permintaan ATK</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item py-2" href="{{ route('assets.index') }}"><i class="fas fa-boxes mr-2 text-warning"></i> Master Aset GA (All)</a>
+                        <a class="dropdown-item py-2" href="{{ route('assets.plant', '01') }}"><i class="fas fa-industry mr-2 text-primary"></i> Aset Plant A</a>
+                        <a class="dropdown-item py-2" href="{{ route('assets.plant', '02') }}"><i class="fas fa-building mr-2 text-info"></i> Aset Plant B</a>
+                        <a class="dropdown-item py-2" href="{{ route('assets.lampiran-c') }}"><i class="fas fa-clipboard-list mr-2 text-success"></i> Form Lampiran C</a>
                     </div>
                 </li>
                 <li class="dropdown position-relative">
@@ -121,12 +131,17 @@
 
             @elseif(auth()->user()->isManager())
                 <li class="dropdown position-relative">
-                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('work-orders.*') || request()->routeIs('atk-requests.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                        <span>Work Order & Permintaan</span>
+                    <a class="top-menu-link dropdown-toggle {{ request()->routeIs('work-orders.*') || request()->routeIs('atk-requests.*') || request()->routeIs('assets.*') ? 'active' : '' }}" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Work Order & Aset</span>
                     </a>
                     <div class="dropdown-menu border-0 shadow-sm mt-2" style="border-radius: .75rem;">
                         <a class="dropdown-item py-2" href="{{ route('work-orders.index') }}"><i class="fas fa-hard-hat mr-2 text-primary"></i> Work Order GA</a>
                         <a class="dropdown-item py-2" href="{{ route('atk-requests.index') }}"><i class="fas fa-pencil-alt mr-2 text-info"></i> Permintaan ATK</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item py-2" href="{{ route('assets.index') }}"><i class="fas fa-boxes mr-2 text-warning"></i> Master Aset GA (All)</a>
+                        <a class="dropdown-item py-2" href="{{ route('assets.plant', '01') }}"><i class="fas fa-industry mr-2 text-primary"></i> Aset Plant A</a>
+                        <a class="dropdown-item py-2" href="{{ route('assets.plant', '02') }}"><i class="fas fa-building mr-2 text-info"></i> Aset Plant B</a>
+                        <a class="dropdown-item py-2" href="{{ route('assets.lampiran-c') }}"><i class="fas fa-clipboard-list mr-2 text-success"></i> Form Lampiran C</a>
                     </div>
                 </li>
                 <li class="dropdown position-relative">
