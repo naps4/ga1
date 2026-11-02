@@ -1,6 +1,176 @@
 @extends('layouts.app')
 
+@push('styles')
+<style>
+    /* ── Single-Line Horizontal Scrolling Tab Bar ────────────────────────── */
+    .dept-tabs-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+    .dept-tabs-track {
+        display: flex;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        gap: 0.5rem;
+        padding: 0.4rem 0.25rem;
+        width: 100%;
+        /* Sleek modern scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+    }
+    .dept-tabs-track::-webkit-scrollbar {
+        height: 5px;
+    }
+    .dept-tabs-track::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .dept-tabs-track::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.35);
+        border-radius: 9999px;
+    }
+    .dept-tabs-track::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.6);
+    }
+    .dept-tab-item {
+        flex: 0 0 auto !important; /* strictly prevent wrapping & shrinkage */
+    }
+    .dept-tab-btn {
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap !important; /* strictly keep on one single line */
+        word-break: keep-all !important;
+        text-decoration: none !important;
+        padding: 0.5rem 1.05rem;
+        border-radius: 9999px;
+        font-size: 0.86rem;
+        font-weight: 600;
+        line-height: 1.25;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background-color: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        user-select: none;
+    }
+    .dept-tab-btn:hover {
+        background-color: #e2e8f0;
+        color: #1e293b;
+        transform: translateY(-1px);
+    }
+    .dept-tab-btn.active {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    }
+    .dept-tab-btn .tab-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 0.5rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 9999px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        background-color: rgba(148, 163, 184, 0.22);
+        color: inherit;
+        line-height: 1;
+    }
+    .dept-tab-btn.active .tab-badge {
+        background-color: rgba(255, 255, 255, 0.28);
+        color: #ffffff;
+    }
+
+    /* Dark Mode Overrides for Tabs */
+    body.dark-mode .dept-tab-btn {
+        background-color: #2c3238;
+        color: #cbd5e1;
+        border-color: #3b424a;
+    }
+    body.dark-mode .dept-tab-btn:hover {
+        background-color: #373f47;
+        color: #ffffff;
+    }
+    body.dark-mode .dept-tab-btn.active {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+    }
+    body.dark-mode .dept-tab-btn .tab-badge {
+        background-color: rgba(255, 255, 255, 0.14);
+        color: #e2e8f0;
+    }
+    body.dark-mode .dept-tab-btn.active .tab-badge {
+        background-color: rgba(255, 255, 255, 0.28);
+        color: #ffffff;
+    }
+
+    /* Arrow scroll buttons */
+    .dept-scroll-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: rgba(148, 163, 184, 0.15);
+        color: inherit;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        cursor: pointer;
+        flex-shrink: 0;
+        margin: 0 3px;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+    .dept-scroll-btn:hover {
+        background-color: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+    }
+    body.dark-mode .dept-scroll-btn {
+        background-color: #2c3238;
+        color: #cbd5e1;
+        border-color: #3b424a;
+    }
+    body.dark-mode .dept-scroll-btn:hover {
+        background-color: #2563eb;
+        color: #ffffff;
+    }
+
+    /* KPI interactive cards */
+    .kpi-link-card {
+        text-decoration: none !important;
+        display: block;
+    }
+    .kpi-interactive {
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+    }
+    .kpi-interactive:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1) !important;
+    }
+    .kpi-active-filter {
+        outline: 2px solid #2563eb;
+        outline-offset: -2px;
+    }
+</style>
+@endpush
+
 @section('content')
+@php
+    // Kumpulkan query filter aktif untuk diwariskan ke link tab dan link pagination
+    $filterParams = request()->only(['search', 'location_id', 'category', 'condition', 'per_page']);
+    $activeDeptName = $selectedDeptId 
+        ? ($departmentTabs->firstWhere('id', $selectedDeptId)->name ?? 'Departemen')
+        : 'Semua Departemen';
+    $hasActiveFilters = !empty($search) || !empty($locationId) || !empty($categoryCode) || !empty($condition);
+@endphp
+
 <div class="content-header">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
@@ -25,16 +195,20 @@
 <section class="content">
     <div class="container-fluid">
 
-        {{-- KPI Cards Per Plant --}}
+        {{-- KPI Cards Per Plant (Clickable untuk Filter Cepat Kondisi) --}}
         <div class="row">
             <div class="col-md-3 col-sm-6 col-12">
-                <div class="info-box shadow-sm border-0" style="border-radius: 1rem;">
-                    <span class="info-box-icon bg-primary elevation-1" style="border-radius: .75rem;"><i class="fas fa-cubes"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text text-muted font-weight-bold">Total Aset di {{ $plant->name }}</span>
-                        <span class="info-box-number text-dark" style="font-size: 1.4rem;">{{ number_format($totalItems, 0, ',', '.') }} <small>Item</small></span>
+                <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except(['condition', 'page']))) }}"
+                   class="kpi-link-card"
+                   title="Klik untuk tampilkan semua kondisi">
+                    <div class="info-box shadow-sm border-0 kpi-interactive {{ empty($condition) ? 'kpi-active-filter' : '' }}" style="border-radius: 1rem;">
+                        <span class="info-box-icon bg-primary elevation-1" style="border-radius: .75rem;"><i class="fas fa-cubes"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text text-muted font-weight-bold">Total Aset di {{ $plant->name }}</span>
+                            <span class="info-box-number text-dark" style="font-size: 1.4rem;">{{ number_format($totalItems, 0, ',', '.') }} <small>Item</small></span>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-3 col-sm-6 col-12">
                 <div class="info-box shadow-sm border-0" style="border-radius: 1rem;">
@@ -46,49 +220,238 @@
                 </div>
             </div>
             <div class="col-md-3 col-sm-6 col-12">
-                <div class="info-box shadow-sm border-0" style="border-radius: 1rem;">
-                    <span class="info-box-icon bg-info elevation-1" style="border-radius: .75rem;"><i class="fas fa-heartbeat"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text text-muted font-weight-bold">Kondisi Baik</span>
-                        <span class="info-box-number text-info font-weight-bold" style="font-size: 1.4rem;">{{ $percentBaik }}% <small>({{ $baikCount }} item)</small></span>
+                <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except('page'), ['condition' => 'Baik'])) }}"
+                   class="kpi-link-card"
+                   title="Klik untuk memfilter aset kondisi Baik">
+                    <div class="info-box shadow-sm border-0 kpi-interactive {{ ($condition ?? '') === 'Baik' ? 'kpi-active-filter' : '' }}" style="border-radius: 1rem;">
+                        <span class="info-box-icon bg-info elevation-1" style="border-radius: .75rem;"><i class="fas fa-heartbeat"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text text-muted font-weight-bold">Kondisi Baik</span>
+                            <span class="info-box-number text-info font-weight-bold" style="font-size: 1.4rem;">{{ $percentBaik }}% <small>({{ $baikCount }} item)</small></span>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-3 col-sm-6 col-12">
-                <div class="info-box shadow-sm border-0" style="border-radius: 1rem;">
-                    <span class="info-box-icon bg-danger elevation-1" style="border-radius: .75rem;"><i class="fas fa-tools"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text text-muted font-weight-bold">Perlu Perbaikan / Rusak</span>
-                        <span class="info-box-number text-danger font-weight-bold" style="font-size: 1.4rem;">{{ $rusakCount }} <small>Item</small></span>
+                <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except('page'), ['condition' => 'Rusak'])) }}"
+                   class="kpi-link-card"
+                   title="Klik untuk memfilter aset Perlu Perbaikan / Rusak">
+                    <div class="info-box shadow-sm border-0 kpi-interactive {{ ($condition ?? '') === 'Rusak' ? 'kpi-active-filter' : '' }}" style="border-radius: 1rem;">
+                        <span class="info-box-icon bg-danger elevation-1" style="border-radius: .75rem;"><i class="fas fa-tools"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text text-muted font-weight-bold">Perlu Perbaikan / Rusak</span>
+                            <span class="info-box-number text-danger font-weight-bold" style="font-size: 1.4rem;">{{ $rusakCount }} <small>Item</small></span>
+                        </div>
                     </div>
+                </a>
+            </div>
+        </div>
+
+        {{-- Sub-Tabs Departemen: Single-Line Horizontal Scrolling --}}
+        <div class="card shadow-sm border-0 mb-3" style="border-radius: 1rem;">
+            <div class="card-body p-2">
+                <div class="dept-tabs-wrapper">
+                    <button type="button" class="dept-scroll-btn d-none d-md-inline-flex" id="tabScrollLeft" title="Scroll ke kiri">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+
+                    <div class="dept-tabs-track" id="deptTabsTrack">
+                        {{-- Tab: Semua Departemen --}}
+                        <div class="dept-tab-item">
+                            <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code], $filterParams)) }}"
+                               class="dept-tab-btn {{ empty($selectedDeptId) ? 'active' : '' }}">
+                                <i class="fas fa-th-large mr-1.5"></i>
+                                <span>Semua Departemen</span>
+                                <span class="tab-badge">{{ $totalItems }}</span>
+                            </a>
+                        </div>
+
+                        {{-- Tab: Tiap Departemen --}}
+                        @foreach($departmentTabs as $tabDept)
+                            <div class="dept-tab-item">
+                                <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $tabDept->id], $filterParams)) }}"
+                                   class="dept-tab-btn {{ $selectedDeptId == $tabDept->id ? 'active' : '' }}">
+                                    <span>{{ $tabDept->name }}</span>
+                                    <span class="tab-badge">{{ $tabDept->assets_count }}</span>
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <button type="button" class="dept-scroll-btn d-none d-md-inline-flex" id="tabScrollRight" title="Scroll ke kanan">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
             </div>
         </div>
 
-        {{-- Sub-Tabs Departemen --}}
+        {{-- Search Bar & Filter Toolbar --}}
         <div class="card shadow-sm border-0 mb-3" style="border-radius: 1rem;">
-            <div class="card-body p-2">
-                <ul class="nav nav-pills flex-nowrap overflow-auto py-1" style="gap: .4rem;">
-                    <li class="nav-item">
-                        <a href="{{ route('assets.plant', $plant->code) }}"
-                           class="nav-link rounded-pill font-weight-bold px-3 py-2 {{ empty($selectedDeptId) ? 'active' : 'bg-light text-dark' }}">
-                            <i class="fas fa-th-large mr-1"></i> Semua Departemen ({{ $totalItems }})
-                        </a>
-                    </li>
-                    @foreach($departmentTabs as $tabDept)
-                        <li class="nav-item">
-                            <a href="{{ route('assets.plant', ['plantCode' => $plant->code, 'dept' => $tabDept->id]) }}"
-                               class="nav-link rounded-pill font-weight-bold px-3 py-2 {{ $selectedDeptId == $tabDept->id ? 'active' : 'bg-light text-dark' }}">
-                                {{ $tabDept->name }} ({{ $tabDept->assets_count }})
+            <div class="card-body p-3">
+                <form method="GET" action="{{ route('assets.plant', $plant->code) }}" id="assetFilterForm" class="mb-0">
+                    {{-- Pertahankan tab departemen yang sedang dibuka --}}
+                    @if(!empty($selectedDeptId))
+                        <input type="hidden" name="dept" value="{{ $selectedDeptId }}">
+                    @endif
+
+                    <div class="row align-items-center" style="row-gap: .6rem;">
+                        {{-- Search Input (Nama, Kode, Merk, Spek) --}}
+                        <div class="col-lg-4 col-md-12">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-transparent border-right-0 text-muted">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                </div>
+                                <input type="text"
+                                       name="search"
+                                       class="form-control border-left-0"
+                                       placeholder="Cari nama barang, kode aset, merk, spek..."
+                                       value="{{ $search ?? '' }}"
+                                       autocomplete="off">
+                                @if(!empty($search))
+                                    <div class="input-group-append">
+                                        <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except(['search', 'page']))) }}"
+                                           class="input-group-text bg-transparent border-left-0 text-muted"
+                                           title="Hapus pencarian">
+                                            <i class="fas fa-times-circle"></i>
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Dropdown Ruangan / Area --}}
+                        <div class="col-lg-3 col-md-4 col-sm-6">
+                            <select name="location_id" class="form-control custom-select" onchange="this.form.submit()">
+                                <option value="">Semua Ruangan / Area ({{ $locations->count() }})</option>
+                                @foreach($locations as $loc)
+                                    <option value="{{ $loc->id }}" {{ ($locationId ?? '') == $loc->id ? 'selected' : '' }}>
+                                        {{ $loc->room_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Dropdown Kategori --}}
+                        <div class="col-lg-2 col-md-4 col-sm-6">
+                            <select name="category" class="form-control custom-select" onchange="this.form.submit()">
+                                <option value="">Semua Kategori</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->code }}" {{ ($categoryCode ?? '') == $cat->code ? 'selected' : '' }}>
+                                        {{ $cat->code }} - {{ $cat->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Dropdown Kondisi --}}
+                        <div class="col-lg-2 col-md-4 col-sm-6">
+                            <select name="condition" class="form-control custom-select" onchange="this.form.submit()">
+                                <option value="">Semua Kondisi</option>
+                                <option value="Baik" {{ ($condition ?? '') === 'Baik' ? 'selected' : '' }}>Kondisi: Baik</option>
+                                <option value="Rusak" {{ ($condition ?? '') === 'Rusak' ? 'selected' : '' }}>Kondisi: Rusak</option>
+                                <option value="Perbaikan" {{ ($condition ?? '') === 'Perbaikan' ? 'selected' : '' }}>Kondisi: Perbaikan</option>
+                            </select>
+                        </div>
+
+                        {{-- Tombol Aksi --}}
+                        <div class="col-lg-1 col-md-12 col-sm-6 d-flex" style="gap: .4rem;">
+                            <button type="submit" class="btn btn-primary btn-block font-weight-bold" title="Terapkan Pencarian">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                            @if($hasActiveFilters)
+                                <a href="{{ route('assets.plant', ['plantCode' => $plant->code, 'dept' => $selectedDeptId]) }}"
+                                   class="btn btn-outline-secondary"
+                                   title="Reset Pencarian & Filter">
+                                    <i class="fas fa-undo"></i>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Baris Filter Chips Aktif --}}
+                    @if($hasActiveFilters)
+                        <div class="d-flex align-items-center flex-wrap mt-2 pt-2 border-top" style="gap: .4rem; font-size: .83rem;">
+                            <span class="text-muted font-weight-bold mr-1">
+                                <i class="fas fa-filter text-primary mr-1"></i>Filter Aktif ({{ $assets->total() }} hasil):
+                            </span>
+
+                            @if(!empty($search))
+                                <span class="badge badge-primary px-2.5 py-1 font-weight-normal">
+                                    Pencarian: "<strong>{{ $search }}</strong>"
+                                    <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except(['search', 'page']))) }}" class="text-white ml-1">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </span>
+                            @endif
+
+                            @if(!empty($locationId))
+                                @php $activeLoc = $locations->firstWhere('id', $locationId); @endphp
+                                <span class="badge badge-info px-2.5 py-1 font-weight-normal">
+                                    Ruangan: <strong>{{ $activeLoc->room_name ?? $locationId }}</strong>
+                                    <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except(['location_id', 'page']))) }}" class="text-white ml-1">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </span>
+                            @endif
+
+                            @if(!empty($categoryCode))
+                                @php $activeCat = $categories->firstWhere('code', $categoryCode); @endphp
+                                <span class="badge badge-secondary px-2.5 py-1 font-weight-normal">
+                                    Kategori: <strong>{{ $activeCat->name ?? $categoryCode }}</strong>
+                                    <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except(['category', 'page']))) }}" class="text-white ml-1">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </span>
+                            @endif
+
+                            @if(!empty($condition))
+                                <span class="badge {{ $condition === 'Baik' ? 'badge-success' : 'badge-danger' }} px-2.5 py-1 font-weight-normal">
+                                    Kondisi: <strong>{{ $condition }}</strong>
+                                    <a href="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except(['condition', 'page']))) }}" class="text-white ml-1">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </span>
+                            @endif
+
+                            <a href="{{ route('assets.plant', ['plantCode' => $plant->code, 'dept' => $selectedDeptId]) }}"
+                               class="text-danger ml-2 font-weight-bold" style="text-decoration: underline;">
+                                Reset Filter
                             </a>
-                        </li>
-                    @endforeach
-                </ul>
+                        </div>
+                    @endif
+                </form>
             </div>
         </div>
 
-        {{-- Plant Assets Table --}}
+        {{-- Plant Assets Table Card --}}
         <div class="card shadow-sm border-0" style="border-radius: 1rem;">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center flex-wrap pt-3 px-3 pb-2">
+                <div>
+                    <h5 class="mb-0 font-weight-bold text-dark">
+                        <i class="fas fa-table text-primary mr-1"></i>
+                        Daftar Aset {{ $activeDeptName }}
+                    </h5>
+                    <small class="text-muted">
+                        Ditemukan {{ $assets->total() }} aset
+                        @if(!empty($search))
+                            yang cocok dengan "<strong>{{ $search }}</strong>"
+                        @endif
+                    </small>
+                </div>
+                <div class="mt-2 mt-md-0 d-flex align-items-center" style="gap: .5rem;">
+                    <span class="small text-muted font-weight-bold">Baris per halaman:</span>
+                    <select class="custom-select custom-select-sm" style="width: 80px;" onchange="window.location.href = this.value">
+                        @foreach([15, 25, 50, 100] as $size)
+                            <option value="{{ route('assets.plant', array_merge(['plantCode' => $plant->code, 'dept' => $selectedDeptId], request()->except('page'), ['per_page' => $size])) }}" {{ ($perPage ?? 25) == $size ? 'selected' : '' }}>
+                                {{ $size }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" style="font-size: .88rem;">
@@ -115,8 +478,13 @@
                                         @if($asset->brand)
                                             <div class="small text-muted"><i class="fas fa-tag mr-1"></i>{{ $asset->brand }}</div>
                                         @endif
+                                        @if($asset->specification)
+                                            <div class="small text-muted" style="max-width: 320px; white-space: normal; line-height: 1.25;">
+                                                <i class="fas fa-info-circle mr-1 text-secondary"></i>{{ Str::limit($asset->specification, 60) }}
+                                            </div>
+                                        @endif
                                         @if($asset->origin_plant_code !== $plant->code)
-                                            <span class="badge badge-warning text-dark" style="font-size: 10px;" title="Aset lahir di Plant lain">
+                                            <span class="badge badge-warning text-dark mt-1" style="font-size: 10px;" title="Aset lahir di Plant lain">
                                                 <i class="fas fa-exchange-alt mr-1"></i>Mutasi dari Plant {{ $asset->origin_plant_code }}
                                             </span>
                                         @endif
@@ -155,8 +523,15 @@
                             @empty
                                 <tr>
                                     <td colspan="9" class="text-center py-5 text-muted">
-                                        <i class="fas fa-boxes fa-3x mb-3 text-secondary"></i>
-                                        <p class="mb-0">Tidak ada aset pada kriteria ini di {{ $plant->name }}.</p>
+                                        <i class="fas fa-search fa-3x mb-3 text-secondary"></i>
+                                        <h6 class="font-weight-bold">Tidak ada aset yang sesuai kriteria</h6>
+                                        <p class="mb-3 text-muted">Coba ubah kata kunci pencarian atau sesuaikan filter ruangan / kondisi.</p>
+                                        @if($hasActiveFilters)
+                                            <a href="{{ route('assets.plant', ['plantCode' => $plant->code, 'dept' => $selectedDeptId]) }}"
+                                               class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                                <i class="fas fa-undo mr-1"></i> Reset Filter
+                                            </a>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforelse
@@ -178,3 +553,34 @@
 </section>
 @endsection
 
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const track = document.getElementById('deptTabsTrack');
+        const scrollLeftBtn = document.getElementById('tabScrollLeft');
+        const scrollRightBtn = document.getElementById('tabScrollRight');
+
+        if (track) {
+            // Scroll kiri & kanan via tombol chevron
+            if (scrollLeftBtn) {
+                scrollLeftBtn.addEventListener('click', function() {
+                    track.scrollBy({ left: -260, behavior: 'smooth' });
+                });
+            }
+            if (scrollRightBtn) {
+                scrollRightBtn.addEventListener('click', function() {
+                    track.scrollBy({ left: 260, behavior: 'smooth' });
+                });
+            }
+
+            // Otomatis scroll tab aktif ke tengah pandangan saat halaman dimuat
+            const activeTab = track.querySelector('.dept-tab-btn.active');
+            if (activeTab) {
+                setTimeout(function() {
+                    activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }, 120);
+            }
+        }
+    });
+</script>
+@endpush

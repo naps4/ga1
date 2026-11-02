@@ -48,66 +48,7 @@ return new class extends Migration
             $table->foreign('plant_code')->references('code')->on('plants')->cascadeOnUpdate()->cascadeOnDelete();
         });
 
-        // 5. Assets master table
-        Schema::create('assets', function (Blueprint $table) {
-            $table->id();
-            $table->string('asset_code', 120)->unique();
-            $table->enum('asset_group', ['UTAMA', 'TERPISAH', 'BERGERAK'])->default('UTAMA');
-            $table->string('item_name', 255);
-            $table->string('brand', 150)->nullable();
-            $table->text('specification')->nullable();
-            $table->string('origin_plant_code', 10)->default('01');
-            $table->string('current_plant_code', 10)->default('01');
-            $table->foreignId('department_id')->constrained('departments')->cascadeOnUpdate();
-            $table->foreignId('location_id')->nullable()->constrained('locations')->nullOnDelete();
-            $table->string('category_code', 10);
-            $table->string('acquisition_source', 50)->default('RAB');
-            $table->date('purchase_date')->nullable();
-            $table->unsignedInteger('qty')->default(1);
-            $table->decimal('unit_price', 15, 2)->default(0);
-            $table->decimal('total_price', 15, 2)->default(0);
-            $table->unsignedInteger('useful_life_years')->default(4);
-            $table->enum('condition', ['Baik', 'Rusak', 'Perbaikan'])->default('Baik');
-            $table->text('condition_note')->nullable();
-            $table->enum('tracking_mode', ['INDIVIDUAL', 'BULK'])->default('INDIVIDUAL');
-            $table->boolean('is_price_complete')->default(true);
-            $table->enum('status', ['AKTIF', 'DISPOSED'])->default('AKTIF');
-            $table->dateTime('disposed_at')->nullable();
-            $table->text('disposal_reason')->nullable();
-            $table->string('raw_data_source', 50)->nullable();
-            $table->timestamps();
-
-            $table->foreign('origin_plant_code')->references('code')->on('plants')->cascadeOnUpdate();
-            $table->foreign('current_plant_code')->references('code')->on('plants')->cascadeOnUpdate();
-            $table->foreign('category_code')->references('code')->on('asset_categories')->cascadeOnUpdate();
-
-            $table->index(['current_plant_code', 'department_id']);
-            $table->index(['status', 'asset_group']);
-        });
-
-        // 6. Asset Mutations table
-        Schema::create('asset_mutations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
-            $table->string('from_plant_code', 10);
-            $table->string('to_plant_code', 10);
-            $table->foreignId('from_location_id')->nullable()->constrained('locations')->nullOnDelete();
-            $table->foreignId('to_location_id')->nullable()->constrained('locations')->nullOnDelete();
-            $table->foreignId('from_dept_id')->nullable()->constrained('departments')->nullOnDelete();
-            $table->foreignId('to_dept_id')->nullable()->constrained('departments')->nullOnDelete();
-            $table->date('mutation_date');
-            $table->string('pic_name', 255);
-            $table->text('reason');
-            $table->text('notes')->nullable();
-            $table->timestamps();
-
-            $table->foreign('from_plant_code')->references('code')->on('plants')->cascadeOnUpdate();
-            $table->foreign('to_plant_code')->references('code')->on('plants')->cascadeOnUpdate();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
+        
      */
     public function down(): void
     {

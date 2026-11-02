@@ -128,7 +128,41 @@ class GaAssetController extends Controller
             $query->where('department_id', $selectedDeptId);
         }
 
-        $assets = $query->orderBy('department_id')->orderBy('item_name')->paginate(25)->withQueryString();
+        // Search Bar: asset_code, item_name, brand, specification
+        $search = $request->input('search');
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('asset_code', 'like', "%{$search}%")
+                  ->orWhere('item_name', 'like', "%{$search}%")
+                  ->orWhere('brand', 'like', "%{$search}%")
+                  ->orWhere('specification', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter Lokasi / Ruangan
+        $locationId = $request->input('location_id');
+        if (!empty($locationId)) {
+            $query->where('location_id', $locationId);
+        }
+
+        // Filter Kategori
+        $categoryCode = $request->input('category');
+        if (!empty($categoryCode)) {
+            $query->where('category_code', $categoryCode);
+        }
+
+        // Filter Kondisi (Baik / Rusak / Perbaikan)
+        $condition = $request->input('condition');
+        if (!empty($condition)) {
+            $query->where('condition', $condition);
+        }
+
+        $perPage = (int) $request->input('per_page', 25);
+        if (!in_array($perPage, [15, 25, 50, 100])) {
+            $perPage = 25;
+        }
+
+        $assets = $query->orderBy('department_id')->orderBy('item_name')->paginate($perPage)->withQueryString();
 
         // Tab Departemen yang memiliki aset di plant ini
         $departmentTabs = Department::whereHas('assets', function ($q) use ($plantCode) {
@@ -144,9 +178,14 @@ class GaAssetController extends Controller
         $rusakCount = Asset::active()->where('current_plant_code', $plantCode)->where('condition', 'Rusak')->count();
         $percentBaik = $totalItems > 0 ? round(($baikCount / $totalItems) * 100, 1) : 100;
 
+        // Data master untuk filter dropdown
+        $locations = Location::where('plant_code', $plantCode)->orderBy('room_name')->get();
+        $categories = AssetCategory::orderBy('code')->get();
+
         return view('assets.plant', compact(
             'plant', 'assets', 'departmentTabs', 'selectedDeptId',
-            'totalItems', 'totalValuation', 'baikCount', 'rusakCount', 'percentBaik'
+            'totalItems', 'totalValuation', 'baikCount', 'rusakCount', 'percentBaik',
+            'search', 'locationId', 'categoryCode', 'condition', 'locations', 'categories', 'perPage'
         ));
     }
 
@@ -160,6 +199,28 @@ class GaAssetController extends Controller
 
         if ($request->filled('dept')) {
             $query->where('department_id', $request->dept);
+        }
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('asset_code', 'like', "%{$s}%")
+                  ->orWhere('item_name', 'like', "%{$s}%")
+                  ->orWhere('brand', 'like', "%{$s}%")
+                  ->orWhere('specification', 'like', "%{$s}%");
+            });
+        }
+
+        if ($request->filled('location_id')) {
+            $query->where('location_id', $request->location_id);
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category_code', $request->category);
+        }
+
+        if ($request->filled('condition')) {
+            $query->where('condition', $request->condition);
         }
 
         $totalItems = (clone $query)->count();
