@@ -493,6 +493,7 @@ Route::middleware(['auth'])->prefix('assets')->name('assets.')->group(function (
     Route::get('/plant/{plantCode}', [\App\Http\Controllers\GaAssetController::class, 'plantView'])->name('plant');
     Route::get('/lampiran-c/{locationId?}', [\App\Http\Controllers\GaAssetController::class, 'lampiranC'])->name('lampiran-c');
     Route::get('/lampiran-c/{locationId}/print', [\App\Http\Controllers\GaAssetController::class, 'printLampiranC'])->name('lampiran-c.print');
+    Route::get('/lampiran-c/{locationId}/print-qr', [\App\Http\Controllers\GaAssetController::class, 'printRoomQrCodes'])->name('lampiran-c.print-qr');
 
     Route::post('/', [\App\Http\Controllers\GaAssetController::class, 'store'])->name('store');
     Route::put('/{asset}', [\App\Http\Controllers\GaAssetController::class, 'update'])->name('update');

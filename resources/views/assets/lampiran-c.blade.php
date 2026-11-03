@@ -15,7 +15,10 @@
                     <i class="fas fa-arrow-left mr-1"></i> Kembali ke Master Aset
                 </a>
                 @if($selectedLocation)
-                    <a href="{{ route('assets.lampiran-c.print', $selectedLocation->id) }}" target="_blank" class="btn btn-success btn-sm rounded-pill px-4 shadow-sm">
+                    <a href="{{ route('assets.lampiran-c.print-qr', $selectedLocation->id) }}" target="_blank" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm mr-1">
+                        <i class="fas fa-qrcode mr-1"></i> Cetak Semua Stiker QR
+                    </a>
+                    <a href="{{ route('assets.lampiran-c.print', $selectedLocation->id) }}" target="_blank" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">
                         <i class="fas fa-print mr-1"></i> Cetak Dokumen Resmi
                     </a>
                 @endif
@@ -81,6 +84,14 @@
                                     <div class="col-6 text-right">
                                         <strong>Tanggal :</strong> {{ $lastUpdated }} (Last Update)
                                     </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                                    <div class="small text-muted">
+                                        <i class="fas fa-boxes text-primary mr-1"></i> Form ini mengagregasi aset fisik di <strong>{{ $selectedLocation->room_name }}</strong>.
+                                    </div>
+                                    <a href="{{ route('assets.lampiran-c.print-qr', $selectedLocation->id) }}" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill px-3 font-weight-bold">
+                                        <i class="fas fa-qrcode mr-1"></i> Cetak Semua Label QR Ruangan Ini
+                                    </a>
                                 </div>
                             </div>
 

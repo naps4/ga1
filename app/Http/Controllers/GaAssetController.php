@@ -333,6 +333,19 @@ class GaAssetController extends Controller
         return view('assets.lampiran-c-print', compact('location', 'aggregatedItems', 'lastUpdated'));
     }
 
+    public function printRoomQrCodes(int $locationId)
+    {
+        $location = Location::with('plant', 'department')->findOrFail($locationId);
+
+        $assets = Asset::with(['originPlant', 'currentPlant', 'department', 'location', 'category'])
+            ->where('location_id', $location->id)
+            ->active()
+            ->orderBy('asset_code', 'asc')
+            ->get();
+
+        return view('assets.lampiran-c-print-qr', compact('location', 'assets'));
+    }
+
     public function apiLampiranC(int $locationId)
     {
         $location = Location::with('plant', 'department')->findOrFail($locationId);
