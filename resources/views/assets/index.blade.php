@@ -521,12 +521,32 @@
                                         </div>
                                     </td>
                                     <td>
-                                        @if($asset->current_plant_code === '01')
-                                            <span class="badge badge-primary">Plant A</span>
-                                        @elseif($asset->current_plant_code === '02')
-                                            <span class="badge badge-info">Plant B</span>
+                                        @if($asset->origin_plant_code && $asset->current_plant_code && $asset->origin_plant_code !== $asset->current_plant_code)
+                                            <div class="d-flex flex-column align-items-start" style="gap: 3px;" title="Aset berpindah dari Plant {{ $asset->origin_plant_code === '01' ? 'A' : ($asset->origin_plant_code === '02' ? 'B' : $asset->origin_plant_code) }} ke Plant {{ $asset->current_plant_code === '01' ? 'A' : ($asset->current_plant_code === '02' ? 'B' : $asset->current_plant_code) }}">
+                                                <div class="d-inline-flex align-items-center" style="gap: 4px;">
+                                                    <span class="badge badge-light border text-muted px-1.5 py-0.5" style="font-size: 9.5px; opacity: 0.85;">
+                                                        Plant {{ $asset->origin_plant_code === '01' ? 'A' : ($asset->origin_plant_code === '02' ? 'B' : $asset->origin_plant_code) }}
+                                                    </span>
+                                                    <i class="fas fa-undo-alt text-info" style="font-size: 9px; transform: scaleX(-1);" title="Pindah Plant"></i>
+                                                </div>
+                                                <div>
+                                                    @if($asset->current_plant_code === '01')
+                                                        <span class="badge badge-primary font-weight-bold" style="font-size: 11px;">Plant A</span>
+                                                    @elseif($asset->current_plant_code === '02')
+                                                        <span class="badge badge-info font-weight-bold" style="font-size: 11px;">Plant B</span>
+                                                    @else
+                                                        <span class="badge badge-secondary font-weight-bold" style="font-size: 11px;">Mobile</span>
+                                                    @endif
+                                                </div>
+                                            </div>
                                         @else
-                                            <span class="badge badge-secondary">Mobile</span>
+                                            @if($asset->current_plant_code === '01')
+                                                <span class="badge badge-primary font-weight-bold">Plant A</span>
+                                            @elseif($asset->current_plant_code === '02')
+                                                <span class="badge badge-info font-weight-bold">Plant B</span>
+                                            @else
+                                                <span class="badge badge-secondary font-weight-bold">Mobile</span>
+                                            @endif
                                         @endif
                                     </td>
                                     <td class="text-center cell-single-line">
@@ -1374,6 +1394,28 @@ document.addEventListener('DOMContentLoaded', function() {
         syncCategoryUsefulLife();
     }
 
+    // Live update Plant Badge in Edit Modal when Room changes
+    const editLoc = document.getElementById('editMasterLocation');
+    const editPlantBadge = document.getElementById('editAssetBadgePlant');
+    if (editLoc && editPlantBadge) {
+        editLoc.addEventListener('change', function() {
+            const opt = this.options[this.selectedIndex];
+            const targetPlant = opt ? opt.getAttribute('data-plant') : null;
+            if (targetPlant) {
+                let plantText = (targetPlant === '01') ? 'Plant A' : (targetPlant === '02' ? 'Plant B' : 'Plant ' + targetPlant);
+                let originPlant = currentDetailAsset ? currentDetailAsset.origin_plant_code : null;
+                if (originPlant && originPlant !== targetPlant) {
+                    let originText = (originPlant === '01') ? 'Plant A' : (originPlant === '02' ? 'Plant B' : 'Plant ' + originPlant);
+                    editPlantBadge.innerHTML = `<span class="badge badge-light text-dark mr-1">${originText}</span> <i class="fas fa-undo-alt text-warning mr-1" style="transform: scaleX(-1);"></i> ${plantText}`;
+                    editPlantBadge.className = 'badge badge-warning px-2 py-0.5 text-dark font-weight-bold';
+                } else {
+                    editPlantBadge.innerText = plantText;
+                    editPlantBadge.className = 'badge badge-info px-2 py-0.5';
+                }
+            }
+        });
+    }
+
     calculateCreateTotal();
 });
 
@@ -1387,7 +1429,12 @@ function openDetailModal(asset) {
 
     let plantName = (asset.current_plant_code === '01') ? 'Plant A' : (asset.current_plant_code === '02' ? 'Plant B' : 'Mobile');
     let roomName = asset.location ? asset.location.room_name : '-';
-    document.getElementById('detailStickerLocation').innerText = plantName + (roomName && roomName !== '-' ? ' — ' + roomName : '');
+    let locDisplay = plantName + (roomName && roomName !== '-' ? ' — ' + roomName : '');
+    if (asset.origin_plant_code && asset.current_plant_code && asset.origin_plant_code !== asset.current_plant_code) {
+        let originName = (asset.origin_plant_code === '01') ? 'Plant A' : (asset.origin_plant_code === '02' ? 'Plant B' : 'Plant ' + asset.origin_plant_code);
+        locDisplay += ' (Asal: ' + originName + ')';
+    }
+    document.getElementById('detailStickerLocation').innerText = locDisplay;
 
     let deptName = asset.department ? (asset.department.code || asset.department.name) : '-';
     document.getElementById('detailStickerDept').innerText = deptName;
@@ -1587,8 +1634,15 @@ function openEditModal(asset) {
     }
     const plantBadge = document.getElementById('editAssetBadgePlant');
     if (plantBadge) {
-        let plantText = (asset.current_plant_code === '01') ? 'Plant A' : (asset.current_plant_code === '02' ? 'Plant B' : 'Mobile');
-        plantBadge.innerText = plantText;
+        let currentPlantText = (asset.current_plant_code === '01') ? 'Plant A' : (asset.current_plant_code === '02' ? 'Plant B' : 'Mobile');
+        if (asset.origin_plant_code && asset.origin_plant_code !== asset.current_plant_code) {
+            let originPlantText = (asset.origin_plant_code === '01') ? 'Plant A' : (asset.origin_plant_code === '02' ? 'Plant B' : 'Plant ' + asset.origin_plant_code);
+            plantBadge.innerHTML = `<span class="badge badge-light text-dark mr-1">${originPlantText}</span> <i class="fas fa-undo-alt text-warning mr-1" style="transform: scaleX(-1);"></i> ${currentPlantText}`;
+            plantBadge.className = 'badge badge-warning px-2 py-0.5 text-dark font-weight-bold';
+        } else {
+            plantBadge.innerText = currentPlantText;
+            plantBadge.className = 'badge badge-info px-2 py-0.5';
+        }
     }
     const deptBadge = document.getElementById('editAssetBadgeDept');
     if (deptBadge) {

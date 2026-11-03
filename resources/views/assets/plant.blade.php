@@ -1357,7 +1357,7 @@
                         <div class="flex-grow-1">
                             <div class="d-flex align-items-center mb-1 flex-wrap" style="gap: .35rem;">
                                 <span class="badge badge-primary px-2 py-0.5" id="editAssetBadgeModePlant">INDIVIDUAL</span>
-                                <span class="badge badge-info px-2 py-0.5">{{ $plant->name }}</span>
+                                <span class="badge badge-info px-2 py-0.5" id="editAssetBadgePlantPlant">{{ $plant->name }}</span>
                                 <span class="badge badge-secondary px-2 py-0.5" id="editAssetBadgeDeptPlant">Dept</span>
                             </div>
                             <h6 class="font-weight-bold text-dark mb-0 font-monospace" id="editAssetCode">HII-...</h6>
@@ -1585,7 +1585,12 @@
 
         let plantName = (asset.current_plant_code === '01') ? 'Plant A' : (asset.current_plant_code === '02' ? 'Plant B' : 'Mobile');
         let roomName = asset.location ? asset.location.room_name : '-';
-        document.getElementById('detailStickerLocation').innerText = plantName + (roomName && roomName !== '-' ? ' — ' + roomName : '');
+        let locDisplay = plantName + (roomName && roomName !== '-' ? ' — ' + roomName : '');
+        if (asset.origin_plant_code && asset.current_plant_code && asset.origin_plant_code !== asset.current_plant_code) {
+            let originName = (asset.origin_plant_code === '01') ? 'Plant A' : (asset.origin_plant_code === '02' ? 'Plant B' : 'Plant ' + asset.origin_plant_code);
+            locDisplay += ' (Asal: ' + originName + ')';
+        }
+        document.getElementById('detailStickerLocation').innerText = locDisplay;
 
         let deptName = asset.department ? (asset.department.code || asset.department.name) : '-';
         document.getElementById('detailStickerDept').innerText = deptName;
@@ -1786,6 +1791,18 @@
         const deptBadge = document.getElementById('editAssetBadgeDeptPlant');
         if (deptBadge) {
             deptBadge.innerText = asset.department ? (asset.department.code || asset.department.name) : '-';
+        }
+        const plantBadge = document.getElementById('editAssetBadgePlantPlant');
+        if (plantBadge) {
+            let currentPlantText = '{{ $plant->name }}';
+            if (asset.origin_plant_code && asset.origin_plant_code !== '{{ $plant->code }}') {
+                let originPlantText = (asset.origin_plant_code === '01') ? 'Plant A' : (asset.origin_plant_code === '02' ? 'Plant B' : 'Plant ' + asset.origin_plant_code);
+                plantBadge.innerHTML = `<span class="badge badge-light text-dark mr-1">${originPlantText}</span> <i class="fas fa-undo-alt text-warning mr-1" style="transform: scaleX(-1);"></i> ${currentPlantText}`;
+                plantBadge.className = 'badge badge-warning px-2 py-0.5 text-dark font-weight-bold';
+            } else {
+                plantBadge.innerText = currentPlantText;
+                plantBadge.className = 'badge badge-info px-2 py-0.5';
+            }
         }
 
         // Header QR Code

@@ -188,6 +188,35 @@ class GaAssetService
         }
         if (!empty($data['location_id'])) {
             $updateData['location_id'] = $data['location_id'];
+
+            // Sinkronisasi otomatis Lokasi Plant fisik & catat mutasi jika ruangan berubah
+            $newLoc = Location::find($data['location_id']);
+            if ($newLoc && !empty($newLoc->plant_code)) {
+                $newPlantCode = $newLoc->plant_code;
+                $oldPlantCode = $asset->current_plant_code;
+                $oldLocId = $asset->location_id;
+
+                if ($newPlantCode !== $oldPlantCode || (int)$oldLocId !== (int)$newLoc->id) {
+                    $updateData['current_plant_code'] = $newPlantCode;
+
+                    AssetMutation::create([
+                        'asset_id'          => $asset->id,
+                        'from_plant_code'   => $oldPlantCode,
+                        'to_plant_code'     => $newPlantCode,
+                        'from_location_id'  => $oldLocId,
+                        'to_location_id'    => $newLoc->id,
+                        'from_dept_id'      => $asset->department_id,
+                        'to_dept_id'        => $data['department_id'] ?? $asset->department_id,
+                        'mutation_date'     => now()->format('Y-m-d'),
+                        'pic_name'          => auth()->user()->name ?? 'GA Officer',
+                        'reason'            => ($newPlantCode !== $oldPlantCode) ? 'Perpindahan Lintas Plant via Edit Aset' : 'Perpindahan Ruangan via Edit Aset',
+                        'notes'             => 'Pindah ruangan/plant otomatis dicatat dari form Edit Data Aset',
+                    ]);
+                }
+            }
+        }
+        if (!empty($data['current_plant_code'])) {
+            $updateData['current_plant_code'] = $data['current_plant_code'];
         }
 
         $asset->update($updateData);
