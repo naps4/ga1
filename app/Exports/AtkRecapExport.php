@@ -300,7 +300,6 @@ class AtkDepartmentSheet implements FromCollection, WithHeadings, WithTitle, Wit
         foreach ($this->deptList as $dept) {
             $headerCols[] = $dept;
         }
-        $headerCols[] = 'TOTAL KEBUTUHAN';
 
         $periode = 'Semua Periode';
         if ($this->filterRequest && ($this->filterRequest->filled('start_date') || $this->filterRequest->filled('end_date'))) {
@@ -331,36 +330,30 @@ class AtkDepartmentSheet implements FromCollection, WithHeadings, WithTitle, Wit
                     $item['unit'],
                 ];
                 foreach ($this->deptList as $dept) {
-                    $qty = $item['dept_quantities'][$dept] ?? 0;
-                    $row[] = $qty > 0 ? $qty : '-';
+                    if (!empty($item['dept_display'][$dept])) {
+                        $row[] = $item['dept_display'][$dept];
+                    } else {
+                        $qty = $item['dept_quantities'][$dept] ?? 0;
+                        $row[] = $qty > 0 ? ($qty . ' ' . $item['unit']) : '-';
+                    }
                 }
-                $row[] = $item['total_qty'];
                 $rows->push($row);
             }
 
             // Subtotal per category
             $subRow = ['', 'SUBTOTAL ' . strtoupper($catName), '', ''];
             foreach ($this->deptList as $dept) {
-                $subRow[] = $catData['dept_subtotals'][$dept] ?? 0;
+                $subRow[] = ($catData['dept_subtotals'][$dept] ?? 0) > 0 ? $catData['dept_subtotals'][$dept] : '-';
             }
-            $subRow[] = $catData['subtotal_qty'];
             $rows->push($subRow);
         }
-
-        // Grand Total row
-        $gtRow = ['', 'GRAND TOTAL KEBUTUHAN ATK', '', ''];
-        foreach ($this->deptList as $dept) {
-            $gtRow[] = $this->deptGrandTotals[$dept] ?? 0;
-        }
-        $gtRow[] = $this->grandTotalQty;
-        $rows->push($gtRow);
 
         return $rows;
     }
 
     public function styles(Worksheet $sheet): array
     {
-        $colCount = 4 + count($this->deptList) + 1;
+        $colCount = 4 + count($this->deptList);
         $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colCount);
 
         $sheet->mergeCells("A1:{$lastColLetter}1");
@@ -388,12 +381,6 @@ class AtkDepartmentSheet implements FromCollection, WithHeadings, WithTitle, Wit
                 $styles[$r] = [
                     'font' => ['bold' => true, 'color' => ['rgb' => '1E40AF']],
                     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'DBEAFE']],
-                ];
-            } elseif (str_starts_with($valB, 'GRAND TOTAL')) {
-                $sheet->mergeCells("B{$r}:D{$r}");
-                $styles[$r] = [
-                    'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => 'FFFFFF']],
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E3A8A']],
                 ];
             }
         }
@@ -424,7 +411,6 @@ class HouseholdDepartmentSheet implements FromCollection, WithHeadings, WithTitl
         foreach ($this->deptList as $dept) {
             $headerCols[] = $dept;
         }
-        $headerCols[] = 'TOTAL KEBUTUHAN';
 
         $periode = 'Semua Periode';
         if ($this->filterRequest && ($this->filterRequest->filled('start_date') || $this->filterRequest->filled('end_date'))) {
@@ -455,36 +441,30 @@ class HouseholdDepartmentSheet implements FromCollection, WithHeadings, WithTitl
                     $item['unit'],
                 ];
                 foreach ($this->deptList as $dept) {
-                    $qty = $item['dept_quantities'][$dept] ?? 0;
-                    $row[] = $qty > 0 ? $qty : '-';
+                    if (!empty($item['dept_display'][$dept])) {
+                        $row[] = $item['dept_display'][$dept];
+                    } else {
+                        $qty = $item['dept_quantities'][$dept] ?? 0;
+                        $row[] = $qty > 0 ? ($qty . ' ' . $item['unit']) : '-';
+                    }
                 }
-                $row[] = $item['total_qty'];
                 $rows->push($row);
             }
 
             // Subtotal per category
             $subRow = ['', 'SUBTOTAL ' . strtoupper($catName), '', ''];
             foreach ($this->deptList as $dept) {
-                $subRow[] = $catData['dept_subtotals'][$dept] ?? 0;
+                $subRow[] = ($catData['dept_subtotals'][$dept] ?? 0) > 0 ? $catData['dept_subtotals'][$dept] : '-';
             }
-            $subRow[] = $catData['subtotal_qty'];
             $rows->push($subRow);
         }
-
-        // Grand Total row
-        $gtRow = ['', 'GRAND TOTAL KEBUTUHAN RUMAH TANGGA', '', ''];
-        foreach ($this->deptList as $dept) {
-            $gtRow[] = $this->deptGrandTotals[$dept] ?? 0;
-        }
-        $gtRow[] = $this->grandTotalQty;
-        $rows->push($gtRow);
 
         return $rows;
     }
 
     public function styles(Worksheet $sheet): array
     {
-        $colCount = 4 + count($this->deptList) + 1;
+        $colCount = 4 + count($this->deptList);
         $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colCount);
 
         $sheet->mergeCells("A1:{$lastColLetter}1");
@@ -512,12 +492,6 @@ class HouseholdDepartmentSheet implements FromCollection, WithHeadings, WithTitl
                 $styles[$r] = [
                     'font' => ['bold' => true, 'color' => ['rgb' => 'B45309']],
                     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FEF3C7']],
-                ];
-            } elseif (str_starts_with($valB, 'GRAND TOTAL')) {
-                $sheet->mergeCells("B{$r}:D{$r}");
-                $styles[$r] = [
-                    'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => 'FFFFFF']],
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'B45309']],
                 ];
             }
         }
