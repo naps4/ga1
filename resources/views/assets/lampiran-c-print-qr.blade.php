@@ -267,7 +267,12 @@
         @endif
     </div>
 
-    <script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        if (typeof QRCode === 'undefined') {
+            document.write('<script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"><\/script>');
+        }
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const qrItems = document.querySelectorAll('.qr-bulk-item');
@@ -278,16 +283,20 @@
                 const code = item.getAttribute('data-code');
                 const targetUrl = baseUrl + '/' + encodeURIComponent(code);
 
-                new QRCode(item, {
-                    text: targetUrl,
-                    width: 82,
-                    height: 82,
-                    colorDark: "#0f172a",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.M
-                });
-
-                loadedCount++;
+                try {
+                    new QRCode(item, {
+                        text: targetUrl,
+                        width: 82,
+                        height: 82,
+                        colorDark: "#0f172a",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                    loadedCount++;
+                } catch (e) {
+                    console.error('Gagal render QR item:', code, e);
+                    item.innerHTML = '<div class="text-danger small">Error</div>';
+                }
             });
 
             const countBadge = document.getElementById('qrCountLoaded');

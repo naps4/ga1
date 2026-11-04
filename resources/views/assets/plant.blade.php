@@ -1473,7 +1473,12 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    if (typeof QRCode === 'undefined') {
+        document.write('<script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"><\/script>');
+    }
+</script>
 <script>
     let currentDetailAsset = null;
 
@@ -1629,16 +1634,28 @@
 
         // 3. Render QR Code (Dynamic Canvas/SVG)
         const qrContainer = document.getElementById('detailQrContainer');
-        qrContainer.innerHTML = '';
-        const scanUrl = window.location.origin + '/assets/scan/' + encodeURIComponent(asset.asset_code);
-        new QRCode(qrContainer, {
-            text: scanUrl,
-            width: 100,
-            height: 100,
-            colorDark : "#0f172a",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.M
-        });
+        if (qrContainer) {
+            qrContainer.innerHTML = '';
+            const scanUrl = window.location.origin + '/assets/scan/' + encodeURIComponent(asset.asset_code);
+            if (typeof QRCode !== 'undefined') {
+                try {
+                    new QRCode(qrContainer, {
+                        text: scanUrl,
+                        width: 100,
+                        height: 100,
+                        colorDark : "#0f172a",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.M
+                    });
+                } catch (err) {
+                    console.error('Gagal generate QR Code:', err);
+                    qrContainer.innerHTML = '<div class="text-muted small text-center p-2"><i class="fas fa-qrcode fa-2x mb-1 d-block text-secondary"></i>QR Error</div>';
+                }
+            } else {
+                console.warn('Library QRCode belum tersedia');
+                qrContainer.innerHTML = '<div class="text-muted small text-center p-2"><i class="fas fa-qrcode fa-2x mb-1 d-block text-secondary"></i>QR Offline</div>';
+            }
+        }
 
         $('#modalDetailAsset').modal('show');
     }
@@ -1810,14 +1827,23 @@
         if (editQrContainer) {
             editQrContainer.innerHTML = '';
             const scanUrl = window.location.origin + '/assets/scan/' + encodeURIComponent(asset.asset_code);
-            new QRCode(editQrContainer, {
-                text: scanUrl,
-                width: 70,
-                height: 70,
-                colorDark : "#0f172a",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.M
-            });
+            if (typeof QRCode !== 'undefined') {
+                try {
+                    new QRCode(editQrContainer, {
+                        text: scanUrl,
+                        width: 70,
+                        height: 70,
+                        colorDark : "#0f172a",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.M
+                    });
+                } catch (err) {
+                    console.error('Gagal generate QR Code Edit:', err);
+                    editQrContainer.innerHTML = '<i class="fas fa-qrcode text-muted"></i>';
+                }
+            } else {
+                editQrContainer.innerHTML = '<i class="fas fa-qrcode text-muted"></i>';
+            }
         }
 
         document.getElementById('editItemName').value = asset.item_name || '';
