@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             SecurityShiftSeeder::class,
             CleaningCheckpointSeeder::class,
             CleaningShiftSeeder::class,
+            GaAssetMasterSeeder::class,
         ]);
     }
 }
