@@ -17,7 +17,9 @@ class AtkRequestSeeder extends Seeder
     public function run(): void
     {
         // 0. Ensure UOM and Master Barang Units match the case requirement
-        Uom::firstOrCreate(['name' => 'Pcs, Pack']);
+        Uom::where('name', 'Pcs, Pack')->delete();
+        Uom::firstOrCreate(['name' => 'Pcs']);
+        Uom::firstOrCreate(['name' => 'Pack']);
         AtkItem::where('name', 'Pensil')->update(['unit' => 'Pcs, Pack']);
         AtkItem::where('name', 'Pulpen')->update(['unit' => 'Pcs, Pack']);
         AtkItem::where('name', 'Isi Pulpen')->update(['unit' => 'Pcs']);
@@ -165,7 +167,7 @@ class AtkRequestSeeder extends Seeder
         AtkRequestItem::create([
             'atk_request_id' => $req1->id,
             'item_name' => 'Pulpen',
-            'unit' => 'Pcs, Pack',
+            'unit' => 'Pcs',
             'description' => 'Hitam',
             'quantity' => 12,
             'is_custom' => false,
@@ -175,7 +177,7 @@ class AtkRequestSeeder extends Seeder
         AtkRequestItem::create([
             'atk_request_id' => $req1->id,
             'item_name' => 'Pensil',
-            'unit' => 'Pcs, Pack',
+            'unit' => 'Pcs',
             'description' => '2B',
             'quantity' => 6,
             'is_custom' => false,

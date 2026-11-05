@@ -204,7 +204,26 @@ class AtkRequestController extends Controller
         $householdItemsFlat = [];
         $householdDeptList = [];
 
+        // Helper untuk memisahkan satuan majemuk (misal 'Pcs, Pack') menjadi array satuan unik
+        $splitUnits = function(?string $unitStr): array {
+            if (!$unitStr) return [];
+            $parts = preg_split('/[,\\/]/', $unitStr);
+            $cleaned = [];
+            foreach ($parts as $p) {
+                $trimmed = trim($p);
+                if ($trimmed !== '' && !in_array($trimmed, $cleaned)) {
+                    $cleaned[] = $trimmed;
+                }
+            }
+            return $cleaned;
+        };
+
         foreach ($requests as $req) {
+            // Abaikan form induk yang sudah direvisi atau berstatus ditolak/revisi agar tidak terjadi duplikasi rekap
+            if ($req->revisions()->exists() || in_array($req->status_approval, ['Ditolak', 'Ditolak/Revisi'])) {
+                continue;
+            }
+
             $isHousehold = ($req->request_type === 'Rumah Tangga');
             $rawDept = trim($req->divisi ?: ($req->user->company ?? $req->user->department ?? 'Umum'));
             $dept = $rawDept ?: 'Umum';
@@ -230,17 +249,21 @@ class AtkRequestController extends Controller
                 $masterUnit = $unitMap[$normName] ?? null;
 
                 $specText = trim($item->description ?? '');
-                $itemUnit = trim($item->unit ?? 'Pcs');
+                
+                // Normalisasi satuan jika data warisan menyimpan gabungan 'Pcs, Pack'
+                $rawItemUnits = $splitUnits($item->unit);
+                $singleItemUnit = !empty($rawItemUnits) ? $rawItemUnits[0] : 'Pcs';
+                
                 $deptLabel = $specText !== '' 
-                    ? "{$item->quantity} {$itemUnit} ({$specText})" 
-                    : "{$item->quantity} {$itemUnit}";
+                    ? "{$item->quantity} {$singleItemUnit} ({$specText})" 
+                    : "{$item->quantity} {$singleItemUnit}";
 
                 if ($isHousehold) {
                     if (!isset($householdItemsFlat[$key])) {
                         $householdItemsFlat[$key] = [
                             'name' => $item->item_name,
-                            'unit' => $itemUnit,
-                            'units' => [$itemUnit],
+                            'unit' => $singleItemUnit,
+                            'units' => $rawItemUnits ?: [$singleItemUnit],
                             'category' => $category,
                             'is_custom' => (bool)$item->is_custom,
                             'total_qty' => 0,
@@ -249,28 +272,37 @@ class AtkRequestController extends Controller
                             'dept_breakdowns' => [],
                             'dept_display' => [],
                         ];
-                        if ($masterUnit && str_contains($masterUnit, ',')) {
-                            $parts = array_map('trim', explode(',', $masterUnit));
-                            $householdItemsFlat[$key]['units'] = array_unique(array_merge($parts, $householdItemsFlat[$key]['units']));
-                            $householdItemsFlat[$key]['unit'] = implode(', ', $householdItemsFlat[$key]['units']);
-                        }
                     } else {
-                        if (!in_array($itemUnit, $householdItemsFlat[$key]['units'])) {
-                            $householdItemsFlat[$key]['units'][] = $itemUnit;
-                            $householdItemsFlat[$key]['unit'] = implode(', ', $householdItemsFlat[$key]['units']);
+                        foreach ($rawItemUnits as $u) {
+                            if (!in_array($u, $householdItemsFlat[$key]['units'])) {
+                                $householdItemsFlat[$key]['units'][] = $u;
+                            }
                         }
                     }
+
+                    if ($masterUnit) {
+                        foreach ($splitUnits($masterUnit) as $mu) {
+                            if (!in_array($mu, $householdItemsFlat[$key]['units'])) {
+                                $householdItemsFlat[$key]['units'][] = $mu;
+                            }
+                        }
+                    }
+                    $householdItemsFlat[$key]['unit'] = implode(', ', $householdItemsFlat[$key]['units']);
+
                     $householdItemsFlat[$key]['total_qty'] += $item->quantity;
                     $householdItemsFlat[$key]['request_count'] += 1;
                     $householdItemsFlat[$key]['dept_quantities'][$dept] = ($householdItemsFlat[$key]['dept_quantities'][$dept] ?? 0) + $item->quantity;
-                    $householdItemsFlat[$key]['dept_breakdowns'][$dept][] = $deptLabel;
-                    $householdItemsFlat[$key]['dept_display'][$dept] = implode(', ', $householdItemsFlat[$key]['dept_breakdowns'][$dept]);
+                    
+                    if (!in_array($deptLabel, $householdItemsFlat[$key]['dept_breakdowns'][$dept] ?? [])) {
+                        $householdItemsFlat[$key]['dept_breakdowns'][$dept][] = $deptLabel;
+                        $householdItemsFlat[$key]['dept_display'][$dept] = implode(', ', $householdItemsFlat[$key]['dept_breakdowns'][$dept]);
+                    }
                 } else {
                     if (!isset($atkItemsFlat[$key])) {
                         $atkItemsFlat[$key] = [
                             'name' => $item->item_name,
-                            'unit' => $itemUnit,
-                            'units' => [$itemUnit],
+                            'unit' => $singleItemUnit,
+                            'units' => $rawItemUnits ?: [$singleItemUnit],
                             'category' => $category,
                             'is_custom' => (bool)$item->is_custom,
                             'total_qty' => 0,
@@ -279,22 +311,31 @@ class AtkRequestController extends Controller
                             'dept_breakdowns' => [],
                             'dept_display' => [],
                         ];
-                        if ($masterUnit && str_contains($masterUnit, ',')) {
-                            $parts = array_map('trim', explode(',', $masterUnit));
-                            $atkItemsFlat[$key]['units'] = array_unique(array_merge($parts, $atkItemsFlat[$key]['units']));
-                            $atkItemsFlat[$key]['unit'] = implode(', ', $atkItemsFlat[$key]['units']);
-                        }
                     } else {
-                        if (!in_array($itemUnit, $atkItemsFlat[$key]['units'])) {
-                            $atkItemsFlat[$key]['units'][] = $itemUnit;
-                            $atkItemsFlat[$key]['unit'] = implode(', ', $atkItemsFlat[$key]['units']);
+                        foreach ($rawItemUnits as $u) {
+                            if (!in_array($u, $atkItemsFlat[$key]['units'])) {
+                                $atkItemsFlat[$key]['units'][] = $u;
+                            }
                         }
                     }
+
+                    if ($masterUnit) {
+                        foreach ($splitUnits($masterUnit) as $mu) {
+                            if (!in_array($mu, $atkItemsFlat[$key]['units'])) {
+                                $atkItemsFlat[$key]['units'][] = $mu;
+                            }
+                        }
+                    }
+                    $atkItemsFlat[$key]['unit'] = implode(', ', $atkItemsFlat[$key]['units']);
+
                     $atkItemsFlat[$key]['total_qty'] += $item->quantity;
                     $atkItemsFlat[$key]['request_count'] += 1;
                     $atkItemsFlat[$key]['dept_quantities'][$dept] = ($atkItemsFlat[$key]['dept_quantities'][$dept] ?? 0) + $item->quantity;
-                    $atkItemsFlat[$key]['dept_breakdowns'][$dept][] = $deptLabel;
-                    $atkItemsFlat[$key]['dept_display'][$dept] = implode(', ', $atkItemsFlat[$key]['dept_breakdowns'][$dept]);
+                    
+                    if (!in_array($deptLabel, $atkItemsFlat[$key]['dept_breakdowns'][$dept] ?? [])) {
+                        $atkItemsFlat[$key]['dept_breakdowns'][$dept][] = $deptLabel;
+                        $atkItemsFlat[$key]['dept_display'][$dept] = implode(', ', $atkItemsFlat[$key]['dept_breakdowns'][$dept]);
+                    }
                 }
             }
         }

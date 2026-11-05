@@ -141,9 +141,11 @@
                                 <div class="form-group mt-3">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <label for="input-qty" class="font-weight-600 mb-0">3. Jumlah (Qty)</label>
-                                        <span class="small font-weight-bold text-muted">
-                                            Satuan: <span id="standard-unit-badge" class="badge badge-primary px-2.5 py-1 font-weight-bold">-</span>
-                                        </span>
+                                        <div class="d-flex align-items-center">
+                                            <span class="small font-weight-bold text-muted mr-1">Satuan:</span>
+                                            <span id="standard-unit-badge" class="badge badge-primary px-2.5 py-1 font-weight-bold">-</span>
+                                            <select id="standard-unit-select" class="form-control form-control-sm rounded-pill font-weight-bold text-primary d-none" style="width: auto; height: 28px; padding: 2px 10px; font-size: 0.85rem;"></select>
+                                        </div>
                                     </div>
                                     <div class="input-group" style="max-width: 160px;">
                                         <div class="input-group-prepend">
@@ -444,14 +446,42 @@
             optionsContainer.innerHTML = '';
             
             const unitBadge = document.getElementById('standard-unit-badge');
+            const unitSelect = document.getElementById('standard-unit-select');
             if (!itemName) {
-                if (unitBadge) unitBadge.textContent = '-';
+                if (unitBadge) {
+                    unitBadge.classList.remove('d-none');
+                    unitBadge.textContent = '-';
+                }
+                if (unitSelect) unitSelect.classList.add('d-none');
                 return;
             }
             
             const item = currentItems.find(i => i.name === itemName);
-            if (unitBadge) {
-                unitBadge.textContent = item && item.unit ? item.unit : 'Pcs';
+            if (item && item.unit) {
+                const units = item.unit.split(/[,/]/).map(u => u.trim()).filter(Boolean);
+                if (units.length > 1) {
+                    if (unitBadge) unitBadge.classList.add('d-none');
+                    if (unitSelect) {
+                        unitSelect.classList.remove('d-none');
+                        unitSelect.innerHTML = '';
+                        units.forEach(u => {
+                            const opt = document.createElement('option');
+                            opt.value = u;
+                            opt.textContent = u;
+                            unitSelect.appendChild(opt);
+                        });
+                    }
+                } else {
+                    if (unitSelect) unitSelect.classList.add('d-none');
+                    if (unitBadge) {
+                        unitBadge.classList.remove('d-none');
+                        unitBadge.textContent = units[0] || 'Pcs';
+                    }
+                }
+            } else if (unitBadge) {
+                unitBadge.classList.remove('d-none');
+                unitBadge.textContent = 'Pcs';
+                if (unitSelect) unitSelect.classList.add('d-none');
             }
             if (item && item.options && item.options.length > 0) {
                 const label = document.createElement('label');
@@ -534,7 +564,14 @@
             
             const qty = parseInt(document.getElementById('input-qty').value) || 1;
             const item = currentItems.find(i => i.name === itemName);
-            const unit = item ? item.unit : 'Pcs';
+            let unit = 'Pcs';
+            const unitSelect = document.getElementById('standard-unit-select');
+            if (unitSelect && !unitSelect.classList.contains('d-none') && unitSelect.value) {
+                unit = unitSelect.value;
+            } else if (item && item.unit) {
+                const units = item.unit.split(/[,/]/).map(u => u.trim()).filter(Boolean);
+                unit = units[0] || 'Pcs';
+            }
             
             // Get selected options
             const options = [];
