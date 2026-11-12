@@ -513,6 +513,20 @@
 <section class="content">
     <div class="container-fluid">
 
+        @if(isset($errors) && $errors->any())
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="border-radius: 0.75rem;">
+                <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Gagal menyimpan perubahan:</strong>
+                <ul class="mb-0 mt-1 pl-3 small">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
         {{-- KPI Cards Per Plant (Clickable untuk Filter Cepat Kondisi) --}}
         <div class="row">
             <div class="col-md-3 col-sm-6 col-12">
@@ -805,7 +819,7 @@
                                 <th class="text-right">Qty</th>
                                 <th class="text-right">Harga Satuan</th>
                                 <th class="text-right">Total Nilai (Rp)</th>
-                                <th class="text-center" style="width: 70px;">Aksi</th>
+                                <th class="text-center" style="width: 105px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -900,6 +914,12 @@
                                                     onclick="openEditAssetModal({{ json_encode($asset) }})"
                                                     title="Edit Data & Pindah Ruangan">
                                                 <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-outline-info"
+                                                    onclick="openMutateModal({{ json_encode($asset) }})"
+                                                    title="Pindah / Mutasi Lokasi Aset">
+                                                <i class="fas fa-exchange-alt"></i>
                                             </button>
                                         </div>
                                     </td>
@@ -1035,7 +1055,7 @@
                                 Ruangan / Sub-Area (Lampiran C)
                             </label>
                             <select name="location_id" class="form-control custom-select">
-                                <option value="">-- Pilih Ruangan / Area --</option>
+                                <option value="">-- Tanpa Ruangan / Area Umum --</option>
                                 @foreach($locations as $loc)
                                     <option value="{{ $loc->id }}">
                                         {{ $loc->room_name }}
@@ -1410,7 +1430,7 @@
                     <div class="col-md-6 col-12 mb-3">
                         <label class="form-label font-weight-bold">Ruangan / Sub-Area (Lampiran C)</label>
                         <select name="location_id" id="editLocation" class="form-control">
-                            <option value="">-- Pilih Ruangan / Area --</option>
+                            <option value="">-- Tanpa Ruangan / Area Umum --</option>
                             @foreach($locations as $loc)
                                 <option value="{{ $loc->id }}">{{ $loc->room_name }}</option>
                             @endforeach
@@ -1470,6 +1490,8 @@
         </form>
     </div>
 </div>
+
+@include('assets.partials.mutate-modal', ['mutateLocations' => $allLocations])
 @endsection
 
 @push('scripts')

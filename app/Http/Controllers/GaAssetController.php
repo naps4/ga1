@@ -129,7 +129,7 @@ class GaAssetController extends Controller
     {
         $plant = Plant::where('code', $plantCode)->firstOrFail();
 
-        $query = Asset::with(['department', 'location', 'category', 'originPlant'])
+        $query = Asset::with(['originPlant', 'currentPlant', 'department', 'location', 'category'])
             ->active()
             ->where('current_plant_code', $plantCode);
 
@@ -198,6 +198,7 @@ class GaAssetController extends Controller
 
         // Data master untuk filter dropdown dan modal
         $locations = Location::where('plant_code', $plantCode)->orderBy('room_name')->get();
+        $allLocations = Location::with('plant')->orderBy('plant_code')->orderBy('room_name')->get();
         $categories = AssetCategory::orderBy('code')->get();
         $departments = Department::orderBy('name')->get();
         $plants = Plant::all();
@@ -205,7 +206,7 @@ class GaAssetController extends Controller
         return view('assets.plant', compact(
             'plant', 'assets', 'departmentTabs', 'selectedDeptId',
             'totalItems', 'totalValuation', 'baikCount', 'rusakCount', 'percentBaik',
-            'search', 'locationId', 'categoryCode', 'condition', 'source', 'locations', 'categories', 'departments', 'plants', 'perPage'
+            'search', 'locationId', 'categoryCode', 'condition', 'source', 'locations', 'allLocations', 'categories', 'departments', 'plants', 'perPage'
         ));
     }
 
@@ -281,24 +282,13 @@ class GaAssetController extends Controller
         $lastUpdated = now()->translatedFormat('d F Y');
 
         if ($selectedLocation) {
-            // Query Agregasi SUM per Nama & Kode Kategori
-            $aggregatedItems = DB::table('assets as a')
-                ->join('asset_categories as c', 'a.category_code', '=', 'c.code')
-                ->selectRaw('
-                    a.item_name as jenis_aset,
-                    c.code as kode,
-                    SUM(a.qty) as jumlah,
-                    MAX(a.updated_at) as last_updated
-                ')
-                ->where('a.location_id', $selectedLocation->id)
-                ->where('a.status', 'AKTIF')
-                ->groupBy('a.item_name', 'c.code')
-                ->orderBy('c.code', 'asc')
-                ->orderBy('a.item_name', 'asc')
-                ->get();
+            $aggregatedItems = $this->getLampiranCAggregatedItems($selectedLocation, true);
 
-            // Ambil tanggal update terakhir dari aset pada ruangan ini
-            $latestAssetDate = Asset::where('location_id', $selectedLocation->id)->max('updated_at');
+            // Ambil tanggal update terakhir dari aset aktif pada ruangan dan plant ini
+            $latestAssetDate = Asset::where('location_id', $selectedLocation->id)
+                ->where('current_plant_code', $selectedLocation->plant_code)
+                ->active()
+                ->max('updated_at');
             if ($latestAssetDate) {
                 $lastUpdated = \Carbon\Carbon::parse($latestAssetDate)->translatedFormat('d F Y');
             }
@@ -313,21 +303,12 @@ class GaAssetController extends Controller
     {
         $location = Location::with('plant', 'department')->findOrFail($locationId);
 
-        $aggregatedItems = DB::table('assets as a')
-            ->join('asset_categories as c', 'a.category_code', '=', 'c.code')
-            ->selectRaw('
-                a.item_name as jenis_aset,
-                c.code as kode,
-                SUM(a.qty) as jumlah
-            ')
-            ->where('a.location_id', $location->id)
-            ->where('a.status', 'AKTIF')
-            ->groupBy('a.item_name', 'c.code')
-            ->orderBy('c.code', 'asc')
-            ->orderBy('a.item_name', 'asc')
-            ->get();
+        $aggregatedItems = $this->getLampiranCAggregatedItems($location);
 
-        $latestAssetDate = Asset::where('location_id', $location->id)->max('updated_at');
+        $latestAssetDate = Asset::where('location_id', $location->id)
+            ->where('current_plant_code', $location->plant_code)
+            ->active()
+            ->max('updated_at');
         $lastUpdated = $latestAssetDate ? \Carbon\Carbon::parse($latestAssetDate)->translatedFormat('d F Y') : now()->translatedFormat('d F Y');
 
         return view('assets.lampiran-c-print', compact('location', 'aggregatedItems', 'lastUpdated'));
@@ -339,6 +320,7 @@ class GaAssetController extends Controller
 
         $assets = Asset::with(['originPlant', 'currentPlant', 'department', 'location', 'category'])
             ->where('location_id', $location->id)
+            ->where('current_plant_code', $location->plant_code)
             ->active()
             ->orderBy('asset_code', 'asc')
             ->get();
@@ -350,19 +332,7 @@ class GaAssetController extends Controller
     {
         $location = Location::with('plant', 'department')->findOrFail($locationId);
 
-        $aggregatedItems = DB::table('assets as a')
-            ->join('asset_categories as c', 'a.category_code', '=', 'c.code')
-            ->selectRaw('
-                a.item_name as jenis_aset,
-                c.code as kode,
-                SUM(a.qty) as jumlah
-            ')
-            ->where('a.location_id', $location->id)
-            ->where('a.status', 'AKTIF')
-            ->groupBy('a.item_name', 'c.code')
-            ->orderBy('c.code', 'asc')
-            ->orderBy('a.item_name', 'asc')
-            ->get();
+        $aggregatedItems = $this->getLampiranCAggregatedItems($location);
 
         return response()->json([
             'success'       => true,
@@ -370,6 +340,28 @@ class GaAssetController extends Controller
             'location'      => $location,
             'items'         => $aggregatedItems,
         ]);
+    }
+
+    /**
+     * Query agregasi item aktif per ruangan & plant untuk audit Lampiran C.
+     */
+    protected function getLampiranCAggregatedItems(Location $location, bool $includeLastUpdated = false)
+    {
+        $selectColumns = 'a.item_name as jenis_aset, c.code as kode, SUM(a.qty) as jumlah';
+        if ($includeLastUpdated) {
+            $selectColumns .= ', MAX(a.updated_at) as last_updated';
+        }
+
+        return DB::table('assets as a')
+            ->join('asset_categories as c', 'a.category_code', '=', 'c.code')
+            ->selectRaw($selectColumns)
+            ->where('a.location_id', $location->id)
+            ->where('a.current_plant_code', $location->plant_code)
+            ->where('a.status', 'AKTIF')
+            ->groupBy('a.item_name', 'c.code')
+            ->orderBy('c.code', 'asc')
+            ->orderBy('a.item_name', 'asc')
+            ->get();
     }
 
     // ── Endpoint 4: Core Actions (Create, Update, Mutate, Dispose) ───────────
@@ -454,13 +446,24 @@ class GaAssetController extends Controller
             'mutation_date'      => 'nullable|date',
         ]);
 
-        $mutation = $this->assetService->mutateAsset($asset, $validated);
-
-        if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => "Aset {$asset->asset_code} berhasil dimutasikan ke Plant {$validated['target_plant_code']}.", 'data' => $mutation]);
+        if ($validated['target_plant_code'] === '00') {
+            $validated['target_location_id'] = null;
         }
 
-        return back()->with('success', "Aset {$asset->asset_code} berhasil dipindahkan ke Plant {$validated['target_plant_code']}.");
+        $mutation = $this->assetService->mutateAsset($asset, $validated);
+        $mutation->load(['toPlant', 'toLocation']);
+        $targetPlantName = $mutation->toPlant->name ?? "Plant {$mutation->to_plant_code}";
+        $targetRoomText = $mutation->toLocation ? " (Ruangan: {$mutation->toLocation->room_name})" : '';
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Aset {$asset->asset_code} berhasil dimutasikan ke {$targetPlantName}{$targetRoomText}.",
+                'data'    => $mutation,
+            ]);
+        }
+
+        return back()->with('success', "Aset {$asset->asset_code} berhasil dipindahkan ke {$targetPlantName}{$targetRoomText}.");
     }
 
     public function updateCondition(Request $request, Asset $asset)

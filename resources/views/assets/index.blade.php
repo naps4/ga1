@@ -360,6 +360,20 @@
             </div>
         @endif
 
+        @if(isset($errors) && $errors->any())
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="border-radius: 0.75rem;">
+                <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Gagal menyimpan perubahan:</strong>
+                <ul class="mb-0 mt-1 pl-3 small">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
         {{-- KPI Cards --}}
         <div class="row">
             <div class="col-md-4 col-sm-6 col-12">
@@ -547,6 +561,11 @@
                                             @else
                                                 <span class="badge badge-secondary font-weight-bold">Mobile</span>
                                             @endif
+                                        @endif
+                                        @if($asset->location)
+                                            <div class="small text-muted mt-1" style="line-height: 1.2;">
+                                                <i class="fas fa-map-pin mr-1 text-secondary"></i>{{ $asset->location->room_name }}
+                                            </div>
                                         @endif
                                     </td>
                                     <td class="text-center cell-single-line">
@@ -918,50 +937,7 @@
     </div>
 </div>
 
-{{-- MODAL MUTASI ASET --}}
-<div class="modal fade" id="modalMutateAsset" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <form id="formMutateAsset" method="POST" class="modal-content border-0 shadow-lg" style="border-radius: 1rem;" autocomplete="off">
-            @csrf
-            <div class="modal-header bg-info text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
-                <h5 class="modal-title font-weight-bold"><i class="fas fa-exchange-alt mr-2"></i> Mutasi Lokasi Aset</h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="alert alert-light border mb-3">
-                    <strong id="mutateAssetName" class="d-block text-dark">Nama Aset</strong>
-                    <code id="mutateAssetCode" class="text-primary font-weight-bold">KODE ASET</code>
-                    <div class="small text-muted mt-1">Stiker kode aset fisik tidak akan diubah selama mutasi.</div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label font-weight-bold">Plant Tujuan <span class="text-danger">*</span></label>
-                    <select name="target_plant_code" class="form-control" required>
-                        @foreach($plants as $p)
-                            <option value="{{ $p->code }}">{{ $p->name }} ({{ $p->code }})</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label font-weight-bold">Nama PIC / Penanggung Jawab <span class="text-danger">*</span></label>
-                    <input type="text" name="pic_name" class="form-control" value="{{ auth()->user()->name }}" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label font-weight-bold">Alasan Pemindahan <span class="text-danger">*</span></label>
-                    <textarea name="reason" class="form-control" rows="2" placeholder="Contoh: Kebutuhan ekspansi fasilitas, mutasi staf..." required></textarea>
-                </div>
-            </div>
-            <div class="modal-footer bg-light" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
-                <button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Batal</button>
-                <button type="submit" class="btn btn-info rounded-pill px-4"><i class="fas fa-check mr-1"></i> Eksekusi Mutasi</button>
-            </div>
-        </form>
-    </div>
-</div>
+@include('assets.partials.mutate-modal', ['mutateLocations' => $locations])
 
 {{-- MODAL UPDATE KONDISI --}}
 <div class="modal fade" id="modalConditionAsset" tabindex="-1" role="dialog" aria-hidden="true">
@@ -1240,11 +1216,15 @@
                     <div class="col-md-3 col-12 mb-3">
                         <label class="form-label font-weight-bold">Ruangan / Sub-Area</label>
                         <select name="location_id" id="editMasterLocation" class="form-control">
-                            <option value="">-- Pilih Ruangan / Area --</option>
-                            @foreach($locations as $loc)
-                                <option value="{{ $loc->id }}" data-plant="{{ $loc->plant_code }}">
-                                    {{ $loc->room_name }} ({{ $loc->plant->name ?? 'Plant ' . $loc->plant_code }})
-                                </option>
+                            <option value="">-- Tanpa Ruangan / Area Mobile --</option>
+                            @foreach($locations->groupBy('plant_code') as $pCode => $plantLocs)
+                                <optgroup label="{{ $plantLocs->first()->plant->name ?? 'Plant ' . $pCode }} ({{ $pCode }})">
+                                    @foreach($plantLocs as $loc)
+                                        <option value="{{ $loc->id }}" data-plant="{{ $loc->plant_code }}">
+                                            {{ $loc->room_name }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>
@@ -1350,20 +1330,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const plantSelect = document.getElementById('modalPlantSelect');
     const locSelect = document.getElementById('modalLocationSelect');
     if (plantSelect && locSelect) {
+        const allCreateLocations = Array.from(locSelect.querySelectorAll('option'))
+            .filter(opt => opt.getAttribute('data-plant'))
+            .map(opt => ({
+                value: opt.value,
+                text: opt.textContent.trim(),
+                plant: opt.getAttribute('data-plant')
+            }));
+
         function filterLocations() {
             const selectedPlant = plantSelect.value;
-            const options = locSelect.querySelectorAll('option');
-            options.forEach(opt => {
-                const plant = opt.getAttribute('data-plant');
-                if (!plant || plant === selectedPlant) {
-                    opt.style.display = '';
-                } else {
-                    opt.style.display = 'none';
-                    if (opt.selected) {
-                        opt.selected = false;
-                    }
-                }
+            const currentVal = locSelect.value;
+            locSelect.innerHTML = '';
+
+            if (String(selectedPlant) === '00') {
+                const mobileOpt = document.createElement('option');
+                mobileOpt.value = '';
+                mobileOpt.textContent = '-- Area Mobile / Lintas Plant (Tanpa Ruangan) --';
+                locSelect.appendChild(mobileOpt);
+                locSelect.value = '';
+                locSelect.disabled = true;
+                return;
+            }
+
+            locSelect.disabled = false;
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = '-- Pilih Ruangan / Area --';
+            locSelect.appendChild(defaultOpt);
+
+            const filtered = allCreateLocations.filter(loc => String(loc.plant) === String(selectedPlant));
+            filtered.forEach(loc => {
+                const opt = document.createElement('option');
+                opt.value = loc.value;
+                opt.textContent = loc.text;
+                opt.setAttribute('data-plant', loc.plant);
+                locSelect.appendChild(opt);
             });
+
+            locSelect.value = filtered.some(loc => loc.value === currentVal) ? currentVal : '';
         }
         plantSelect.addEventListener('change', filterLocations);
         filterLocations();
@@ -1706,13 +1711,6 @@ function openEditModal(asset) {
     document.getElementById('editMasterUsefulLife').value = asset.useful_life_years || 4;
     document.getElementById('editMasterSpecification').value = asset.specification || '';
     $('#modalEditAsset').modal('show');
-}
-
-function openMutateModal(asset) {
-    document.getElementById('formMutateAsset').action = '/assets/' + asset.id + '/mutate';
-    document.getElementById('mutateAssetName').innerText = asset.item_name;
-    document.getElementById('mutateAssetCode').innerText = asset.asset_code;
-    $('#modalMutateAsset').modal('show');
 }
 
 function openConditionModal(asset) {

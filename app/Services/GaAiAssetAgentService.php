@@ -81,6 +81,7 @@ PROMPT;
                         'asset_code'         => ['type' => 'string', 'description' => 'Kode aset asli (misal: HII-MK.1-RnD-0724-01.02)'],
                         'target_plant_code'  => ['type' => 'string', 'enum' => ['01', '02', '00']],
                         'target_location_id' => ['type' => 'integer'],
+                        'target_dept_id'     => ['type' => 'integer'],
                         'pic_name'           => ['type' => 'string'],
                         'reason'             => ['type' => 'string'],
                     ],
@@ -227,16 +228,19 @@ PROMPT;
         $mutation = $this->assetService->mutateAsset($asset, [
             'target_plant_code'  => $args['target_plant_code'],
             'target_location_id' => $args['target_location_id'] ?? null,
+            'target_dept_id'     => $args['target_dept_id'] ?? null,
             'pic_name'           => $args['pic_name'],
             'reason'             => $args['reason'],
         ]);
+        $mutation->load(['toLocation']);
 
         return [
             'success'           => true,
-            'message'           => "Aset {$asset->asset_code} ({$asset->item_name}) berhasil dimutasikan ke Plant {$args['target_plant_code']}.",
+            'message'           => "Aset {$asset->asset_code} ({$asset->item_name}) berhasil dimutasikan ke Plant {$mutation->to_plant_code}" . ($mutation->toLocation ? " ({$mutation->toLocation->room_name})" : '') . '.',
             'asset_code'        => $asset->asset_code,
             'from_plant'        => $mutation->from_plant_code,
             'to_plant'          => $mutation->to_plant_code,
+            'to_location'       => $mutation->toLocation->room_name ?? null,
             'mutation_id'       => $mutation->id,
         ];
     }
@@ -276,13 +280,17 @@ PROMPT;
                 SUM(a.qty) as jumlah
             ')
             ->where('a.location_id', $location->id)
+            ->where('a.current_plant_code', $location->plant_code)
             ->where('a.status', 'AKTIF')
             ->groupBy('a.item_name', 'c.code')
             ->orderBy('c.code', 'asc')
             ->orderBy('a.item_name', 'asc')
             ->get();
 
-        $latestDate = Asset::where('location_id', $location->id)->max('updated_at');
+        $latestDate = Asset::where('location_id', $location->id)
+            ->where('current_plant_code', $location->plant_code)
+            ->active()
+            ->max('updated_at');
 
         return [
             'document_name'    => 'FORM DAFTAR ASET',

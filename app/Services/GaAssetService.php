@@ -9,6 +9,7 @@ use App\Models\Department;
 use App\Models\Location;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class GaAssetService
 {
@@ -53,12 +54,17 @@ class GaAssetService
         $dept = Department::findOrFail($data['department_id']);
         $cat = AssetCategory::findOrFail($data['category_code']);
         $plantCode = $data['current_plant_code'] ?? '01';
+        $locationId = $this->resolveValidatedLocationId(
+            !empty($data['location_id']) ? (int) $data['location_id'] : null,
+            $plantCode,
+            'location_id'
+        );
         $purchaseDate = $data['purchase_date'] ?? now()->format('Y-m-d');
         $usefulLife = (int) ($data['useful_life_years'] ?? $cat->default_useful_life_years ?? 4);
 
         $createdAssets = [];
 
-        DB::transaction(function () use ($data, $trackingMode, $qty, $unitPrice, $itemAbbr, $dept, $cat, $plantCode, $purchaseDate, $usefulLife, &$createdAssets) {
+        DB::transaction(function () use ($data, $trackingMode, $qty, $unitPrice, $itemAbbr, $dept, $cat, $plantCode, $locationId, $purchaseDate, $usefulLife, &$createdAssets) {
             if ($trackingMode === 'INDIVIDUAL' && $qty > 1) {
                 // Loop buat baris terpisah masing-masing qty = 1
                 $dateObj = Carbon::parse($purchaseDate);
@@ -88,7 +94,7 @@ class GaAssetService
                         'origin_plant_code'  => $plantCode,
                         'current_plant_code' => $plantCode,
                         'department_id'      => $dept->id,
-                        'location_id'        => $data['location_id'] ?? null,
+                        'location_id'        => $locationId,
                         'category_code'      => $cat->code,
                         'acquisition_source' => $data['acquisition_source'] ?? 'RAB',
                         'purchase_date'      => $purchaseDate,
@@ -130,7 +136,7 @@ class GaAssetService
                     'origin_plant_code'  => $plantCode,
                     'current_plant_code' => $plantCode,
                     'department_id'      => $dept->id,
-                    'location_id'        => $data['location_id'] ?? null,
+                    'location_id'        => $locationId,
                     'category_code'      => $cat->code,
                     'acquisition_source' => $data['acquisition_source'] ?? 'RAB',
                     'purchase_date'      => $purchaseDate,
@@ -183,56 +189,114 @@ class GaAssetService
             $updateData['purchase_date'] = $data['purchase_date'];
         }
 
-        if (!empty($data['department_id'])) {
-            $updateData['department_id'] = $data['department_id'];
-        }
-        if (!empty($data['location_id'])) {
-            $updateData['location_id'] = $data['location_id'];
+        DB::transaction(function () use ($asset, &$updateData, $data) {
+            $targetDeptId = !empty($data['department_id']) ? (int) $data['department_id'] : $asset->department_id;
+            if (!empty($data['department_id'])) {
+                $updateData['department_id'] = $targetDeptId;
+            }
 
-            // Sinkronisasi otomatis Lokasi Plant fisik & catat mutasi jika ruangan berubah
-            $newLoc = Location::find($data['location_id']);
-            if ($newLoc && !empty($newLoc->plant_code)) {
-                $newPlantCode = $newLoc->plant_code;
-                $oldPlantCode = $asset->current_plant_code;
-                $oldLocId = $asset->location_id;
-
-                if ($newPlantCode !== $oldPlantCode || (int)$oldLocId !== (int)$newLoc->id) {
-                    $updateData['current_plant_code'] = $newPlantCode;
-
-                    AssetMutation::create([
-                        'asset_id'          => $asset->id,
-                        'from_plant_code'   => $oldPlantCode,
-                        'to_plant_code'     => $newPlantCode,
-                        'from_location_id'  => $oldLocId,
-                        'to_location_id'    => $newLoc->id,
-                        'from_dept_id'      => $asset->department_id,
-                        'to_dept_id'        => $data['department_id'] ?? $asset->department_id,
-                        'mutation_date'     => now()->format('Y-m-d'),
-                        'pic_name'          => auth()->user()->name ?? 'GA Officer',
-                        'reason'            => ($newPlantCode !== $oldPlantCode) ? 'Perpindahan Lintas Plant via Edit Aset' : 'Perpindahan Ruangan via Edit Aset',
-                        'notes'             => 'Pindah ruangan/plant otomatis dicatat dari form Edit Data Aset',
-                    ]);
+            if (!empty($data['current_plant_code'])) {
+                $updateData['current_plant_code'] = $data['current_plant_code'];
+                if ($data['current_plant_code'] === '00') {
+                    $updateData['location_id'] = null;
                 }
             }
-        }
-        if (!empty($data['current_plant_code'])) {
-            $updateData['current_plant_code'] = $data['current_plant_code'];
-        }
 
-        $asset->update($updateData);
+            if (array_key_exists('location_id', $data)) {
+                $requestedLocId = !empty($data['location_id']) ? (int) $data['location_id'] : null;
+                $targetPlantAfterEdit = $updateData['current_plant_code'] ?? $asset->current_plant_code;
+
+                if ($requestedLocId) {
+                    $newLoc = Location::find($requestedLocId);
+                    if ($newLoc && !empty($newLoc->plant_code)) {
+                        $newPlantCode = !empty($data['current_plant_code']) ? $data['current_plant_code'] : $newLoc->plant_code;
+                        if ($newPlantCode === '00') {
+                            $requestedLocId = null;
+                        } elseif ($newLoc->plant_code !== $newPlantCode) {
+                            throw ValidationException::withMessages([
+                                'location_id' => "Ruangan / sub-area yang dipilih tidak berada di Plant {$newPlantCode}.",
+                            ]);
+                        }
+
+                        $updateData['location_id'] = $requestedLocId;
+                        $oldPlantCode = $asset->current_plant_code;
+                        $oldLocId = $asset->location_id;
+
+                        if ($newPlantCode !== $oldPlantCode || (int) $oldLocId !== (int) $requestedLocId) {
+                            $updateData['current_plant_code'] = $newPlantCode;
+
+                            AssetMutation::create([
+                                'asset_id'          => $asset->id,
+                                'from_plant_code'   => $oldPlantCode,
+                                'to_plant_code'     => $newPlantCode,
+                                'from_location_id'  => $oldLocId,
+                                'to_location_id'    => $requestedLocId,
+                                'from_dept_id'      => $asset->department_id,
+                                'to_dept_id'        => $targetDeptId,
+                                'mutation_date'     => now()->format('Y-m-d'),
+                                'pic_name'          => auth()->user()->name ?? 'GA Officer',
+                                'reason'            => ($newPlantCode !== $oldPlantCode) ? 'Perpindahan Lintas Plant via Edit Aset' : 'Perpindahan Ruangan via Edit Aset',
+                                'notes'             => 'Pindah ruangan/plant otomatis dicatat dari form Edit Data Aset',
+                            ]);
+                        }
+                    }
+                } else {
+                    $updateData['location_id'] = null;
+                    if ($asset->location_id !== null || $targetPlantAfterEdit !== $asset->current_plant_code) {
+                        AssetMutation::create([
+                            'asset_id'          => $asset->id,
+                            'from_plant_code'   => $asset->current_plant_code,
+                            'to_plant_code'     => $targetPlantAfterEdit,
+                            'from_location_id'  => $asset->location_id,
+                            'to_location_id'    => null,
+                            'from_dept_id'      => $asset->department_id,
+                            'to_dept_id'        => $targetDeptId,
+                            'mutation_date'     => now()->format('Y-m-d'),
+                            'pic_name'          => auth()->user()->name ?? 'GA Officer',
+                            'reason'            => 'Pengosongan Ruangan via Edit Aset',
+                            'notes'             => 'Ruangan dikosongkan dari form Edit Data Aset',
+                        ]);
+                    }
+                }
+            }
+
+            $asset->update($updateData);
+        });
 
         return $asset->fresh();
     }
 
     /**
-     * Flow MUTATE (Pindah Plant / Ruangan)
+     * Flow MUTATE (Pindah Plant / Ruangan / Departemen)
      * Catat log mutasi dan perbarui lokasi tanpa mengubah asset_code!
      */
     public function mutateAsset(Asset $asset, array $data): AssetMutation
     {
         $targetPlant = $data['target_plant_code'] ?? $asset->current_plant_code;
-        $targetLocId = $data['target_location_id'] ?? $asset->location_id;
-        $targetDeptId = $data['target_dept_id'] ?? $asset->department_id;
+        $targetDeptId = !empty($data['target_dept_id']) ? (int) $data['target_dept_id'] : $asset->department_id;
+
+        if ($targetPlant === '00') {
+            $targetLocId = null;
+        } elseif ($targetPlant !== $asset->current_plant_code) {
+            // Saat berpindah Plant, jangan pernah mewarisi ruangan dari Plant lama jika target_location_id kosong
+            $rawLocId = !empty($data['target_location_id']) ? (int) $data['target_location_id'] : null;
+            $targetLocId = $this->resolveValidatedLocationId($rawLocId, $targetPlant, 'target_location_id');
+        } else {
+            $rawLocId = array_key_exists('target_location_id', $data)
+                ? (!empty($data['target_location_id']) ? (int) $data['target_location_id'] : null)
+                : $asset->location_id;
+            $targetLocId = $this->resolveValidatedLocationId($rawLocId ? (int) $rawLocId : null, $targetPlant, 'target_location_id');
+        }
+
+        $plantChanged = $targetPlant !== $asset->current_plant_code;
+        $locationChanged = $targetLocId !== ($asset->location_id !== null ? (int) $asset->location_id : null);
+        $deptChanged = ($targetDeptId !== null ? (int) $targetDeptId : null) !== ($asset->department_id !== null ? (int) $asset->department_id : null);
+
+        if (!$plantChanged && !$locationChanged && !$deptChanged) {
+            throw ValidationException::withMessages([
+                'target_plant_code' => 'Lokasi plant, ruangan, dan departemen tujuan masih sama dengan posisi aset saat ini.',
+            ]);
+        }
 
         return DB::transaction(function () use ($asset, $data, $targetPlant, $targetLocId, $targetDeptId) {
             $mutation = AssetMutation::create([
@@ -258,6 +322,26 @@ class GaAssetService
 
             return $mutation;
         });
+    }
+
+    /**
+     * Validasi bahwa ruangan tujuan berada di Plant target.
+     * Plant '00' (Umum / Mobile) tidak memiliki ruangan tetap sehingga selalu null.
+     */
+    protected function resolveValidatedLocationId(?int $locationId, string $plantCode, string $errorKey = 'location_id'): ?int
+    {
+        if ($plantCode === '00' || empty($locationId)) {
+            return null;
+        }
+
+        $location = Location::find($locationId);
+        if (!$location || $location->plant_code !== $plantCode) {
+            throw ValidationException::withMessages([
+                $errorKey => "Ruangan / sub-area yang dipilih tidak terdaftar di Plant {$plantCode}.",
+            ]);
+        }
+
+        return (int) $location->id;
     }
 
     /**
