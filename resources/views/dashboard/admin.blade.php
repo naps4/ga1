@@ -387,11 +387,11 @@
                 </div>
             </div>
 
-            {{-- Update Permintaan ATK / Rumah Tangga Terbaru --}}
+            {{-- Update Permintaan ATK / Sanitasi Non Produksi (SNP) Terbaru --}}
             <div class="col-lg-6 mb-3">
                 <div class="card shadow-sm border-0 rounded-4 h-100">
                     <div class="card-header bg-white border-bottom border-light d-flex justify-content-between align-items-center py-3">
-                        <h3 class="card-title text-primary font-weight-bold mb-0"><i class="fas fa-boxes mr-1"></i> Permintaan ATK / Rumah Tangga</h3>
+                        <h3 class="card-title text-primary font-weight-bold mb-0"><i class="fas fa-boxes mr-1"></i> Permintaan ATK / Sanitasi Non Produksi (SNP)</h3>
                         <a href="{{ route('atk-requests.index') }}" class="btn btn-outline-primary btn-xs rounded-pill px-3">Semua</a>
                     </div>
                     <div class="card-body p-0">

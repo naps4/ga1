@@ -111,7 +111,7 @@
                             <select name="request_type" class="form-control form-control-sm" style="border-radius: 0.5rem;">
                                 <option value="all" {{ request('request_type') == 'all' ? 'selected' : '' }}>Semua Tipe</option>
                                 <option value="ATK" {{ request('request_type') == 'ATK' ? 'selected' : '' }}>ATK</option>
-                                <option value="Rumah Tangga" {{ request('request_type') == 'Rumah Tangga' ? 'selected' : '' }}>Rumah Tangga</option>
+                                <option value="Rumah Tangga" {{ request('request_type') == 'Rumah Tangga' ? 'selected' : '' }}>Sanitasi Non Produksi (SNP)</option>
                             </select>
                         </div>
                         <div class="col-md-2 col-sm-6 mb-2">
@@ -167,7 +167,7 @@
                                         <i class="fas fa-pencil-alt text-primary mr-2"></i> Rekap Total ATK
                                     </a>
                                     <a class="dropdown-item py-1.5" href="javascript:void(0)" onclick="exportPdf('aggregation', 'Rumah Tangga')">
-                                        <i class="fas fa-home text-warning mr-2"></i> Rekap Total Rumah Tangga
+                                        <i class="fas fa-pump-soap text-warning mr-2"></i> Rekap Total Sanitasi Non Produksi (SNP)
                                     </a>
                                     <a class="dropdown-item py-1.5" href="javascript:void(0)" onclick="exportPdf('aggregation', 'all')">
                                         <i class="fas fa-boxes text-info mr-2"></i> Rekap Total Keseluruhan
@@ -179,7 +179,7 @@
                                         <i class="fas fa-building text-primary mr-2"></i> Matriks Departemen ATK
                                     </a>
                                     <a class="dropdown-item py-1.5" href="javascript:void(0)" onclick="exportPdf('department', 'Rumah Tangga')">
-                                        <i class="fas fa-warehouse text-warning mr-2"></i> Matriks Dept Rumah Tangga
+                                        <i class="fas fa-warehouse text-warning mr-2"></i> Matriks Dept Sanitasi Non Produksi (SNP)
                                     </a>
 
                                     <div class="dropdown-divider my-1"></div>
@@ -235,7 +235,7 @@
                             <td>
                                 @if(($req->request_type ?? 'ATK') === 'Rumah Tangga')
                                     <span class="badge badge-warning px-2 py-1 text-dark" style="border-radius: 0.5rem; font-size: 0.75rem;">
-                                        <i class="fas fa-home mr-1"></i> Rumah Tangga
+                                        <i class="fas fa-pump-soap mr-1"></i> Sanitasi Non Produksi (SNP)
                                     </span>
                                 @else
                                     <span class="badge badge-primary px-2 py-1" style="border-radius: 0.5rem; font-size: 0.75rem;">
@@ -468,7 +468,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link font-weight-bold shadow-sm" id="household-total-tab" data-toggle="pill" href="#pills-household-total" role="tab" aria-controls="pills-household-total" aria-selected="false" style="border-radius: 0.5rem;">
-                            <i class="fas fa-home mr-1"></i> Rumah Tangga (RT)
+                            <i class="fas fa-pump-soap mr-1"></i> Sanitasi Non Produksi (SNP)
                             <span class="badge badge-warning text-dark ml-1">{{ $householdGrandTotalQty ?? 0 }} Qty</span>
                         </a>
                     </li>
@@ -540,14 +540,14 @@
                         </div>
                     </div>
 
-                    {{-- Tab Rumah Tangga --}}
+                    {{-- Tab Sanitasi Non Produksi --}}
                     <div class="tab-pane fade" id="pills-household-total" role="tabpanel" aria-labelledby="household-total-tab">
                         <div class="table-responsive style-scroll" style="max-height: 420px;">
                             <table class="table table-bordered table-hover mb-0">
                                 <thead class="bg-warning text-white">
                                     <tr>
                                         <th style="width: 45px;" class="text-center">No</th>
-                                        <th>Nama Barang Rumah Tangga</th>
+                                        <th>Nama Barang Sanitasi Non Produksi</th>
                                         <th style="width: 110px;" class="text-center">Satuan</th>
                                         <th style="width: 140px;" class="text-center">Total Kebutuhan</th>
                                         <th style="width: 130px;" class="text-center">Frekuensi</th>
@@ -586,7 +586,7 @@
                                     @empty
                                         <tr>
                                             <td colspan="5" class="text-center py-4 text-muted">
-                                                Tidak ada data kebutuhan Rumah Tangga pada filter saat ini.
+                                                Tidak ada data kebutuhan Sanitasi Non Produksi pada filter saat ini.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -594,7 +594,7 @@
                                 @if(($householdGrandTotalQty ?? 0) > 0)
                                     <tfoot class="bg-warning text-dark font-weight-bold">
                                         <tr>
-                                            <td colspan="3" class="text-right">GRAND TOTAL KEBUTUHAN RUMAH TANGGA:</td>
+                                            <td colspan="3" class="text-right">GRAND TOTAL KEBUTUHAN SANITASI NON PRODUKSI:</td>
                                             <td class="text-center" style="font-size: 1.05rem;">{{ $householdGrandTotalQty }}</td>
                                             <td></td>
                                         </tr>
@@ -611,7 +611,7 @@
                         <i class="fas fa-file-pdf mr-1"></i> Cetak Rekap ATK
                     </button>
                     <button type="button" onclick="exportPdf('aggregation', 'Rumah Tangga')" class="btn btn-outline-warning text-dark btn-sm rounded-pill font-weight-bold">
-                        <i class="fas fa-file-pdf mr-1"></i> Cetak Rekap RT
+                        <i class="fas fa-file-pdf mr-1"></i> Cetak Rekap SNP
                     </button>
                 </div>
                 <div>
@@ -652,7 +652,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link font-weight-bold shadow-sm" id="household-dept-tab" data-toggle="pill" href="#pills-household-dept" role="tab" aria-controls="pills-household-dept" aria-selected="false" style="border-radius: 0.5rem;">
-                            <i class="fas fa-home mr-1"></i> Distribusi Rumah Tangga (RT) Per Divisi
+                            <i class="fas fa-pump-soap mr-1"></i> Distribusi Sanitasi Non Produksi (SNP) Per Divisi
                             <span class="badge badge-warning text-dark ml-1">{{ count($householdDeptList ?? []) }} Divisi</span>
                         </a>
                     </li>
@@ -756,7 +756,7 @@
                                 <thead class="bg-warning text-dark">
                                     <tr>
                                         <th style="width: 35px;" class="text-center" rowspan="2">No</th>
-                                        <th style="min-width: 180px;" rowspan="2">Nama Barang Rumah Tangga</th>
+                                        <th style="min-width: 180px;" rowspan="2">Nama Barang Sanitasi Non Produksi</th>
                                         <th style="width: 80px;" class="text-center" rowspan="2">Satuan</th>
                                         @if(count($householdDeptList ?? []) > 0)
                                             <th colspan="{{ count($householdDeptList) }}" class="text-center text-white bg-dark" style="background-color: #92400e !important; font-size: 0.8rem;">
@@ -818,7 +818,7 @@
                                     @empty
                                         <tr>
                                             <td colspan="{{ 3 + count($householdDeptList ?? []) + 1 }}" class="text-center py-4 text-muted">
-                                                Tidak ada data permintaan Rumah Tangga ditemukan.
+                                                Tidak ada data permintaan Sanitasi Non Produksi ditemukan.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -845,7 +845,7 @@
                         <i class="fas fa-file-pdf mr-1"></i> Cetak Matriks ATK (PDF)
                     </button>
                     <button type="button" onclick="exportPdf('department', 'Rumah Tangga')" class="btn btn-outline-warning text-dark btn-sm rounded-pill font-weight-bold">
-                        <i class="fas fa-file-pdf mr-1"></i> Cetak Matriks RT (PDF)
+                        <i class="fas fa-file-pdf mr-1"></i> Cetak Matriks SNP (PDF)
                     </button>
                 </div>
                 <div>

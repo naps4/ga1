@@ -130,7 +130,7 @@
     <div style="text-align: center; margin-top: 15px; margin-bottom: 15px;">
         <h5 style="margin: 0; font-weight: bold; font-size: 13px; text-decoration: underline; letter-spacing: 0.5px;">
             FORM PERMINTAAN
-            {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'KEBUTUHAN RUMAH TANGGA' : 'ATK (ALAT TULIS KANTOR)' }}
+            {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'KEBUTUHAN SANITASI NON PRODUKSI (SNP)' : 'ATK (ALAT TULIS KANTOR)' }}
         </h5>
     </div>
 

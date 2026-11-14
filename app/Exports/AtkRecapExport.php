@@ -167,7 +167,7 @@ class AtkSummarySheet implements FromCollection, WithHeadings, WithTitle, WithSt
 }
 
 // ════════════════════════════════════════════════════════════
-// Sheet 2: Rekap Total Rumah Tangga
+// Sheet 2: Rekap Total Sanitasi Non Produksi
 // ════════════════════════════════════════════════════════════
 class HouseholdSummarySheet implements FromCollection, WithHeadings, WithTitle, WithStyles, ShouldAutoSize
 {
@@ -177,7 +177,7 @@ class HouseholdSummarySheet implements FromCollection, WithHeadings, WithTitle, 
         protected $filterRequest
     ) {}
 
-    public function title(): string { return 'Rekap Total Rumah Tangga'; }
+    public function title(): string { return 'Rekap Sanitasi Non Produksi'; }
 
     public function headings(): array
     {
@@ -189,10 +189,10 @@ class HouseholdSummarySheet implements FromCollection, WithHeadings, WithTitle, 
         }
 
         return [
-            ['REKAPITULASI TOTAL KEBUTUHAN RUMAH TANGGA (RT)'],
+            ['REKAPITULASI TOTAL KEBUTUHAN SANITASI NON PRODUKSI (SNP)'],
             ['Periode: ' . $periode . '   |   Dicetak pada: ' . now()->translatedFormat('d F Y H:i')],
             [],
-            ['No', 'Kategori', 'Nama Barang Rumah Tangga', 'Satuan', 'Total Kebutuhan (Qty)', 'Frekuensi Pengajuan'],
+            ['No', 'Kategori', 'Nama Barang Sanitasi Non Produksi', 'Satuan', 'Total Kebutuhan (Qty)', 'Frekuensi Pengajuan'],
         ];
     }
 
@@ -226,7 +226,7 @@ class HouseholdSummarySheet implements FromCollection, WithHeadings, WithTitle, 
         // Grand Total row
         $rows->push([
             '',
-            'GRAND TOTAL KEBUTUHAN RUMAH TANGGA',
+            'GRAND TOTAL KEBUTUHAN SANITASI NON PRODUKSI',
             '',
             '',
             $this->grandTotalQty,
@@ -391,7 +391,7 @@ class AtkDepartmentSheet implements FromCollection, WithHeadings, WithTitle, Wit
 }
 
 // ════════════════════════════════════════════════════════════
-// Sheet 4: Distribusi Departemen Rumah Tangga
+// Sheet 4: Distribusi Departemen Sanitasi Non Produksi
 // ════════════════════════════════════════════════════════════
 class HouseholdDepartmentSheet implements FromCollection, WithHeadings, WithTitle, WithStyles, ShouldAutoSize
 {
@@ -403,11 +403,11 @@ class HouseholdDepartmentSheet implements FromCollection, WithHeadings, WithTitl
         protected $filterRequest
     ) {}
 
-    public function title(): string { return 'Distribusi Dept Rumah Tangga'; }
+    public function title(): string { return 'Distribusi Sanitasi Non Prod'; }
 
     public function headings(): array
     {
-        $headerCols = ['No', 'Kategori', 'Nama Barang Rumah Tangga', 'Satuan'];
+        $headerCols = ['No', 'Kategori', 'Nama Barang Sanitasi Non Produksi', 'Satuan'];
         foreach ($this->deptList as $dept) {
             $headerCols[] = $dept;
         }
@@ -420,7 +420,7 @@ class HouseholdDepartmentSheet implements FromCollection, WithHeadings, WithTitl
         }
 
         return [
-            ['MATRIKS DISTRIBUSI KEBUTUHAN RUMAH TANGGA (RT) PER DEPARTEMEN / DIVISI'],
+            ['MATRIKS DISTRIBUSI KEBUTUHAN SANITASI NON PRODUKSI (SNP) PER DEPARTEMEN / DIVISI'],
             ['Periode: ' . $periode . '   |   Dicetak pada: ' . now()->translatedFormat('d F Y H:i')],
             [],
             $headerCols,

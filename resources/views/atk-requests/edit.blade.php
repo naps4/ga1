@@ -56,7 +56,7 @@
                                 <label for="request_type" class="font-weight-600">Tipe Permintaan</label>
                                 <select name="request_type" id="request_type" class="form-control font-weight-bold text-primary" required>
                                     <option value="ATK" {{ ($atkRequest->request_type ?? 'ATK') === 'ATK' ? 'selected' : '' }}>Alat Tulis Kantor (ATK)</option>
-                                    <option value="Rumah Tangga" {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'selected' : '' }}>Kebutuhan Rumah Tangga (RT)</option>
+                                    <option value="Rumah Tangga" {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'selected' : '' }}>Sanitasi Non Produksi (SNP)</option>
                                 </select>
                             </div>
                         </div>
@@ -387,11 +387,11 @@
             
             if (val === 'Rumah Tangga') {
                 currentItems = householdItems;
-                formTitle.innerHTML = '<i class="fas fa-edit mr-2"></i>Edit Pengajuan Kebutuhan Rumah Tangga (RT)';
-                summaryTitle.innerHTML = '<i class="fas fa-list-ul mr-2"></i>Daftar Kebutuhan Rumah Tangga Anda';
-                modeStandardText.textContent = 'Barang Standar RT';
+                formTitle.innerHTML = '<i class="fas fa-edit mr-2"></i>Edit Pengajuan Kebutuhan Sanitasi Non Produksi (SNP)';
+                summaryTitle.innerHTML = '<i class="fas fa-list-ul mr-2"></i>Daftar Kebutuhan Sanitasi Non Produksi Anda';
+                modeStandardText.textContent = 'Barang Standar SNP';
                 rulesCard.innerHTML = `
-                    <h5 class="alert-heading font-weight-bold mb-2"><i class="fas fa-info-circle mr-2"></i>Ketentuan Permintaan Kebutuhan Rumah Tangga</h5>
+                    <h5 class="alert-heading font-weight-bold mb-2"><i class="fas fa-info-circle mr-2"></i>Ketentuan Permintaan Sanitasi Non Produksi (SNP)</h5>
                     <ul class="mb-0 small" style="padding-left: 20px;">
                         <li>Mohon diisi kebutuhan selama <strong>1 bulan (estimasi)</strong>.</li>
                         <li>Pengisian Permintaan & Penyerahan Form paling lambat <strong>tanggal 28</strong> disetiap bulannya.</li>

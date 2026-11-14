@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>
         @if(($targetType ?? 'ATK') === 'Rumah Tangga')
-            Rekap Distribusi Kebutuhan Rumah Tangga (RT) Per Departemen
+            Rekap Distribusi Kebutuhan Sanitasi Non Produksi (SNP) Per Departemen
         @else
             Rekap Distribusi Kebutuhan ATK Per Departemen
         @endif
@@ -150,7 +150,7 @@
             <tr>
                 <td>
                     <h1 class="header-title">
-                        MATRIKS REKAPITULASI DISTRIBUSI {{ $isHousehold ? 'KEBUTUHAN RUMAH TANGGA (RT)' : 'ALAT TULIS KANTOR (ATK)' }} PER DEPARTEMEN
+                        MATRIKS REKAPITULASI DISTRIBUSI {{ $isHousehold ? 'KEBUTUHAN SANITASI NON PRODUKSI (SNP)' : 'ALAT TULIS KANTOR (ATK)' }} PER DEPARTEMEN
                     </h1>
                     <div class="header-meta">
                         Dicetak pada: {{ now()->translatedFormat('d F Y H:i') }} | Dicetak Oleh: {{ auth()->user()?->name ?? 'Admin / Purchasing' }}
@@ -188,7 +188,7 @@
                 <td style="width: 15%;"><strong>Tipe Kategori</strong></td>
                 <td style="width: 35%;">: 
                     <strong style="color: {{ $isHousehold ? '#d97706' : '#1d4ed8' }};">
-                        {{ $isHousehold ? 'Kebutuhan Rumah Tangga (RT)' : 'Alat Tulis Kantor (ATK)' }}
+                        {{ $isHousehold ? 'Kebutuhan Sanitasi Non Produksi (SNP)' : 'Alat Tulis Kantor (ATK)' }}
                     </strong>
                 </td>
             </tr>
@@ -206,7 +206,7 @@
         <thead>
             <tr>
                 <th style="width: 25px;" rowspan="2">No</th>
-                <th style="width: 180px;" class="text-left" rowspan="2">Nama Barang {{ $isHousehold ? 'Rumah Tangga' : 'ATK' }}</th>
+                <th style="width: 180px;" class="text-left" rowspan="2">Nama Barang {{ $isHousehold ? 'Sanitasi Non Produksi' : 'ATK' }}</th>
                 <th style="width: 45px;" rowspan="2">Satuan</th>
                 @if($deptColCount > 0)
                     <th colspan="{{ $deptColCount }}" style="background-color: {{ $isHousehold ? '#fef3c7' : '#dbeafe' }}; color: {{ $isHousehold ? '#92400e' : '#1e3a8a' }}; font-size: 8.5px;">

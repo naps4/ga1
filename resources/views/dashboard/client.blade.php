@@ -136,7 +136,7 @@
                     </div>
                 @endif
 
-                {{-- 2. ALERT PEMBERITAHUAN REVISI ATK / RUMAH TANGGA --}}
+                {{-- 2. ALERT PEMBERITAHUAN REVISI ATK / SANITASI NON PRODUKSI (SNP) --}}
                 @if($hasClientRejectedAtk)
                     <div class="{{ $clientColClass }} mb-4">
                         <div class="card border-0 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #fffbeb 0%, #fef2f2 100%); border-left: 5px solid #ef4444 !important;">
@@ -230,12 +230,12 @@
 
         {{-- 4. TABLES: ATK REQUESTS & WORK ORDERS --}}
         <div class="row">
-            {{-- Tabel Permintaan ATK & Rumah Tangga --}}
+            {{-- Tabel Permintaan ATK & Sanitasi Non Produksi (SNP) --}}
             <div class="col-lg-6 mb-4">
                 <div class="card shadow-sm border-0 rounded-4 h-100">
                     <div class="card-header bg-white border-bottom border-light d-flex justify-content-between align-items-center py-3">
                         <h3 class="card-title text-primary font-weight-bold mb-0">
-                            <i class="fas fa-boxes mr-1"></i> Pengajuan ATK / Rumah Tangga
+                            <i class="fas fa-boxes mr-1"></i> Pengajuan ATK / Sanitasi Non Produksi (SNP)
                         </h3>
                         <a href="{{ route('atk-requests.index') }}" class="btn btn-outline-primary btn-xs rounded-pill px-3">
                             Semua
@@ -260,7 +260,7 @@
                                                 @if($atk->revision_number > 0)
                                                     <span class="badge badge-warning text-dark font-weight-bold ml-1" style="font-size: 9px;">Rev. {{ $atk->revision_number }}</span>
                                                 @endif
-                                                <div class="small text-muted">{{ $atk->request_type }}</div>
+                                                <div class="small text-muted">{{ $atk->request_type === 'Rumah Tangga' ? 'Sanitasi Non Produksi (SNP)' : $atk->request_type }}</div>
                                             </td>
                                             <td><span class="badge badge-info">{{ $atk->periode }}</span></td>
                                             <td>
@@ -289,7 +289,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted py-4 small">Belum ada pengajuan ATK / Rumah Tangga.</td>
+                                            <td colspan="4" class="text-center text-muted py-4 small">Belum ada pengajuan ATK / Sanitasi Non Produksi (SNP).</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

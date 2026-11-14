@@ -16,7 +16,7 @@
             </a>
             <a class="nav-link font-weight-bold rounded-pill {{ ($tab ?? 'barang') !== 'uom' && $type === 'Rumah Tangga' ? 'active bg-warning text-white shadow-sm' : 'text-secondary' }}" 
                href="{{ route('super-admin.master-barang.index', ['type' => 'Rumah Tangga']) }}">
-                <i class="fas fa-home mr-1"></i> Rumah Tangga (RT)
+                <i class="fas fa-pump-soap mr-1"></i> Sanitasi Non Produksi (SNP)
             </a>
             <a class="nav-link font-weight-bold rounded-pill {{ ($tab ?? 'barang') === 'uom' ? 'active bg-info text-white shadow-sm' : 'text-secondary' }}" 
                href="{{ route('super-admin.master-barang.index', ['tab' => 'uom']) }}">
@@ -37,7 +37,7 @@
                 <h4 class="font-weight-bold text-dark mb-0">
                     <i class="fas fa-tags text-info mr-2"></i>Daftar Satuan Barang (UOM)
                 </h4>
-                <p class="text-muted mb-0 small">Kelola master satuan baku untuk barang ATK, Rumah Tangga, dan Form Permintaan User.</p>
+                <p class="text-muted mb-0 small">Kelola master satuan baku untuk barang ATK, Sanitasi Non Produksi (SNP), dan Form Permintaan User.</p>
             </div>
             <button class="btn btn-info text-white btn-sm rounded-pill shadow-sm px-3 mt-2 mt-sm-0" 
                     data-toggle="modal" 
@@ -306,7 +306,7 @@
                         <label class="font-weight-600 text-dark">Tipe Form Permintaan</label>
                         <select name="type" class="form-control rounded-pill border-light bg-light shadow-none" required>
                             <option value="ATK" {{ $type === 'ATK' ? 'selected' : '' }}>Alat Tulis Kantor (ATK)</option>
-                            <option value="Rumah Tangga" {{ $type === 'Rumah Tangga' ? 'selected' : '' }}>Rumah Tangga (RT)</option>
+                            <option value="Rumah Tangga" {{ $type === 'Rumah Tangga' ? 'selected' : '' }}>Sanitasi Non Produksi (SNP)</option>
                         </select>
                     </div>
                 </div>
@@ -341,7 +341,7 @@
                         <label class="font-weight-600 text-dark">Tipe</label>
                         <select name="type" id="edit-cat-type" class="form-control rounded-pill border-light bg-light shadow-none" required>
                             <option value="ATK">Alat Tulis Kantor (ATK)</option>
-                            <option value="Rumah Tangga">Rumah Tangga (RT)</option>
+                            <option value="Rumah Tangga">Sanitasi Non Produksi (SNP)</option>
                         </select>
                     </div>
                 </div>

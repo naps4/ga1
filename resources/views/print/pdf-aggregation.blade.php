@@ -6,7 +6,7 @@
         @if(($targetType ?? 'all') === 'ATK')
             Rekap Kebutuhan Alat Tulis Kantor (ATK)
         @elseif(($targetType ?? 'all') === 'Rumah Tangga')
-            Rekap Kebutuhan Rumah Tangga (RT)
+            Rekap Kebutuhan Sanitasi Non Produksi (SNP)
         @else
             Rekap Total Kebutuhan Barang
         @endif
@@ -150,7 +150,7 @@
                         @if($target === 'ATK')
                             Rekapitulasi Kebutuhan Alat Tulis Kantor (ATK)
                         @elseif($target === 'Rumah Tangga')
-                            Rekapitulasi Kebutuhan Rumah Tangga (RT)
+                            Rekapitulasi Kebutuhan Sanitasi Non Produksi (SNP)
                         @else
                             Rekapitulasi Total Kebutuhan Barang
                         @endif
@@ -193,7 +193,7 @@
                     @if($target === 'ATK')
                         <strong style="color: #1d4ed8;">Alat Tulis Kantor (ATK)</strong>
                     @elseif($target === 'Rumah Tangga')
-                        <strong style="color: #d97706;">Kebutuhan Rumah Tangga (RT)</strong>
+                        <strong style="color: #d97706;">Kebutuhan Sanitasi Non Produksi (SNP)</strong>
                     @else
                         Semua Tipe (Dipisah Per Kategori)
                     @endif
@@ -299,17 +299,17 @@
         </div>
     @endif
 
-    <!-- SECTION 2: REKAP RUMAH TANGGA -->
+    <!-- SECTION 2: REKAP SANITASI NON PRODUKSI -->
     @if($showHousehold)
         <div class="section-header section-household">
-            {{ $showAtk && $target === 'all' ? '2. ' : '' }}Rekapitulasi Kebutuhan Rumah Tangga (RT)
+            {{ $showAtk && $target === 'all' ? '2. ' : '' }}Rekapitulasi Kebutuhan Sanitasi Non Produksi (SNP)
         </div>
 
         <table class="data-table">
             <thead>
                 <tr>
                     <th style="width: 6%;" class="text-center">No</th>
-                    <th>Nama Barang Rumah Tangga</th>
+                    <th>Nama Barang Sanitasi Non Produksi</th>
                     <th style="width: 15%;" class="text-center">Satuan</th>
                     <th style="width: 20%;" class="text-center">Total Kebutuhan</th>
                     <th style="width: 18%;" class="text-center">Frekuensi</th>
@@ -346,14 +346,14 @@
                 @empty
                     <tr>
                         <td colspan="5" class="text-center" style="padding: 15px; color: #999;">
-                            Tidak ada data kebutuhan Rumah Tangga ditemukan sesuai kriteria filter.
+                            Tidak ada data kebutuhan Sanitasi Non Produksi ditemukan sesuai kriteria filter.
                         </td>
                     </tr>
                 @endforelse
 
                 @if(($householdGrandTotalQty ?? 0) > 0)
                     <tr class="table-grandtotal-row" style="background-color: #fef3c7; color: #92400e;">
-                        <td colspan="3" class="text-right">GRAND TOTAL KEBUTUHAN RUMAH TANGGA:</td>
+                        <td colspan="3" class="text-right">GRAND TOTAL KEBUTUHAN SANITASI NON PRODUKSI:</td>
                         <td class="text-center" style="font-size: 12px; color: #d97706;">{{ $householdGrandTotalQty }}</td>
                         <td></td>
                     </tr>

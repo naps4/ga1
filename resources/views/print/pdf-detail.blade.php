@@ -134,7 +134,7 @@
                     @endif
                 </td>
                 <td style="width: 15%;"><strong>Tipe Permintaan</strong></td>
-                <td style="width: 35%;">: {{ $request->request_type === 'ATK' ? 'Alat Tulis Kantor (ATK)' : (($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga (RT)' : 'Semua Tipe') }}</td>
+                <td style="width: 35%;">: {{ $request->request_type === 'ATK' ? 'Alat Tulis Kantor (ATK)' : (($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Sanitasi Non Produksi (SNP)' : 'Semua Tipe') }}</td>
             </tr>
             <tr>
                 <td><strong>Status Approval</strong></td>
@@ -177,7 +177,7 @@
                     </td>
                     <td>
                         @if($req->request_type === 'Rumah Tangga')
-                            Rumah Tangga
+                            Sanitasi Non Produksi (SNP)
                         @else
                             ATK
                         @endif

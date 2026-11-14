@@ -269,7 +269,7 @@
         <div class="card shadow-sm border-0 rounded-4 mt-3">
             <div class="card-header bg-white border-bottom border-light py-3 d-flex align-items-center justify-content-between">
                 <h3 class="card-title text-primary m-0 font-weight-bold">
-                    <i class="fas fa-clipboard-list mr-1"></i> Kesimpulan Permintaan ATK / Rumah Tangga
+                    <i class="fas fa-clipboard-list mr-1"></i> Kesimpulan Permintaan ATK / Sanitasi Non Produksi (SNP)
                 </h3>
                 <a href="{{ route('atk-requests.index') }}" class="btn btn-sm btn-primary rounded-pill px-3">
                     Lihat Semua

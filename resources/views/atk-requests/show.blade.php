@@ -39,7 +39,7 @@
         <div class="card shadow-sm border-0 rounded-4 mb-4">
             <div class="card-header bg-white border-bottom border-light d-flex justify-content-between align-items-center">
                 <h3 class="card-title text-primary font-weight-bold mb-0">
-                    <i class="fas fa-file-alt mr-2"></i>Detail Permintaan {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'Rumah Tangga' : 'ATK' }} - {{ $atkRequest->formatted_doc_number }}
+                    <i class="fas fa-file-alt mr-2"></i>Detail Permintaan {{ ($atkRequest->request_type ?? 'ATK') === 'Rumah Tangga' ? 'Sanitasi Non Produksi (SNP)' : 'ATK' }} - {{ $atkRequest->formatted_doc_number }}
                     @if($atkRequest->revision_number > 0)
                         <span class="badge badge-warning text-dark font-weight-bold ml-2 shadow-sm" style="font-size: 0.75rem;"><i class="fas fa-history mr-1"></i> Revisi Ke-{{ $atkRequest->revision_number }}</span>
                     @endif

@@ -591,7 +591,7 @@ class AtkRequestController extends Controller
             }
         });
 
-        $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';
+        $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Sanitasi Non Produksi (SNP)' : 'ATK';
         $msg = ($status === 'Draft') ? "Draft permintaan {$typeName} berhasil disimpan." : "Permintaan {$typeName} berhasil diajukan.";
         return redirect()->route('atk-requests.index')->with('success', $msg);
     }
@@ -776,7 +776,7 @@ class AtkRequestController extends Controller
                 }
             });
 
-            $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';
+            $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Sanitasi Non Produksi (SNP)' : 'ATK';
             return redirect()->route('atk-requests.show', $newRequest->id)->with('success', "Pengajuan revisi {$typeName} ({$newRequest->formatted_doc_number}) berhasil dibuat dan diajukan ke Manager.");
         }
 
@@ -858,7 +858,7 @@ class AtkRequestController extends Controller
             }
         });
 
-        $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';
+        $typeName = ($request->request_type === 'Rumah Tangga') ? 'Kebutuhan Sanitasi Non Produksi (SNP)' : 'ATK';
         $msg = ($status === 'Draft') ? "Draft permintaan {$typeName} berhasil diperbarui." : "Permintaan {$typeName} berhasil diajukan.";
         return redirect()->route('atk-requests.index')->with('success', $msg);
     }
@@ -873,7 +873,7 @@ class AtkRequestController extends Controller
             return back()->withErrors(['error' => 'Hanya permintaan draft, menunggu persetujuan, atau ditolak/revisi yang dapat dihapus.']);
         }
 
-        $typeName = ($atkRequest->request_type === 'Rumah Tangga') ? 'Kebutuhan Rumah Tangga' : 'ATK';
+        $typeName = ($atkRequest->request_type === 'Rumah Tangga') ? 'Kebutuhan Sanitasi Non Produksi (SNP)' : 'ATK';
         $atkRequest->delete();
 
         return redirect()->route('atk-requests.index')->with('success', "Permintaan {$typeName} berhasil dihapus.");
@@ -1434,7 +1434,7 @@ class AtkRequestController extends Controller
                 'targetType' => $targetType,
             ], $aggregations))->setPaper('a4', 'landscape');
 
-            $prefix = ($targetType === 'Rumah Tangga') ? 'Rekap-Distribusi-Rumah-Tangga-' : 'Rekap-Distribusi-ATK-';
+            $prefix = ($targetType === 'Rumah Tangga') ? 'Rekap-Distribusi-Sanitasi-Non-Produksi-' : 'Rekap-Distribusi-ATK-';
             return $pdf->download($prefix . now()->format('Y-m-d') . '.pdf');
         }
 
@@ -1457,7 +1457,7 @@ class AtkRequestController extends Controller
             if ($targetType === 'ATK') {
                 $filename = 'Rekap-Total-ATK-' . now()->format('Y-m-d') . '.pdf';
             } elseif ($targetType === 'Rumah Tangga' || $targetType === 'household') {
-                $filename = 'Rekap-Total-Rumah-Tangga-' . now()->format('Y-m-d') . '.pdf';
+                $filename = 'Rekap-Total-Sanitasi-Non-Produksi-' . now()->format('Y-m-d') . '.pdf';
             } else {
                 $filename = 'Rekap-Total-Kebutuhan-Barang-' . now()->format('Y-m-d') . '.pdf';
             }
